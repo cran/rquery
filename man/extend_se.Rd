@@ -5,7 +5,7 @@
 \title{Extend data by adding more columns.}
 \usage{
 extend_se(source, assignments, ..., partitionby = NULL, orderby = NULL,
-  desc = FALSE, env = parent.frame())
+  rev_orderby = NULL, env = parent.frame())
 }
 \arguments{
 \item{source}{source to select from.}
@@ -16,9 +16,9 @@ extend_se(source, assignments, ..., partitionby = NULL, orderby = NULL,
 
 \item{partitionby}{partitioning (window function) terms.}
 
-\item{orderby}{ordering (window function) terms.}
+\item{orderby}{ordering (in window function) terms.}
 
-\item{desc}{reverse order}
+\item{rev_orderby}{reverse ordering (in window function) terms.}
 
 \item{env}{environment to look for values in.}
 }
@@ -29,9 +29,7 @@ extend node.
 Create a node similar to a Codd extend relational operator (add derived columns).
 }
 \details{
-Allows re-use of column names in the spirit of \code{\link[seplyr]{partition_mutate_se}},
-though re-use can break relational property.
-partitionby and orderby can only be used with a database that supports window-functions
+Partitionby and orderby can only be used with a database that supports window-functions
 (such as PostgreSQL).
 }
 \examples{

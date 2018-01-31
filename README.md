@@ -1,6 +1,3 @@
-rquery
-================
-2017-12-30
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 `rquery`
@@ -212,16 +209,16 @@ cat(format(dq))
 
     table('d') %.>%
      extend(.,
-       := probability := exp(assessmentTotal * scale) / sum(exp(assessmentTotal * scale)),
-       := count := count(1),
+      probability := exp(assessmentTotal * scale) / sum(exp(assessmentTotal * scale)),
+      count := count(1),
       p= subjectID) %.>%
      extend(.,
-       := rank := rank(),
+      rank := rank(),
       p= subjectID,
       o= probability, surveyCategory) %.>%
      rename(.,
-      c('diagnosis' := 'surveyCategory')) %.>%
-     select_rows(.,  := rank = count) %.>%
+      c('diagnosis' = 'surveyCategory')) %.>%
+     select_rows(., rank = count) %.>%
      select_columns(., subjectID, diagnosis, probability) %.>%
      orderby(., subjectID)
 

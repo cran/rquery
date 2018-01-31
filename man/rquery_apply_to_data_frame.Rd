@@ -33,22 +33,23 @@ RSQLite::initExtension(winvector_temp_db_handle$db)
 d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
 q <- table_source("d", c("AUC", "R2", "D")) \%.>\%
 	extend_nse(., c := sqrt(R2)) \%.>\%
-  orderby(., "R2", desc = TRUE)
+  orderby(., rev_cols = "R2")
 
 rquery_apply_to_data_frame(d, q)
 
 execute_data_frame(q, data = d)
 
-d \%.>\% q
+# # requires S3 method wrapr_function.relop defined
+# d \%.>\% q
 # run (and build result for) ad-hoc query
 d \%.>\%
   extend_nse(., c := sqrt(R2)) \%.>\%
-  orderby(., "R2", desc = TRUE) \%.>\%
+  orderby(., rev_cols = "R2") \%.>\%
   execute_data_frame(.)
 # print ad-hoc query (result only available for printing)
 d \%.>\%
   extend_nse(., c := sqrt(R2)) \%.>\%
-  orderby(., "R2", desc = TRUE)
+  orderby(., rev_cols = "R2")
 
 DBI::dbDisconnect(winvector_temp_db_handle$db)
 winvector_temp_db_handle <- NULL

@@ -4,16 +4,16 @@
 \alias{orderby}
 \title{Make an orderby node (not a relational operation).}
 \usage{
-orderby(source, orderby, ..., desc = FALSE, limit = NULL)
+orderby(source, cols = NULL, ..., rev_cols = NULL, limit = NULL)
 }
 \arguments{
 \item{source}{source to select from.}
 
-\item{orderby}{order by column names.}
+\item{cols}{order by column names.}
 
 \item{...}{force later arguments to be bound by name}
 
-\item{desc}{logical if TRUE reverse order}
+\item{rev_cols}{order by reverse of these column names.}
 
 \item{limit}{number limit row count.}
 }
@@ -37,7 +37,7 @@ which does preserve row order).
 my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 d <- dbi_copy_to(my_db, 'd',
                 data.frame(AUC = 0.6, R2 = 0.2))
-eqn <- orderby(d, "AUC", desc=TRUE, limit=4)
+eqn <- orderby(d, rev_cols = "AUC", limit=4)
 cat(format(eqn))
 sql <- to_sql(eqn, my_db)
 cat(sql)
