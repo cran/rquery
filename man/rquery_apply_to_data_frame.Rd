@@ -2,17 +2,17 @@
 % Please edit documentation in R/ex_data_frame.R
 \name{rquery_apply_to_data_frame}
 \alias{rquery_apply_to_data_frame}
-\title{Execture node_tree in an enviroment where d is the only data.}
+\title{Execture optree in an enviroment where d is the only data.}
 \usage{
-rquery_apply_to_data_frame(pipe_left_arg, pipe_right_arg,
-  pipe_environment = parent.frame(), result_limit = NULL)
+rquery_apply_to_data_frame(d, optree, env = parent.frame(),
+  result_limit = NULL)
 }
 \arguments{
-\item{pipe_left_arg}{data.frame}
+\item{d}{data.frame}
 
-\item{pipe_right_arg}{rquery rel_op operation tree.}
+\item{optree}{rquery rel_op operation tree.}
 
-\item{pipe_environment}{environment to look for "winvector_temp_db_handle" in.}
+\item{env}{environment to look for "winvector_temp_db_handle" in.}
 
 \item{result_limit}{numeric if not null limit result to this many rows.}
 }
@@ -21,7 +21,6 @@ data.frame result
 }
 \description{
 Default DB uses RSQLite (so some functions are not supported).
-Functionality is through \code{"wrapr_applicable"}: \url{https://winvector.github.io/wrapr/articles/wrapr_applicable.html}.
 }
 \examples{
 
@@ -31,16 +30,16 @@ winvector_temp_db_handle <- list(
 RSQLite::initExtension(winvector_temp_db_handle$db)
 
 d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
-q <- table_source("d", c("AUC", "R2", "D")) \%.>\%
+optree <- table_source("d", c("AUC", "R2", "D")) \%.>\%
 	extend_nse(., c := sqrt(R2)) \%.>\%
   orderby(., rev_cols = "R2")
 
-rquery_apply_to_data_frame(d, q)
+rquery_apply_to_data_frame(d, optree)
 
-execute_data_frame(q, data = d)
+execute_data_frame(optree, data = d)
 
-# # requires S3 method wrapr_function.relop defined
-# d \%.>\% q
+d \%.>\% optree
+
 # run (and build result for) ad-hoc query
 d \%.>\%
   extend_nse(., c := sqrt(R2)) \%.>\%

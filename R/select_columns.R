@@ -20,15 +20,13 @@
 #' @export
 #'
 select_columns <- function(source, columns) {
+  UseMethod("select_columns", source)
+}
+
+#' @export
+select_columns.relop <- function(source, columns) {
   if(length(columns)<=0) {
     stop("rquery::select_columns must select at least 1 column")
-  }
-  if(is.data.frame(source)) {
-    tmp_name <- cdata::makeTempNameGenerator("rquery_tmp")()
-    dnode <- table_source(tmp_name, colnames(source))
-    dnode$data <- source
-    enode <- select_columns(dnode, columns)
-    return(enode)
   }
   have <- column_names(source)
   check_have_cols(have, columns, "rquery::select_columns columns")
@@ -40,12 +38,25 @@ select_columns <- function(source, columns) {
   r
 }
 
+#' @export
+select_columns.data.frame <- function(source, columns) {
+  if(length(columns)<=0) {
+    stop("rquery::select_columns must select at least 1 column")
+  }
+  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  dnode <- table_source(tmp_name, colnames(source))
+  dnode$data <- source
+  enode <- select_columns(dnode, columns)
+  return(enode)
+}
+
+
 
 
 #' @export
 column_names.relop_select_columns <- function (x, ...) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   x$columns
 }
@@ -53,7 +64,7 @@ column_names.relop_select_columns <- function (x, ...) {
 #' @export
 format.relop_select_columns <- function(x, ...) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   paste0(trimws(format(x$source[[1]]), which = "right"),
          " %.>%\n ",
@@ -99,7 +110,7 @@ to_sql.relop_select_columns <- function (x,
                                          append_cr = TRUE,
                                          using = NULL) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   using <- calc_using_relop_select_columns(x,
                                            using = using)

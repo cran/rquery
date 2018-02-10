@@ -33,24 +33,19 @@ natural_join <- function(a, b,
                          ...,
                          jointype = 'INNER',
                          by = NULL) {
+  UseMethod("natural_join", a)
+}
+
+#' @export
+natural_join.relop <- function(a, b,
+                               ...,
+                               jointype = 'INNER',
+                               by = NULL) {
   if(length(list(...))>0) {
     stop("rquery::natural_join unexpected arguments")
   }
-  if(is.data.frame(a) || is.data.frame(b)) {
-    if((!is.data.frame(a)) || (!is.data.frame(b))) {
-      stop("rquery::natural_join if one input is a data.frame, both must be")
-    }
-    nmgen <- cdata::makeTempNameGenerator("rquery_tmp")
-    tmp_namea <- nmgen()
-    dnodea <- table_source(tmp_namea, colnames(a))
-    dnodea$data <- a
-    tmp_nameb <- nmgen()
-    dnodeb <- table_source(tmp_namea, colnames(b))
-    dnodeb$data <- b
-    enode <- natural_join(dnodea, dnodeb,
-                          jointype = jointype,
-                          by = by)
-    return(enode)
+  if(!("relop" %in% class(b))) {
+    stop("rquery::natural_join.relop b must also be of class relop")
   }
   usesa <- column_names(a)
   usesb <- column_names(b)
@@ -66,12 +61,36 @@ natural_join <- function(a, b,
   r
 }
 
+#' @export
+natural_join.data.frame <- function(a, b,
+                                    ...,
+                                    jointype = 'INNER',
+                                    by = NULL) {
+  if(length(list(...))>0) {
+    stop("rquery::natural_join unexpected arguments")
+  }
+  if(!is.data.frame(b)) {
+    stop("rquery::natural_join.data.frame b must also be a data.frame")
+  }
+  nmgen <- mkTempNameGenerator("rquery_tmp")
+  tmp_namea <- nmgen()
+  dnodea <- table_source(tmp_namea, colnames(a))
+  dnodea$data <- a
+  tmp_nameb <- nmgen()
+  dnodeb <- table_source(tmp_namea, colnames(b))
+  dnodeb$data <- b
+  enode <- natural_join(dnodea, dnodeb,
+                        jointype = jointype,
+                        by = by)
+  return(enode)
+}
+
 
 
 #' @export
 format.relop_natural_join <- function(x, ...) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   a <- trimws(format(x$source[[1]]), which = "right")
   b <- trimws(format(x$source[[2]]), which = "right")
@@ -136,7 +155,7 @@ to_sql.relop_natural_join <- function (x,
                                        append_cr = TRUE,
                                        using = NULL) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   using <- calc_used_relop_natural_join(x,
                                         using=using)

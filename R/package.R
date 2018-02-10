@@ -19,5 +19,4 @@ NULL
 
 
 #' @importFrom wrapr %.>% :=
-#' @importFrom cdata makeTempNameGenerator
 NULL

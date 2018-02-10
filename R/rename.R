@@ -20,6 +20,11 @@
 #' @export
 #'
 rename_columns <- function(source, cmap) {
+  UseMethod("rename_columns", source)
+}
+
+#' @export
+rename_columns.relop <- function(source, cmap) {
   if(length(cmap)<=0) {
     stop("rquery::rename_columns must rename at least 1 column")
   }
@@ -28,13 +33,6 @@ rename_columns <- function(source, cmap) {
   }
   if(length(cmap)!=length(unique(names(cmap)))) {
     stop("rquery::rename_columns map keys must be unique")
-  }
-  if(is.data.frame(source)) {
-    tmp_name <- cdata::makeTempNameGenerator("rquery_tmp")()
-    dnode <- table_source(tmp_name, colnames(source))
-    dnode$data <- source
-    enode <- rename_columns(dnode, cmap)
-    return(enode)
   }
   have <- column_names(source)
   check_have_cols(have, as.character(cmap), "rquery::rename_columns cmap")
@@ -51,11 +49,29 @@ rename_columns <- function(source, cmap) {
   r
 }
 
+#' @export
+rename_columns.data.frame <- function(source, cmap) {
+  if(length(cmap)<=0) {
+    stop("rquery::rename_columns must rename at least 1 column")
+  }
+  if(length(cmap)!=length(unique(as.character(cmap)))) {
+    stop("rquery::rename_columns map values must be unique")
+  }
+  if(length(cmap)!=length(unique(names(cmap)))) {
+    stop("rquery::rename_columns map keys must be unique")
+  }
+  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  dnode <- table_source(tmp_name, colnames(source))
+  dnode$data <- source
+  enode <- rename_columns(dnode, cmap)
+  return(enode)
+}
+
 
 #' @export
 column_names.relop_rename_columns <- function (x, ...) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   sc <- column_names(x$source[[1]])
   rmap <- names(x$cmap)
@@ -69,7 +85,7 @@ column_names.relop_rename_columns <- function (x, ...) {
 #' @export
 format.relop_rename_columns <- function(x, ...) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   paste0(trimws(format(x$source[[1]]), which = "right"),
          " %.>%\n ",
@@ -122,7 +138,7 @@ to_sql.relop_rename_columns <- function (x,
                                          append_cr = TRUE,
                                          using = NULL) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   qmap <- calc_used_relop_rename_columns(x, using=using)
   colsV <- vapply(as.character(qmap),

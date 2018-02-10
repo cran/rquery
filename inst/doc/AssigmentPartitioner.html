@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2018-01-31" />
+<meta name="date" content="2018-02-10" />
 
 <title>Assignment Paritioner</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Assignment Paritioner</h1>
 <h4 class="author"><em>John Mount, Win-Vector LLC</em></h4>
-<h4 class="date"><em>2018-01-31</em></h4>
+<h4 class="date"><em>2018-02-10</em></h4>
 
 
 
@@ -79,9 +79,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>The method used to partition expressions is to scan the remaining expressions in order taking any that: have all their values available from earlier groups, do not use a value formed in the current group, and do not overwrite a value formed in the current group.</p>
 <p>This partitioning method ensures safe and correct results, and can lead to far fewer groups (and much more efficient queries) than the straightforward method of breaking up the sequence of expressions at each new-value use.</p>
 <p>Here is a non-trivial database based example (demonstrating methods that might be used in big data work such as with <code>Spark</code>). We are going to assign pairs of items to complimentary treatment (“T”) and control (“C”) groups based on already populated pseudo-random numbers (pre-populating the pseudo-random numbers is to avoid <a href="https://winvector.github.io/rquery/reference/if_else_block.html">known issues in using <code>rand()</code> in <code>RSQlite</code></a>, and would not be necessary with other databases).</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)
-
-<span class="co"># example data</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</code></pre></div>
+<pre><code>Loading required package: wrapr</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># example data</span>
 <span class="kw">set.seed</span>(<span class="dv">3463</span>)
 d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">id =</span> <span class="kw">seq_len</span>(<span class="dv">4</span>))
 <span class="cf">for</span>(group <span class="cf">in</span> <span class="kw">c</span>(<span class="st">'a'</span>, <span class="st">'b'</span>, <span class="st">'c'</span>, <span class="st">'d'</span>, <span class="st">'e'</span>)) {
@@ -261,9 +261,9 @@ FROM (
     `example_table`.`rand_e`
    FROM
     `example_table`
-   ) tsql_0000
-  ) tsql_0001
-) tsql_0002</code></pre>
+   ) tsql_53272849086359897594_0000000000
+  ) tsql_53272849086359897594_0000000001
+) tsql_53272849086359897594_0000000002</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(my_db, sql) <span class="op">%.&gt;%</span>
 <span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</code></pre></div>
 <table>

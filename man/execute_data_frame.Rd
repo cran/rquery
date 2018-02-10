@@ -4,11 +4,11 @@
 \alias{execute_data_frame}
 \title{Attempt to execute a pipeline (assuming it has local data, or is passed local data).}
 \usage{
-execute_data_frame(node_tree, ..., env = parent.frame(), data = NULL,
+execute_data_frame(optree, ..., env = parent.frame(), data = NULL,
   result_limit = NULL)
 }
 \arguments{
-\item{node_tree}{rquery relop pipeline.}
+\item{optree}{rquery relop pipeline.}
 
 \item{...}{force later arguments to bind by name.}
 
@@ -32,16 +32,15 @@ winvector_temp_db_handle <- list(
 RSQLite::initExtension(winvector_temp_db_handle$db)
 
 d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
-q <- table_source("d", c("AUC", "R2", "D")) \%.>\%
+optree <- table_source("d", c("AUC", "R2", "D")) \%.>\%
 	extend_nse(., c := sqrt(R2)) \%.>\%
   orderby(.,  rev_cols = "R2")
 
-rquery_apply_to_data_frame(d, q)
+rquery_apply_to_data_frame(d, optree)
 
-execute_data_frame(q, data = d)
+execute_data_frame(optree, data = d)
 
-# # requires S3 method wrapr_function.relop defined
-# d \%.>\% q
+d \%.>\% optree
 # run (and build result for) ad-hoc query
 d \%.>\%
   extend_nse(., c := sqrt(R2)) \%.>\%

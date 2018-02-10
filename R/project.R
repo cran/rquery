@@ -54,17 +54,29 @@ project_impl <- function(source, groupby, parsed) {
 #'
 project_se <- function(source, groupby, assignments,
                        env = parent.frame()) {
-  if(is.data.frame(source)) {
-    tmp_name <- cdata::makeTempNameGenerator("rquery_tmp")()
-    dnode <- table_source(tmp_name, colnames(source))
-    dnode$data <- source
-    enode <- project_se(dnode, groupby, assignments,
-                        env = env)
-    return(enode)
-  }
+  UseMethod("project_se", source)
+}
+
+#' @export
+project_se.relop <- function(source, groupby, assignments,
+                             env = parent.frame()) {
   parsed <- parse_se(source, assignments, env = env)
   project_impl(source, groupby, parsed)
 }
+
+#' @export
+project_se.data.frame <- function(source, groupby, assignments,
+                                  env = parent.frame()) {
+  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  dnode <- table_source(tmp_name, colnames(source))
+  dnode$data <- source
+  enode <- project_se(dnode, groupby, assignments,
+                      env = env)
+  return(enode)
+}
+
+
+
 
 #' project data by grouping, and adding aggregate columns.
 #'
@@ -90,24 +102,33 @@ project_se <- function(source, groupby, assignments,
 #'
 project_nse <- function(source, groupby, ...,
                         env = parent.frame()) {
-  if(is.data.frame(source)) {
-    tmp_name <- cdata::makeTempNameGenerator("rquery_tmp")()
-    dnode <- table_source(tmp_name, colnames(source))
-    dnode$data <- source
-    enode <- project_nse(dnode, groupby, ...,
-                         env = env)
-    return(enode)
-  }
+  UseMethod("project_nse", source)
+}
+
+#' @export
+project_nse.relop <- function(source, groupby, ...,
+                        env = parent.frame()) {
   exprs <-  eval(substitute(alist(...)))
   parsed <- parse_nse(source, exprs, env = env)
   project_impl(source, groupby, parsed)
+}
+
+#' @export
+project_nse.data.frame <- function(source, groupby, ...,
+                                   env = parent.frame()) {
+  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  dnode <- table_source(tmp_name, colnames(source))
+  dnode$data <- source
+  enode <- project_nse(dnode, groupby, ...,
+                       env = env)
+  return(enode)
 }
 
 
 #' @export
 column_names.relop_project <- function (x, ...) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   x$columns
 }
@@ -116,7 +137,7 @@ column_names.relop_project <- function (x, ...) {
 #' @export
 format.relop_project <- function(x, ...) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   origTerms <- vapply(x$parsed,
                       function(pi) {
@@ -156,7 +177,7 @@ columns_used.relop_project <- function (x, ...,
                                         using = NULL,
                                         contract = FALSE) {
   if(length(list(...))>0) {
-    stop("rquery:columns_used: unexpected arguemnts")
+    stop("rquery:columns_used: unexpected arguments")
   }
   cols <- calc_used_relop_project(x,
                                   using = using,
@@ -177,7 +198,7 @@ to_sql.relop_project <- function (x,
                                   append_cr = TRUE,
                                   using = NULL) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   # re-quote expr
   re_quoted <- redo_parse_quoting(x$parsed, db)

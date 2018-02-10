@@ -22,13 +22,11 @@
 #' @export
 #'
 sql_node <- function(source, exprs, mods = NULL) {
-  if(is.data.frame(source)) {
-    tmp_name <- cdata::makeTempNameGenerator("rquery_tmp")()
-    dnode <- table_source(tmp_name, colnames(source))
-    dnode$data <- source
-    enode <- sql_node(dnode, exprs = exprs, mods = mods)
-    return(enode)
-  }
+  UseMethod("sql_node", source)
+}
+
+#' @export
+sql_node.relop <- function(source, exprs, mods = NULL) {
   r <- list(source = list(source),
             table_name = NULL,
             parsed = NULL,
@@ -38,11 +36,22 @@ sql_node <- function(source, exprs, mods = NULL) {
   r
 }
 
+#' @export
+sql_node.data.frame <- function(source, exprs, mods = NULL) {
+  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  dnode <- table_source(tmp_name, colnames(source))
+  dnode$data <- source
+  enode <- sql_node(dnode, exprs = exprs, mods = mods)
+  return(enode)
+}
+
+
+
 
 #' @export
 column_names.relop_sql <- function (x, ...) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   names(x$exprs)
 }
@@ -52,7 +61,7 @@ column_names.relop_sql <- function (x, ...) {
 #' @export
 format.relop_sql <- function(x, ...) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   assignments <- paste(names(x$exprs), ":=", as.character(x$exprs))
   modsstr <- ""
@@ -90,7 +99,7 @@ to_sql.relop_sql <- function (x,
                               append_cr = TRUE,
                               using = NULL) {
   if(length(list(...))>0) {
-    stop("unexpected arguemnts")
+    stop("unexpected arguments")
   }
   colsA <- vapply(names(x$exprs),
                   function(ci) {

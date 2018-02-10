@@ -1,8 +1,8 @@
 Package: rquery
 Type: Package
 Title: Relational Query Generator for Data Manipulation
-Version: 0.3.0
-Date: 2018-01-31
+Version: 0.3.1
+Date: 2018-02-10
 Authors@R: c(
     person("John", "Mount", email = "jmount@win-vector.com", role = c("aut", "cre")),
     person(family = "Win-Vector LLC", role = c("cph"))
@@ -21,7 +21,7 @@ Description: A query generator based on Edgar F. Codd's relational
     trees to in-memory 'data.frame's.
 License: GPL-3
 Encoding: UTF-8
-Depends: wrapr (>= 1.1.1), cdata (>= 0.5.2)
+Depends: wrapr (>= 1.1.1)
 Imports: DBI, RSQLite, utils
 Suggests: sparklyr, RPostgreSQL, RPostgres, knitr, rmarkdown, testthat
 LazyData: true
@@ -29,8 +29,8 @@ RoxygenNote: 6.0.1
 ByteCompile: true
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2018-01-31 17:32:36 UTC; johnmount
+Packaged: 2018-02-10 19:32:21 UTC; johnmount
 Author: John Mount [aut, cre],
   Win-Vector LLC [cph]
 Repository: CRAN
-Date/Publication: 2018-01-31 17:40:26 UTC
+Date/Publication: 2018-02-10 19:39:44 UTC
