@@ -43,7 +43,7 @@ select_columns.data.frame <- function(source, columns) {
   if(length(columns)<=0) {
     stop("rquery::select_columns must select at least 1 column")
   }
-  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
   enode <- select_columns(dnode, columns)
@@ -106,7 +106,7 @@ to_sql.relop_select_columns <- function (x,
                                          ...,
                                          source_limit = NULL,
                                          indent_level = 0,
-                                         tnum = mkTempNameGenerator('tsql'),
+                                         tnum = mk_tmp_name_source('tsql'),
                                          append_cr = TRUE,
                                          using = NULL) {
   if(length(list(...))>0) {
@@ -114,13 +114,14 @@ to_sql.relop_select_columns <- function (x,
   }
   using <- calc_using_relop_select_columns(x,
                                            using = using)
-  subsql <- to_sql(x$source[[1]],
-                   db = db,
-                   source_limit = source_limit,
-                   indent_level = indent_level + 1,
-                   tnum = tnum,
-                   append_cr = FALSE,
-                   using = using)
+  subsql_list <- to_sql(x$source[[1]],
+                        db = db,
+                        source_limit = source_limit,
+                        indent_level = indent_level + 1,
+                        tnum = tnum,
+                        append_cr = FALSE,
+                        using = using)
+  subsql <- subsql_list[[length(subsql_list)]]
   cols <- vapply(x$columns,
                  function(ci) {
                    quote_identifier(db, ci)
@@ -136,7 +137,7 @@ to_sql.relop_select_columns <- function (x,
   if(append_cr) {
     q <- paste0(q, "\n")
   }
-  q
+  c(subsql_list[-length(subsql_list)], q)
 }
 
 

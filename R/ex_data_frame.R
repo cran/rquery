@@ -1,5 +1,16 @@
 
 
+re_write_table_names <- function(op_tree, new_name) {
+  if(!is.null(op_tree$table_name)) {
+    op_tree$table_name <- new_name
+  }
+  for(i in seq_len(length(op_tree$source))) {
+    op_tree$source[[i]] <- re_write_table_names(op_tree$source[[i]],
+                                                new_name)
+  }
+  op_tree
+}
+
 #' Execture optree in an enviroment where d is the only data.
 #'
 #' Default DB uses RSQLite (so some functions are not supported).
@@ -7,64 +18,56 @@
 #' @param d data.frame
 #' @param optree rquery rel_op operation tree.
 #' @param env environment to look for "winvector_temp_db_handle" in.
-#' @param result_limit numeric if not null limit result to this many rows.
+#' @param limit numeric if not null limit result to this many rows.
 #' @return data.frame result
 #'
 #' @examples
 #'
+#' db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #' winvector_temp_db_handle <- list(
-#'   db = DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+#'   db = db
 #' )
 #' RSQLite::initExtension(winvector_temp_db_handle$db)
 #'
 #' d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
+#' DBI::dbWriteTable(db, "d", d)
+#' d2 <- data.frame(AUC = 0.0, R2 = 0, D = 0, z = 0)
+#'
 #' optree <- table_source("d", c("AUC", "R2", "D")) %.>%
 #' 	extend_nse(., c := sqrt(R2)) %.>%
 #'   orderby(., rev_cols = "R2")
 #'
-#' rquery_apply_to_data_frame(d, optree)
+#' execute(db, optree, table_name = "res")
+#' DBI::dbReadTable(db, "res")
 #'
-#' execute_data_frame(optree, data = d)
+#' d2 %.>% optree
 #'
-#' d %.>% optree
+#' # show d is unharmed
+#' DBI::dbReadTable(db, "d")
 #'
-#' # run (and build result for) ad-hoc query
-#' d %.>%
-#'   extend_nse(., c := sqrt(R2)) %.>%
-#'   orderby(., rev_cols = "R2") %.>%
-#'   execute_data_frame(.)
-#' # print ad-hoc query (result only available for printing)
-#' d %.>%
-#'   extend_nse(., c := sqrt(R2)) %.>%
-#'   orderby(., rev_cols = "R2")
-#'
-#' DBI::dbDisconnect(winvector_temp_db_handle$db)
 #' winvector_temp_db_handle <- NULL
+#' DBI::dbDisconnect(db)
 #'
 #' @export
 #'
 rquery_apply_to_data_frame <- function(d,
                                        optree,
                                        env = parent.frame(),
-                                       result_limit = NULL) {
+                                       limit = NULL) {
   if(!is.data.frame(d)) {
     stop("rquery::rquery_apply_to_data_frame d must be a data.frame")
   }
-  tabs <- tables_used(optree)
-  tabName <- c()
-  if(length(tabs)!=1) {
-    for(ni in names(tabs)) {
-      ti <- tabs[[ni]]
-      if(is.null(ti$data)) {
-        tabName <- c(tabName, ni)
-      }
-    }
-  } else {
-    tabName <- names(tabs)[[1]]
+  if(!("relop" %in% class(optree))) {
+    stop("rquery::rquery_apply_to_data_frame expect optree to be of class relop")
   }
-  if(length(tabName)!=1) {
-    stop("rquery::rquery_apply_to_data_frame optree must reference exactly one table or exactly one unbound table.")
+  tabNames <- tables_used(optree)
+  if(length(tabNames)!=1) {
+    stop("rquery::rquery_apply_to_data_frame optree must reference exactly one table")
   }
+  tmp_name_source <- mk_tmp_name_source('rqatmp')
+  inp_name <- tmp_name_source()
+  res_name <- tmp_name_source()
+  optree <- re_write_table_names(optree, inp_name)
   need_close <- FALSE
   db_handle <- base::mget("winvector_temp_db_handle",
                           envir = env,
@@ -78,20 +81,38 @@ rquery_apply_to_data_frame <- function(d,
     my_db <- db_handle$db
   }
   dR <- dbi_copy_to(my_db,
-                    tabName,
+                    inp_name,
                     d,
                     temporary = TRUE,
                     overwrite = FALSE)
-  sql <- to_sql(optree, my_db)
-  if(!is.null(result_limit)) {
-    sql <- paste(sql, "LIMIT", result_limit)
+  materialize(my_db,
+              optree,
+              table_name = res_name,
+              overwrite = TRUE,
+              temporary = TRUE)
+  sql <- paste("SELECT * FROM",
+               DBI::dbQuoteIdentifier(my_db, res_name))
+  if(!is.null(limit)) {
+    sql <- paste(sql, "LIMIT",
+                 format(ceiling(limit), scientific = FALSE))
   }
   res <- DBI::dbGetQuery(my_db, sql)
-  x <- DBI::dbExecute(my_db, paste("DROP TABLE", tabName))
+  x <- DBI::dbExecute(my_db, paste("DROP TABLE", inp_name))
+  x <- DBI::dbExecute(my_db, paste("DROP TABLE", res_name))
   if(need_close) {
     DBI::dbDisconnect(my_db)
   }
   res
+}
+
+grab_first_dat <- function(op_tree) {
+  for(i in seq_len(length(op_tree$source))) {
+    di <- grab_first_dat(op_tree$source[[i]])
+    if(!is.null(di)) {
+      return(di)
+    }
+  }
+  op_tree$data
 }
 
 #' Attempt to execute a pipeline (assuming it has local data, or is passed local data).
@@ -100,61 +121,31 @@ rquery_apply_to_data_frame <- function(d,
 #' @param ... force later arguments to bind by name.
 #' @param env environment to work in.
 #' @param data data.frame to evaluate.
-#' @param result_limit numeric if not null limit result to this many rows.
+#' @param limit numeric if not null limit result to this many rows.
 #' @return executed pipleline or NULL if not executable.
 #'
-#' @examples
 #'
-#' winvector_temp_db_handle <- list(
-#'   db = DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#' )
-#' RSQLite::initExtension(winvector_temp_db_handle$db)
+#' @noRd
 #'
-#' d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
-#' optree <- table_source("d", c("AUC", "R2", "D")) %.>%
-#' 	extend_nse(., c := sqrt(R2)) %.>%
-#'   orderby(.,  rev_cols = "R2")
-#'
-#' rquery_apply_to_data_frame(d, optree)
-#'
-#' execute_data_frame(optree, data = d)
-#'
-#' d %.>% optree
-#' # run (and build result for) ad-hoc query
-#' d %.>%
-#'   extend_nse(., c := sqrt(R2)) %.>%
-#'   orderby(., rev_cols = "R2") %.>%
-#'   execute_data_frame(.)
-#' # print ad-hoc query (result only available for printing)
-#' d %.>%
-#'   extend_nse(., c := sqrt(R2)) %.>%
-#'   orderby(., rev_cols = "R2")
-#'
-#' DBI::dbDisconnect(winvector_temp_db_handle$db)
-#' winvector_temp_db_handle <- NULL
-#'
-#' @export
-#'
-execute_data_frame <- function(optree,
+execute_embeded_data_frame <- function(optree,
                ...,
                env = parent.frame(),
                data = NULL,
-               result_limit = NULL) {
-  if(length(list(...))>0) {
-    stop("rquery: unexpected arguments")
-  }
+               limit = NULL) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery:::execute_embeded_data_frame")
   tabs <- tables_used(optree)
-  if( (length(tabs)==1) &&
-     ((!is.null(data)) || (!is.null(tabs[[1]]$data))) ) {
-    if(is.null(data)) {
-      data <- tabs[[1]]$data
-    }
-    res <- rquery_apply_to_data_frame(data, optree,
-                                      env = env,
-                                      result_limit = result_limit)
-    return(res)
+  if(length(tabs)!=1) {
+    return(NULL)
   }
-  NULL
+  data <- grab_first_dat(optree)
+  if(is.null(data)) {
+    return(NULL)
+  }
+  res <- rquery_apply_to_data_frame(data, optree,
+                                    env = env,
+                                    limit = limit)
+  return(res)
 }
 
 #' @export
@@ -167,8 +158,8 @@ as.data.frame.relop <- function (x,
   if(!is.null(dotargs$n)) {
     n <- dotargs$n
   }
-  execute_data_frame(x,
-          env = parent.frame(), result_limit = n)
+  execute_embeded_data_frame(x,
+          env = parent.frame(), limit = n)
 }
 
 
@@ -179,8 +170,8 @@ print.relop <- function(x, ...) {
   if(!is.null(dotargs$n)) {
     n <- dotargs$n
   }
-  res <- execute_data_frame(x,
-                 env = parent.frame(), result_limit = n)
+  res <- execute_embeded_data_frame(x,
+                 env = parent.frame(), limit = n)
   if(!is.null(res)) {
     print(res)
   } else {
@@ -200,8 +191,8 @@ head.relop <- function(x, ...) {
   if(!is.null(dotargs$n)) {
     n <- dotargs$n
   }
-  res <- execute_data_frame(x,
-                 env = parent.frame(), result_limit = n)
+  res <- execute_embeded_data_frame(x,
+                 env = parent.frame(), limit = n)
   if(!is.null(res)) {
     res
   } else {
@@ -209,3 +200,23 @@ head.relop <- function(x, ...) {
   }
 }
 
+#' Execute pipeline treating pipe_left_arg as local data to
+#' be copied into database.
+#'
+#' @param pipe_left_arg data.frame
+#' @param pipe_right_arg rquery relop operation tree
+#' @param pipe_environment environment to execute in
+#' @param pipe_name name of pipling symbol
+#' @return data.frame
+#'
+#' @seealso \code{\link{rquery_apply_to_data_frame}}
+#'
+#' @export
+wrapr_function.relop <- function(pipe_left_arg,
+                                 pipe_right_arg,
+                                 pipe_environment,
+                                 pipe_name = NULL) {
+  return(rquery_apply_to_data_frame(pipe_left_arg,
+                                    pipe_right_arg,
+                                    pipe_environment))
+}

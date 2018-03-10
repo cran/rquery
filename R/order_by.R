@@ -71,7 +71,7 @@ orderby.data.frame <- function(source,
   if(length(list(...))>0) {
     stop("unexpected arguments")
   }
-  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
   enode <- orderby(dnode,
@@ -100,7 +100,8 @@ format.relop_orderby <- function(x, ...) {
                 paste(ot, collapse = ", "),
                 ""),
          ifelse((length(x$limit)>0) && (length(x$orderby)>0),
-                paste0(", LIMIT ", x$limit),
+                paste0(", LIMIT ",
+                       format(ceiling(x$limit), scientific = FALSE)),
                 ""),
          ")",
          "\n")
@@ -143,7 +144,7 @@ to_sql.relop_orderby <- function (x,
                                    ...,
                                    source_limit = NULL,
                                    indent_level = 0,
-                                   tnum = mkTempNameGenerator('tsql'),
+                                   tnum = mk_tmp_name_source('tsql'),
                                    append_cr = TRUE,
                                    using = NULL) {
   if(length(list(...))>0) {
@@ -166,13 +167,14 @@ to_sql.relop_orderby <- function (x,
     ot <- c(ot, rev_ot)
   }
   subcols <- calc_used_relop_orderby(x, using=using)
-  subsql <- to_sql(x$source[[1]],
-                   db = db,
-                   source_limit = source_limit,
-                   indent_level = indent_level + 1,
-                   tnum = tnum,
-                   append_cr = FALSE,
-                   using = subcols)
+  subsql_list <- to_sql(x$source[[1]],
+                        db = db,
+                        source_limit = source_limit,
+                        indent_level = indent_level + 1,
+                        tnum = tnum,
+                        append_cr = FALSE,
+                        using = subcols)
+  subsql <- subsql_list[[length(subsql_list)]]
   tab <- tnum()
   prefix <- paste(rep(' ', indent_level), collapse = '')
   q <- paste0(prefix, "SELECT * FROM (\n",
@@ -183,12 +185,13 @@ to_sql.relop_orderby <- function (x,
                 paste0(" ORDER BY ", paste(ot, collapse = ", ")),
                 ""),
          ifelse(length(x$limit)>0,
-                paste0(" LIMIT ", x$limit),
+                paste0(" LIMIT ",
+                       format(ceiling(x$limit), scientific = FALSE)),
                 ""))
   if(append_cr) {
     q <- paste0(q, "\n")
   }
-  q
+  c(subsql_list[-length(subsql_list)], q)
 }
 
 #' @export

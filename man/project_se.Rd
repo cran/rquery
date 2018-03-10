@@ -23,14 +23,28 @@ project data by grouping, and adding aggregate columns.
 }
 \examples{
 
-my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-d <- dbi_copy_to(my_db, 'd',
-                data.frame(AUC = 0.6, R2 = 0.2))
-eqn <- project_se(d, "AUC", "v" := "max(R2)")
-cat(format(eqn))
-sql <- to_sql(eqn, my_db)
-cat(sql)
-DBI::dbGetQuery(my_db, sql)
-DBI::dbDisconnect(my_db)
+ my_db <- DBI::dbConnect(RSQLite::SQLite(),
+                         ":memory:")
+ d <- dbi_copy_to(
+   my_db, 'd',
+   data.frame(group = c('a', 'a', 'b', 'b'),
+              val = 1:4,
+              stringsAsFactors = FALSE))
+
+ op_tree <- d \%.>\%
+   project_se(., "group", "vmax" := "max(val)")
+ cat(format(op_tree))
+ sql <- to_sql(op_tree, my_db)
+ cat(sql)
+ execute(my_db, op_tree)
+
+ op_tree <- d \%.>\%
+   project_se(., NULL, "vmax" := "max(val)")
+ cat(format(op_tree))
+ sql <- to_sql(op_tree, my_db)
+ cat(sql)
+ execute(my_db, op_tree)
+
+ DBI::dbDisconnect(my_db)
 
 }

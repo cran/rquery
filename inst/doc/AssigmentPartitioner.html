@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2018-02-10" />
+<meta name="date" content="2018-03-10" />
 
 <title>Assignment Paritioner</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Assignment Paritioner</h1>
 <h4 class="author"><em>John Mount, Win-Vector LLC</em></h4>
-<h4 class="date"><em>2018-02-10</em></h4>
+<h4 class="date"><em>2018-03-10</em></h4>
 
 
 
@@ -81,6 +81,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>Here is a non-trivial database based example (demonstrating methods that might be used in big data work such as with <code>Spark</code>). We are going to assign pairs of items to complimentary treatment (“T”) and control (“C”) groups based on already populated pseudo-random numbers (pre-populating the pseudo-random numbers is to avoid <a href="https://winvector.github.io/rquery/reference/if_else_block.html">known issues in using <code>rand()</code> in <code>RSQlite</code></a>, and would not be necessary with other databases).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</code></pre></div>
 <pre><code>Loading required package: wrapr</code></pre>
+<pre><code>Loading required package: DBI</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># example data</span>
 <span class="kw">set.seed</span>(<span class="dv">3463</span>)
 d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">id =</span> <span class="kw">seq_len</span>(<span class="dv">4</span>))

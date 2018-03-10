@@ -60,7 +60,7 @@ rename_columns.data.frame <- function(source, cmap) {
   if(length(cmap)!=length(unique(names(cmap)))) {
     stop("rquery::rename_columns map keys must be unique")
   }
-  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
   enode <- rename_columns(dnode, cmap)
@@ -134,7 +134,7 @@ to_sql.relop_rename_columns <- function (x,
                                          ...,
                                          source_limit = NULL,
                                          indent_level = 0,
-                                         tnum = mkTempNameGenerator('tsql'),
+                                         tnum = mk_tmp_name_source('tsql'),
                                          append_cr = TRUE,
                                          using = NULL) {
   if(length(list(...))>0) {
@@ -150,13 +150,14 @@ to_sql.relop_rename_columns <- function (x,
                     quote_identifier(db, ci)
                   }, character(1))
   cols <- paste(colsV, "AS", colsA)
-  subsql <- to_sql(x$source[[1]],
-                   db = db,
-                   source_limit = source_limit,
-                   indent_level = indent_level + 1,
-                   tnum = tnum,
-                   append_cr = FALSE,
-                   using = as.character(qmap))
+  subsql_list <- to_sql(x$source[[1]],
+                        db = db,
+                        source_limit = source_limit,
+                        indent_level = indent_level + 1,
+                        tnum = tnum,
+                        append_cr = FALSE,
+                        using = as.character(qmap))
+  subsql <- subsql_list[[length(subsql_list)]]
   tab <- tnum()
   prefix <- paste(rep(' ', indent_level), collapse = '')
   q <- paste0(prefix, "SELECT\n",
@@ -168,7 +169,7 @@ to_sql.relop_rename_columns <- function (x,
   if(append_cr) {
     q <- paste0(q, "\n")
   }
-  q
+  c(subsql_list[-length(subsql_list)], q)
 }
 
 #' @export

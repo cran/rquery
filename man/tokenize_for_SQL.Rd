@@ -14,7 +14,7 @@ tokenize_for_SQL(lexpr, colnames, env = parent.frame())
 \item{env}{environment to look for values}
 }
 \value{
-sql info: list(presentation, parsed_toks(list of tokens), sql_text, symbols_used, symbols_produced)
+sql info: list(presentation, parsed_toks(list of tokens), sql_text, symbols_used, symbols_produced, free_symbols)
 }
 \description{
 Cross-parse from an R parse tree into SQL.

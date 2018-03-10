@@ -128,7 +128,7 @@ theta_join_se.data.frame <- function(a, b,
   if(!is.data.frame(b)) {
     stop("rquery::theta_join_se.data.frame b must also be a data.frame")
   }
-  nmgen <- mkTempNameGenerator("rquery_tmp")
+  nmgen <- mk_tmp_name_source("rquery_tmp")
   tmp_namea <- nmgen()
   dnodea <- table_source(tmp_namea, colnames(a))
   dnodea$data <- a
@@ -230,7 +230,7 @@ theta_join_nse.data.frame <- function(a, b,
   if(!is.data.frame(b)) {
     stop("rquery::theta_join_nse.data.frame b must also be a data.frame")
   }
-  nmgen <- mkTempNameGenerator("rquery_tmp")
+  nmgen <- mk_tmp_name_source("rquery_tmp")
   tmp_namea <- nmgen()
   dnodea <- table_source(tmp_namea, colnames(a))
   dnodea$data <- a
@@ -340,7 +340,7 @@ to_sql.relop_theta_join <- function (x,
                                      ...,
                                      source_limit = NULL,
                                      indent_level = 0,
-                                     tnum = mkTempNameGenerator('tsql'),
+                                     tnum = mk_tmp_name_source('tsql'),
                                      append_cr = TRUE,
                                      using = NULL) {
   if(length(list(...))>0) {
@@ -353,20 +353,22 @@ to_sql.relop_theta_join <- function (x,
                                       using=using)
   c1 <- intersect(using, column_names(x$source[[1]]))
   c2 <- intersect(using, column_names(x$source[[2]]))
-  subsqla <- to_sql(x$source[[1]],
-                    db = db,
-                    source_limit = source_limit,
-                    indent_level = indent_level + 1,
-                    tnum = tnum,
-                    append_cr = FALSE,
-                    using = c1)
-  subsqlb <- to_sql(x$source[[2]],
-                    db = db,
-                    source_limit = source_limit,
-                    indent_level = indent_level + 1,
-                    tnum = tnum,
-                    append_cr = FALSE,
-                    using = c2)
+  subsqla_list <- to_sql(x$source[[1]],
+                         db = db,
+                         source_limit = source_limit,
+                         indent_level = indent_level + 1,
+                         tnum = tnum,
+                         append_cr = FALSE,
+                         using = c1)
+  subsqla <- subsqla_list[[length(subsqla_list)]]
+  subsqlb_list <- to_sql(x$source[[2]],
+                         db = db,
+                         source_limit = source_limit,
+                         indent_level = indent_level + 1,
+                         tnum = tnum,
+                         append_cr = FALSE,
+                         using = c2)
+  subsqlb <- subsqlb_list[[length(subsqlb_list)]]
   taba <- tnum()
   tabb <- tnum()
   bterms <- setdiff(column_names(x$source[[1]]),
@@ -401,5 +403,7 @@ to_sql.relop_theta_join <- function (x,
   if(append_cr) {
     q <- paste0(q, "\n")
   }
-  q
+  c(subsqla_list[-length(subsqla_list)],
+    subsqlb_list[-length(subsqlb_list)],
+    q)
 }

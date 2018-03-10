@@ -28,6 +28,9 @@ extend_impl <- function(source, parsed,
   have <- column_names(source)
   check_have_cols(have, partitionby, "rquery::extend partitionby")
   check_have_cols(have, orderby, "rquery::extend orderby")
+  # these checks are easy by the no same block use rule
+  check_have_cols(have, merge_fld(parsed, "symbols_used"), "rquery::extend terms")
+  check_have_cols(have, merge_fld(parsed, "free_symbols"), "rquery::extend terms")
   assignments <- unpack_assignments(source, parsed)
   r <- list(source = list(source),
             table_name = NULL,
@@ -150,7 +153,7 @@ extend_se.data.frame <- function(source, assignments,
   if(length(list(...))>0) {
     stop("unexpected arguments")
   }
-  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
   enode <- extend_se(dnode,
@@ -227,7 +230,7 @@ extend_nse.data.frame <- function(source,
                                   orderby = NULL,
                                   rev_orderby = NULL,
                                   env = parent.frame()) {
-  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
   enode <- extend_nse(dnode,
@@ -335,7 +338,7 @@ to_sql.relop_extend <- function (x,
                                  ...,
                                  source_limit = NULL,
                                  indent_level = 0,
-                                 tnum = mkTempNameGenerator('tsql'),
+                                 tnum = mk_tmp_name_source('tsql'),
                                  append_cr = TRUE,
                                  using = NULL) {
   if(length(list(...))>0) {
@@ -347,13 +350,14 @@ to_sql.relop_extend <- function (x,
   # work on query
   using <- calc_used_relop_extend(x,
                                   using = using)
-  subsql <- to_sql(x$source[[1]],
-                   db = db,
-                   source_limit = source_limit,
-                   indent_level = indent_level + 1,
-                   tnum = tnum,
-                   append_cr = FALSE,
-                   using = using)
+  subsql_list <- to_sql(x$source[[1]],
+                        db = db,
+                        source_limit = source_limit,
+                        indent_level = indent_level + 1,
+                        tnum = tnum,
+                        append_cr = FALSE,
+                        using = using)
+  subsql <- subsql_list[[length(subsql_list)]]
   cols1 <- intersect(column_names(x$source[[1]]), using)
   cols1 <- setdiff(cols1, names(re_assignments)) # allow simple name re-use
   cols <- NULL
@@ -417,7 +421,7 @@ to_sql.relop_extend <- function (x,
   if(append_cr) {
     q <- paste0(q, "\n")
   }
-  q
+  c(subsql_list[-length(subsql_list)], q)
 }
 
 #' @export

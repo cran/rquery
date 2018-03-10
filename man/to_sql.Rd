@@ -5,7 +5,7 @@
 \title{Return SQL implementation of operation tree.}
 \usage{
 to_sql(x, db, ..., source_limit = NULL, indent_level = 0,
-  tnum = mkTempNameGenerator("tsql"), append_cr = TRUE, using = NULL)
+  tnum = mk_tmp_name_source("tsql"), append_cr = TRUE, using = NULL)
 }
 \arguments{
 \item{x}{rquery operation tree.}
@@ -28,5 +28,5 @@ to_sql(x, db, ..., source_limit = NULL, indent_level = 0,
 SQL command
 }
 \description{
-Return SQL implementation of operation tree.
+Add to last argument and pass all others through.
 }

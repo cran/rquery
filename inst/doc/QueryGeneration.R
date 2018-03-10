@@ -6,7 +6,6 @@ knitr::opts_chunk$set(
 
 ## ----ex, warning=FALSE, message=FALSE, include=FALSE---------------------
 library("rquery")
-use_spark = FALSE
 
 # this db does not have window fns
 my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
@@ -31,7 +30,7 @@ d <- dbi_copy_to(my_db, 'd',
                    irrelevantCol2 = "irrel2",
                    stringsAsFactors = FALSE),
                  temporary = TRUE, 
-                 overwrite = !use_spark)
+                 overwrite = TRUE)
 
 ## ----calc----------------------------------------------------------------
 scale <- 0.237
@@ -62,9 +61,5 @@ sql <- to_sql(dq, db = my_db, source_limit = 1000)
 cat(sql)
 
 ## ----cleanup, include=FALSE----------------------------------------------
-if(use_spark) {
-  sparklyr::spark_disconnect(my_db)
-} else {
-  DBI::dbDisconnect(my_db)
-}
+DBI::dbDisconnect(my_db)
 

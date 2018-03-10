@@ -1,4 +1,17 @@
 
+# rquery 0.4.0 2018/03/10
+
+ * Move to wrapr 1.2.0
+ * Add wrapr_function.relop().
+ * Column checks on extend.
+ * Default sql_node to copying incoming columns.
+ * NULL column ops.
+ * rsummary().
+ * "Non SQL" nodes.
+ * New rquery_intro vingette.
+ * Improved help examples.
+ * Stricter argument checking.
+
 # rquery 0.3.1 2018/02/10
 
  * Be compatible with both wrapr 1.1.1 and 1.2.0.

@@ -46,3 +46,6 @@ DBI::dbGetQuery(my_db, sql2)
 DBI::dbDisconnect(my_db)
 
 }
+\seealso{
+\code{\link{table_source}}
+}

@@ -4,8 +4,7 @@
 \alias{rquery_apply_to_data_frame}
 \title{Execture optree in an enviroment where d is the only data.}
 \usage{
-rquery_apply_to_data_frame(d, optree, env = parent.frame(),
-  result_limit = NULL)
+rquery_apply_to_data_frame(d, optree, env = parent.frame(), limit = NULL)
 }
 \arguments{
 \item{d}{data.frame}
@@ -14,7 +13,7 @@ rquery_apply_to_data_frame(d, optree, env = parent.frame(),
 
 \item{env}{environment to look for "winvector_temp_db_handle" in.}
 
-\item{result_limit}{numeric if not null limit result to this many rows.}
+\item{limit}{numeric if not null limit result to this many rows.}
 }
 \value{
 data.frame result
@@ -24,33 +23,29 @@ Default DB uses RSQLite (so some functions are not supported).
 }
 \examples{
 
+db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 winvector_temp_db_handle <- list(
-  db = DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  db = db
 )
 RSQLite::initExtension(winvector_temp_db_handle$db)
 
 d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
+DBI::dbWriteTable(db, "d", d)
+d2 <- data.frame(AUC = 0.0, R2 = 0, D = 0, z = 0)
+
 optree <- table_source("d", c("AUC", "R2", "D")) \%.>\%
 	extend_nse(., c := sqrt(R2)) \%.>\%
   orderby(., rev_cols = "R2")
 
-rquery_apply_to_data_frame(d, optree)
+execute(db, optree, table_name = "res")
+DBI::dbReadTable(db, "res")
 
-execute_data_frame(optree, data = d)
+d2 \%.>\% optree
 
-d \%.>\% optree
+# show d is unharmed
+DBI::dbReadTable(db, "d")
 
-# run (and build result for) ad-hoc query
-d \%.>\%
-  extend_nse(., c := sqrt(R2)) \%.>\%
-  orderby(., rev_cols = "R2") \%.>\%
-  execute_data_frame(.)
-# print ad-hoc query (result only available for printing)
-d \%.>\%
-  extend_nse(., c := sqrt(R2)) \%.>\%
-  orderby(., rev_cols = "R2")
-
-DBI::dbDisconnect(winvector_temp_db_handle$db)
 winvector_temp_db_handle <- NULL
+DBI::dbDisconnect(db)
 
 }

@@ -45,7 +45,7 @@ select_rows_se.relop <- function(source, expr,
 #' @export
 select_rows_se.data.frame <- function(source, expr,
                                       env = parent.frame()) {
-  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
   enode <- select_rows_se(dnode, expr,
@@ -104,7 +104,7 @@ select_rows_nse.relop <- function(source, expr,
 select_rows_nse.data.frame <- function(source, expr,
                             env = parent.frame()) {
   exprq <- substitute(expr)
-  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
   enode <- select_rows_se(dnode, deparse(exprq),
@@ -162,7 +162,7 @@ to_sql.relop_select_rows <- function (x,
                                       ...,
                                       source_limit = NULL,
                                       indent_level = 0,
-                                      tnum = mkTempNameGenerator('tsql'),
+                                      tnum = mk_tmp_name_source('tsql'),
                                       append_cr = TRUE,
                                       using = NULL) {
   if(length(list(...))>0) {
@@ -175,13 +175,14 @@ to_sql.relop_select_rows <- function (x,
   # work on query
   cols <- calc_used_relop_select_rows(x,
                                       using = using)
-  subsql <- to_sql(x$source[[1]],
-                   db = db,
-                   source_limit = source_limit,
-                   indent_level = indent_level + 1,
-                   tnum = tnum,
-                   append_cr = FALSE,
-                   using = cols)
+  subsql_list <- to_sql(x$source[[1]],
+                        db = db,
+                        source_limit = source_limit,
+                        indent_level = indent_level + 1,
+                        tnum = tnum,
+                        append_cr = FALSE,
+                        using = cols)
+  subsql <- subsql_list[[length(subsql_list)]]
   tab <- tnum()
   prefix <- paste(rep(' ', indent_level), collapse = '')
   q <- paste0(prefix, "SELECT * FROM (\n",
@@ -193,5 +194,5 @@ to_sql.relop_select_rows <- function (x,
   if(append_cr) {
     q <- paste0(q, "\n")
   }
-  q
+  c(subsql_list[-length(subsql_list)], q)
 }

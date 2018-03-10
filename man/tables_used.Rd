@@ -12,7 +12,7 @@ tables_used(node, ...)
 \item{...}{(not used)}
 }
 \value{
-named map of tables used.
+names of tables used.
 }
 \description{
 Return vector of table names used.

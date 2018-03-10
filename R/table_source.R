@@ -30,6 +30,7 @@
 #' DBI::dbGetQuery(my_db, sql)
 #' DBI::dbDisconnect(my_db)
 #'
+#' @seealso \code{\link{dbi_table}}
 #'
 #' @export
 #'
@@ -82,6 +83,8 @@ listFields <- function(my_db, tableName) {
 #' @param table_name name of table
 #' @return a relop representation of the data
 #'
+#' @seealso \code{\link{table_source}}
+#'
 #' @examples
 #'
 #' my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
@@ -113,29 +116,25 @@ dbi_table <- function(db, table_name) {
 
 #' @export
 tables_used.relop_table_source <- function(node, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
-  r <- list(node)
-  names(r) <- node$table_name
-  r
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::tables_used.relop_table_source")
+  node$table_name
 }
 
 #' @export
 column_names.relop_table_source <- function (x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::column_names.relop_table_source")
   x$columns
 }
 
 
-columns_used_relop_table_source <- function (x, ...,
+columns_used_relop_table_source <- function (x,
+                                             ...,
                                              using = NULL,
                                              contract = FALSE) {
-  if(length(list(...))>0) {
-    stop("columns_used_relop_table_source: unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery:::columns_used_relop_table_source")
   cols <- x$columns
   if(length(using)>0) {
     missing <- setdiff(using, x$columns)
@@ -164,12 +163,11 @@ to_sql.relop_table_source <- function (x,
                                        ...,
                                        source_limit = NULL,
                                        indent_level = 0,
-                                       tnum = mkTempNameGenerator('tsql'),
+                                       tnum = mk_tmp_name_source('tsql'),
                                        append_cr = TRUE,
                                        using = NULL) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::to_sql.relop_table_source")
   prefix <- paste(rep(' ', indent_level), collapse = '')
   tabnam <- quote_identifier(db,  x$table_name)
   cols <- columns_used_relop_table_source(x, using = using)
@@ -185,7 +183,8 @@ to_sql.relop_table_source <- function (x,
               prefix, "FROM\n",
               prefix, " ", tabnam)
   if(!is.null(source_limit)) {
-    q <- paste(q, "LIMIT", source_limit)
+    q <- paste(q, "LIMIT",
+               format(ceiling(source_limit), scientific = FALSE))
   }
   if(append_cr) {
     q <- paste0(q, "\n")
@@ -195,25 +194,14 @@ to_sql.relop_table_source <- function (x,
 
 #' @export
 format.relop_table_source <- function(x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::format.relop_table_source")
   sym <- ""
   if(!is.null(x$data)) {
     sym <- "+"
   }
   paste0("table", sym, "('", x$table_name, "')",
          "\n")
-}
-
-#' @export
-print.relop_table_source <- function(x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
-  txt <- format(x)
-  txt <- trimws(gsub("[ \t\r\n]+", " ", txt), which = "both")
-  print(txt, ...)
 }
 
 
@@ -244,9 +232,8 @@ dbi_copy_to <- function(db, table_name, d,
                         overwrite = FALSE,
                         temporary = TRUE,
                         rowidcolumn = NULL) {
-  if(length(list(...))>0) {
-    stop("rquery::dbi_table unexpeced arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::dbi_copy_to")
   if(!is.null(rowidcolumn)) {
     d[[rowidcolumn]] <- 1:nrow(d)
   }
@@ -255,27 +242,20 @@ dbi_copy_to <- function(db, table_name, d,
                       table_name,
                       d,
                       overwrite = overwrite,
-                      temporary = temporary)
+                      temporary = temporary,
+                      append = FALSE)
   } else {
     # sparklyr does not take overwrite argument
     DBI::dbWriteTable(db,
                       table_name,
                       d,
-                      temporary = temporary)
+                      temporary = temporary,
+                      append = FALSE)
   }
   dbi_table(db, table_name)
 }
 
 
-#' @export
-#'
-to_pre_sql.relop_table_source  <- function (x,
-                                             ...) {
-  if(length(list(...))>0) {
-    stop("rquery::to_pre_sqlt.relop_table_source  unexpeced arguments")
-  }
-  pre_sql_table(x$table_name, x$columns)
-}
 
 #' @export
 #'

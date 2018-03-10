@@ -40,5 +40,7 @@ cat(sql)
 DBI::dbGetQuery(my_db, sql)
 DBI::dbDisconnect(my_db)
 
-
+}
+\seealso{
+\code{\link{dbi_table}}
 }

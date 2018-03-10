@@ -30,9 +30,8 @@ column_names <- function (x, ...) {
 
 #' @export
 column_names.relop <- function (x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::column_names.relop")
   subs <- lapply(x$source,
                  column_names)
   return(sort(unique(unlist(subs))))
@@ -62,9 +61,8 @@ columns_used.relop <- function (x,
                                 ...,
                                 using = NULL,
                                 contract = FALSE) {
-  if(length(list(...))>0) {
-    stop("rquery:columns_used: unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::columns_used.relop")
   subs <- lapply(x$source,
                  columns_used)
   res <- list()
@@ -85,7 +83,7 @@ columns_used.relop <- function (x,
 #'
 #' @param node rquery tree to examine.
 #' @param ... (not used)
-#' @return named map of tables used.
+#' @return names of tables used.
 #'
 #' @examples
 #'
@@ -107,21 +105,20 @@ tables_used <- function(node, ...) {
 
 #' @export
 tables_used.relop <- function(node, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
-  r <- list()
-  for(si in node$source) {
-    ui <- tables_used(si, ...)
-    for(ki in names(ui)) {
-      r[[ki]] <- ui[[ki]]
-    }
-  }
-  r
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::tables_used.relop")
+  tabs <- lapply(node$source,
+         function(si) {
+           tables_used(si)
+         })
+  tabs <- sort(unique(unlist(tabs)))
+  tabs
 }
 
 
 #' Return SQL implementation of operation tree.
+#'
+#' Add to last argument and pass all others through.
 #'
 #' @param x rquery operation tree.
 #' @param db DBI database handle or rquery_db_info object.
@@ -140,25 +137,12 @@ to_sql <- function (x,
                     ...,
                     source_limit = NULL,
                     indent_level = 0,
-                    tnum = mkTempNameGenerator('tsql'),
+                    tnum = mk_tmp_name_source('tsql'),
                     append_cr = TRUE,
                     using = NULL) {
   UseMethod("to_sql", x)
 }
 
-
-#' Return SQL implementation of operation tree.
-#'
-#' @param x rquery operation tree.
-#' @param ... generic additional arguments (not used).
-#' @return pre_sql_op node
-#'
-#' @export
-#'
-to_pre_sql <- function (x,
-                        ...) {
-  UseMethod("to_pre_sql", x)
-}
 
 
 #' @export
@@ -166,5 +150,4 @@ to_pre_sql <- function (x,
 dim.relop <- function(x) {
   c(NA_real_, length(column_names(x)))
 }
-
 

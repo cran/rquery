@@ -40,15 +40,29 @@ project_impl <- function(source, groupby, parsed) {
 #'
 #' @examples
 #'
-#' my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#' d <- dbi_copy_to(my_db, 'd',
-#'                 data.frame(AUC = 0.6, R2 = 0.2))
-#' eqn <- project_se(d, "AUC", "v" := "max(R2)")
-#' cat(format(eqn))
-#' sql <- to_sql(eqn, my_db)
-#' cat(sql)
-#' DBI::dbGetQuery(my_db, sql)
-#' DBI::dbDisconnect(my_db)
+#'  my_db <- DBI::dbConnect(RSQLite::SQLite(),
+#'                          ":memory:")
+#'  d <- dbi_copy_to(
+#'    my_db, 'd',
+#'    data.frame(group = c('a', 'a', 'b', 'b'),
+#'               val = 1:4,
+#'               stringsAsFactors = FALSE))
+#'
+#'  op_tree <- d %.>%
+#'    project_se(., "group", "vmax" := "max(val)")
+#'  cat(format(op_tree))
+#'  sql <- to_sql(op_tree, my_db)
+#'  cat(sql)
+#'  execute(my_db, op_tree)
+#'
+#'  op_tree <- d %.>%
+#'    project_se(., NULL, "vmax" := "max(val)")
+#'  cat(format(op_tree))
+#'  sql <- to_sql(op_tree, my_db)
+#'  cat(sql)
+#'  execute(my_db, op_tree)
+#'
+#'  DBI::dbDisconnect(my_db)
 #'
 #' @export
 #'
@@ -67,7 +81,7 @@ project_se.relop <- function(source, groupby, assignments,
 #' @export
 project_se.data.frame <- function(source, groupby, assignments,
                                   env = parent.frame()) {
-  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
   enode <- project_se(dnode, groupby, assignments,
@@ -88,15 +102,29 @@ project_se.data.frame <- function(source, groupby, assignments,
 #'
 #' @examples
 #'
-#' my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#' d <- dbi_copy_to(my_db, 'd',
-#'                 data.frame(AUC = 0.6, R2 = 0.2))
-#' eqn <- project_nse(d, "AUC", v := max(R2))
-#' cat(format(eqn))
-#' sql <- to_sql(eqn, my_db)
-#' cat(sql)
-#' DBI::dbGetQuery(my_db, sql)
-#' DBI::dbDisconnect(my_db)
+#'  my_db <- DBI::dbConnect(RSQLite::SQLite(),
+#'                          ":memory:")
+#'  d <- dbi_copy_to(
+#'    my_db, 'd',
+#'    data.frame(group = c('a', 'a', 'b', 'b'),
+#'               val = 1:4,
+#'               stringsAsFactors = FALSE))
+#'
+#'  op_tree <- d %.>%
+#'    project_nse(., "group", vmax := max(val))
+#'  cat(format(op_tree))
+#'  sql <- to_sql(op_tree, my_db)
+#'  cat(sql)
+#'  execute(my_db, op_tree)
+#'
+#'  op_tree <- d %.>%
+#'    project_nse(., NULL, vmax := max(val))
+#'  cat(format(op_tree))
+#'  sql <- to_sql(op_tree, my_db)
+#'  cat(sql)
+#'  execute(my_db, op_tree)
+#'
+#'  DBI::dbDisconnect(my_db)
 #'
 #' @export
 #'
@@ -116,7 +144,7 @@ project_nse.relop <- function(source, groupby, ...,
 #' @export
 project_nse.data.frame <- function(source, groupby, ...,
                                    env = parent.frame()) {
-  tmp_name <- mkTempNameGenerator("rquery_tmp")()
+  tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
   enode <- project_nse(dnode, groupby, ...,
@@ -194,7 +222,7 @@ to_sql.relop_project <- function (x,
                                   ...,
                                   source_limit = NULL,
                                   indent_level = 0,
-                                  tnum = mkTempNameGenerator('tsql'),
+                                  tnum = mk_tmp_name_source('tsql'),
                                   append_cr = TRUE,
                                   using = NULL) {
   if(length(list(...))>0) {
@@ -206,13 +234,14 @@ to_sql.relop_project <- function (x,
   # work on query
   using <- calc_used_relop_project(x,
                                    using = using)
-  subsql <- to_sql(x$source[[1]],
-                   db = db,
-                   source_limit = source_limit,
-                   indent_level = indent_level + 1,
-                   tnum = tnum,
-                   append_cr = FALSE,
-                   using = using)
+  subsql_list <- to_sql(x$source[[1]],
+                        db = db,
+                        source_limit = source_limit,
+                        indent_level = indent_level + 1,
+                        tnum = tnum,
+                        append_cr = FALSE,
+                        using = using)
+  subsql <- subsql_list[[length(subsql_list)]]
   cols1 <- x$groupby
   cols <- NULL
   if(length(cols1)>0) {
@@ -245,5 +274,5 @@ to_sql.relop_project <- function (x,
   if(append_cr) {
     q <- paste0(q, "\n")
   }
-  q
+  c(subsql_list[-length(subsql_list)], q)
 }

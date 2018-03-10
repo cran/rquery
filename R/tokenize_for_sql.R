@@ -8,7 +8,7 @@ ltok <- function(v) {
 #' @param lexpr item from  \code{substitute} with length(lexpr)>0 and is.call(lexpr)
 #' @param colnames column names of table
 #' @param env environment to look for values
-#' @return sql info: list(presentation, parsed_toks(list of tokens), symbols_used, symbols_produced)
+#' @return sql info: list(presentation, parsed_toks(list of tokens), symbols_used, symbols_produced, free_symbols)
 #'
 #' @noRd
 #'
@@ -28,7 +28,8 @@ tokenize_call_for_SQL <- function(lexpr,
                                    collapse = ' '),
               parsed_toks = list(),
               symbols_used = character(0),
-              symbols_produced = character(0))
+              symbols_produced = character(0),
+              free_symbols = character(0))
   callName <- as.character(lexpr[[1]])
   args <- list()
   subseq <- list()
@@ -61,6 +62,8 @@ tokenize_call_for_SQL <- function(lexpr,
                                   "symbols_used")
     res$symbols_produced <- merge_fld(args,
                                       "symbols_produced")
+    res$free_symbols <- merge_fld(args,
+                                  "free_symbols")
   }
   if(callName=="(") {
     res$presentation <- paste("(", subpres, ")")
@@ -72,6 +75,44 @@ tokenize_call_for_SQL <- function(lexpr,
     res$parsed_toks <- c(ltok("("), ltok("NOT"), ltok("("), subseq, ltok(")"), ltok(")"))
     return(res)
   }
+  if(callName=='is.na') {
+    if(n!=2) {
+      stop("rquery::tokenize_call_for_SQL expect is.na to have 1 argument")
+    }
+    res$presentation <- paste0("is.na(", subpres, ")")
+    res$parsed_toks <- c(ltok("("), args[[1]]$parsed_toks, ltok(")"), ltok("IS NULL"))
+    return(res)
+  }
+  if(callName=='ifelse') {
+    if(n!=4) {
+      stop("rquery::tokenize_call_for_SQL expect ifelse to have 3 arguments")
+    }
+    res$presentation <- paste0(
+      "ifelse(",
+      args[[1]]$presentation,
+      ", ",
+      args[[2]]$presentation,
+      ", ",
+      args[[3]]$presentation,
+      ")")
+    res$parsed_toks <- c(ltok("("),
+                         ltok("CASE WHEN"),
+                         ltok("("),
+                         args[[1]]$parsed_toks,
+                         ltok(")"),
+                         ltok("THEN"),
+                         ltok("("),
+                         args[[2]]$parsed_toks,
+                         ltok(")"),
+                         ltok("ELSE"),
+                         ltok("("),
+                         args[[3]]$parsed_toks,
+                         ltok(")"),
+                         ltok("END"),
+                         ltok(")"))
+    return(res)
+  }
+  # ifelse back in place.
   if((n==3) && (callName %in% inlineops)) {
     lhs <- args[[1]]
     rhs <- args[[2]]
@@ -80,6 +121,7 @@ tokenize_call_for_SQL <- function(lexpr,
       res$symbols_used <- rhs$symbols_used
       res$symbols_produced <- unique(c(as.character(lexpr[[2]]),
                                        rhs$symbols_produced))
+      res$free_symbols <- rhs$free_symbols
       res$presentation <- paste0(lhs$presentation, " := ", rhs$presentation)
       return(res)
     }
@@ -94,31 +136,56 @@ tokenize_call_for_SQL <- function(lexpr,
     res$presentation <- paste(lhs$presentation, callName, rhs$presentation)
     return(res)
   }
-  # TODO: make special cases like this table driven
-  if((n==4) && (callName=="ifelse")) {
-    res$parsed_toks <- c(ltok("("), ltok("CASE"), ltok("WHEN"),
-                    ltok("("), args[[1]]$parsed_toks, ltok(")"),
-                    ltok("THEN"),
-                    ltok("("), args[[2]]$parsed_toks, ltok(")"),
-                    ltok("ELSE"),
-                    ltok("("), args[[3]]$parsed_toks, ltok(")"),
-                    ltok("END"), ltok(")"))
-    res$presentation <- paste0(
-      "ifelse(",
-      args[[1]]$presentation,
-      ", ",
-      args[[2]]$presentation,
-      ", ",
-      args[[3]]$presentation,
-      ")")
+  if(callName %in% c("pmin", "pmax")) {
+    if(n!=3) {
+      stop("rquery::tokenize_call_for_SQL expect pmin/pmax to have 2 arguments")
+    }
+    if(callName=="pmax") {
+      comptok <- ltok(">=")
+    } else {
+      comptok <- ltok("<=")
+    }
+    res$parsed_toks <- c(ltok("("),
+                         ltok("CASE"),
+                         ltok("WHEN"),
+                         ltok("("),
+                         args[[1]]$parsed_toks,
+                         ltok(")"),
+                         ltok("IS NULL"),
+                         ltok("THEN"),
+                         ltok("("),
+                         args[[2]]$parsed_toks,
+                         ltok(")"),
+                         ltok("WHEN"),
+                         ltok("("),
+                         args[[2]]$parsed_toks,
+                         ltok(")"),
+                         ltok("IS NULL"),
+                         ltok("THEN"),
+                         ltok("("),
+                         args[[1]]$parsed_toks,
+                         ltok(")"),
+                         ltok("WHEN"),
+                         ltok("("),
+                         args[[1]]$parsed_toks,
+                         ltok(")"),
+                         comptok,
+                         ltok("("),
+                         args[[2]]$parsed_toks,
+                         ltok(")"),
+                         ltok("THEN"),
+                         ltok("("),
+                         args[[1]]$parsed_toks,
+                         ltok(")"),
+                         ltok("ELSE"),
+                         ltok("("),
+                         args[[2]]$parsed_toks,
+                         ltok(")"),
+                         ltok("END"),
+                         ltok(")"))
     return(res)
   }
   # default
-  creplacements <- list('pmax' = 'max')
-  rep <- creplacements[[callName]]
-  if(!is.null(rep)) {
-    callName <- rep
-  }
   res$parsed_toks <- c(ltok(callName),
                        ltok("("), subseq, ltok(")"))
   res$presentation <- paste0(callName, "(", subpres, ")")
@@ -132,7 +199,7 @@ tokenize_call_for_SQL <- function(lexpr,
 #' @param lexpr item from  \code{substitute}
 #' @param colnames column names of table
 #' @param env environment to look for values
-#' @return sql info: list(presentation, parsed_toks(list of tokens), symbols_used, symbols_produced)
+#' @return sql info: list(presentation, parsed_toks(list of tokens), symbols_used, symbols_produced, free_symbols)
 #'
 #' @noRd
 #'
@@ -143,7 +210,8 @@ tokenize_for_SQL_r <- function(lexpr,
   res <- list(presentation = paste(as.character(lexpr), collapse = ' '),
               parsed_toks = list(),
               symbols_used = character(0),
-              symbols_produced = character(0))
+              symbols_produced = character(0),
+              free_symbols = character(0))
   # just in case (establishes an invarient of n>=1)
   if(n<=0) {
     return(res)
@@ -178,6 +246,8 @@ tokenize_for_SQL_r <- function(lexpr,
                                   "symbols_used")
     res$symbols_produced = merge_fld(sube,
                                      "symbols_produced")
+    res$free_symbols = merge_fld(sube,
+                                 "free_symbols")
     return(res)
   }
   # now have n==1, handle identifiers and constants
@@ -206,6 +276,7 @@ tokenize_for_SQL_r <- function(lexpr,
       }
       # finding functions in the env is a problem here
     }
+    res$free_symbols <- lexpr
     # fall back
     res$parsed_toks <- list(pre_sql_token(paste(as.character(lexpr), collapse = " ")))
     return(res)
@@ -227,7 +298,7 @@ tokenize_for_SQL_r <- function(lexpr,
 #' @param lexpr item from  \code{substitute}
 #' @param colnames column names of table
 #' @param env environment to look for values
-#' @return sql info: list(presentation, parsed_toks(list of tokens), sql_text, symbols_used, symbols_produced)
+#' @return sql info: list(presentation, parsed_toks(list of tokens), sql_text, symbols_used, symbols_produced, free_symbols)
 #'
 #' @examples
 #'
