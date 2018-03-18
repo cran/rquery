@@ -32,19 +32,21 @@ in pipelines.
 }
 \examples{
 
-my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-d <- dbi_copy_to(my_db, 'd',
-                data.frame(AUC = 0.6, R2 = 0.2))
-optree <- extend_se(d, c("v" := "AUC + R2", "x" := "pmax(AUC,v)"))
-cat(format(optree))
-res <- materialize(my_db, optree, "example")
-cat(format(res))
-sql <- to_sql(res, my_db)
-cat(sql)
-DBI::dbGetQuery(my_db, sql)
-DBI::dbDisconnect(my_db)
+if (requireNamespace("RSQLite", quietly = TRUE)) {
+  my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  d <- dbi_copy_to(my_db, 'd',
+                   data.frame(AUC = 0.6, R2 = 0.2))
+  optree <- extend_se(d, c("v" := "AUC + R2", "x" := "pmax(AUC,v)"))
+  cat(format(optree))
+  res <- materialize(my_db, optree, "example")
+  cat(format(res))
+  sql <- to_sql(res, my_db)
+  cat(sql)
+  print(DBI::dbGetQuery(my_db, sql))
+  DBI::dbDisconnect(my_db)
+}
 
 }
 \seealso{
-\code{\link{execute}}, \code{\link{materialize_node}}
+\code{\link{execute}}
 }

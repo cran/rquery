@@ -19,28 +19,32 @@ Build a query that creates NULL indicators for nulls in slected columns.
 }
 \examples{
 
- my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
- winvector_temp_db_handle <- list(
-   db = DBI::dbConnect(RSQLite::SQLite(), ":memory:")
- )
- RSQLite::initExtension(winvector_temp_db_handle$db)
+if (requireNamespace("RSQLite", quietly = TRUE)) {
+  my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  winvector_temp_db_handle <- list(
+    db = my_db
+  )
+  RSQLite::initExtension(winvector_temp_db_handle$db)
 
- d <- dbi_copy_to(my_db, 'd',
-                  data.frame(AUC = c(0.6, 0.5, NA),
-                             R2 = c(1.0, 0.9, NA)))
- op_tree <- d \%.>\% mark_null_cols(., qc(AUC_NULL, R2_NULL) :=
+  d <- dbi_copy_to(my_db, 'd',
+                   data.frame(AUC = c(0.6, 0.5, NA),
+                              R2 = c(1.0, 0.9, NA)))
+  op_tree <- d \%.>\% mark_null_cols(., qc(AUC_NULL, R2_NULL) :=
                                      qc(AUC, R2))
- cat(format(op_tree))
- sql <- to_sql(op_tree, my_db)
- cat(sql)
- DBI::dbGetQuery(my_db, sql)
+  cat(format(op_tree))
+  sql <- to_sql(op_tree, my_db)
+  cat(sql)
+  print(DBI::dbGetQuery(my_db, sql))
 
- # ad-hoc mode
- data.frame(AUC=c(1,NA,0.5), R2=c(NA,1,0)) \%.>\% op_tree
+  # ad-hoc mode
+  data.frame(AUC=c(1,NA,0.5), R2=c(NA,1,0)) \%.>\%
+     op_tree \%.>\%
+     print(.)
 
- # cleanup
- rm(list = "winvector_temp_db_handle")
- DBI::dbDisconnect(my_db)
+  # cleanup
+  rm(list = "winvector_temp_db_handle")
+  DBI::dbDisconnect(my_db)
+}
 
 }
 \seealso{

@@ -4,7 +4,8 @@
 \alias{rsummary}
 \title{Compute usable summary of columns of remote table.}
 \usage{
-rsummary(db, tableName, ..., countUniqueNum = FALSE, cols = NULL)
+rsummary(db, tableName, ..., countUniqueNum = FALSE, quartiles = FALSE,
+  cols = NULL)
 }
 \arguments{
 \item{db}{database connection.}
@@ -13,12 +14,14 @@ rsummary(db, tableName, ..., countUniqueNum = FALSE, cols = NULL)
 
 \item{...}{force additional arguments to be bound by name.}
 
-\item{countUniqueNum}{logical, if true include unique non-NA counts for numeric cols.}
+\item{countUniqueNum}{logical, if TRUE include unique non-NA counts for numeric cols.}
+
+\item{quartiles}{logical, if TRUE add Q1 (25\%), median (50\%), Q3 (75\%) quartiles.}
 
 \item{cols}{if not NULL set of columns to restrict to.}
 }
 \value{
-summary of columns.
+data.frame summary of columns.
 }
 \description{
 Compute per-column summaries and return as a \code{data.frame}.  Warning: can be an expensive operation.
@@ -29,18 +32,20 @@ For numeric columns includes \code{NaN} in \code{nna} count (as is typcial for \
 }
 \examples{
 
-d <- data.frame(p= c(TRUE, FALSE, NA),
-                s= NA,
-                w= 1:3,
-                x= c(NA,2,3),
-                y= factor(c(3,5,NA)),
-                z= c('a',NA,'a'),
-                stringsAsFactors=FALSE)
-db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-RSQLite::initExtension(db)
-DBI::dbWriteTable(db, "dRemote", d,
-   overwrite = TRUE, temporary = TRUE)
-rsummary(db, "dRemote")
-DBI::dbDisconnect(db)
+if (requireNamespace("RSQLite", quietly = TRUE)) {
+  d <- data.frame(p= c(TRUE, FALSE, NA),
+                  s= NA,
+                  w= 1:3,
+                  x= c(NA,2,3),
+                  y= factor(c(3,5,NA)),
+                  z= c('a',NA,'a'),
+                  stringsAsFactors=FALSE)
+  db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  RSQLite::initExtension(db)
+  dbi_copy_to(db, "dRemote", d,
+              overwrite = TRUE, temporary = TRUE)
+  print(rsummary(db, "dRemote"))
+  DBI::dbDisconnect(db)
+}
 
 }

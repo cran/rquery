@@ -1,4 +1,7 @@
-## ----setup---------------------------------------------------------------
+## ----chpkg---------------------------------------------------------------
+run_vignette <- requireNamespace("RSQLite", quietly = TRUE)
+
+## ----setup, eval=run_vignette--------------------------------------------
 library("rquery")
 
 # example database connection
@@ -13,7 +16,7 @@ d <- dbi_copy_to(
   temporary = FALSE,
   overwrite = TRUE)
 
-## ----defcoltwice---------------------------------------------------------
+## ----defcoltwice, eval=run_vignette--------------------------------------
 DBI::dbGetQuery(db, "
   SELECT
     *,
@@ -23,7 +26,7 @@ DBI::dbGetQuery(db, "
     d
 ")
 
-## ----nestsql-------------------------------------------------------------
+## ----nestsql, eval=run_vignette------------------------------------------
 DBI::dbGetQuery(db, "
   SELECT
     *,
@@ -37,42 +40,42 @@ DBI::dbGetQuery(db, "
   ) subtab
 ")
 
-## ----rquerypipe1---------------------------------------------------------
+## ----rquerypipe1, eval=run_vignette--------------------------------------
 op_tree <- d %.>%
   sql_node(., "absv" := "ABS(v)") %.>%
   sql_node(., "delta" := "absv - v")
 execute(db, op_tree)
 
-## ----printsql, comment=""------------------------------------------------
+## ----printsql, comment="", eval=run_vignette-----------------------------
 cat(to_sql(op_tree, db))
 
-## ----rquerypipe11, comment=""--------------------------------------------
+## ----rquerypipe11, comment="", eval=run_vignette-------------------------
 op_tree <- d %.>%
   sql_node(., "absv" := list(list("ABS(", quote(v), ")"))) %.>%
   sql_node(., "delta" := list(list(quote(absv),"-", quote(v))))
 cat(to_sql(op_tree, db))
 
-## ----printoptree---------------------------------------------------------
+## ----printoptree, eval=run_vignette--------------------------------------
 cat(format(op_tree))
 
-## ----opsummaries---------------------------------------------------------
+## ----opsummaries, eval=run_vignette--------------------------------------
 column_names(op_tree)
 
 tables_used(op_tree)
 
 columns_used(op_tree)
 
-## ----addop---------------------------------------------------------------
+## ----addop, eval=run_vignette--------------------------------------------
 op_tree <- op_tree %.>%
   sql_node(., "prod" := "absv * delta")
 
 cat(format(op_tree))
 
-## ----addoperror, error=TRUE----------------------------------------------
+## ----addoperror, error=TRUE, eval=run_vignette---------------------------
 op_tree <- op_tree %.>%
   sql_node(., "z" := list(list("1 + ", quote(z))))
 
-## ----countna-------------------------------------------------------------
+## ----countna, eval=run_vignette------------------------------------------
 # load up example data
 d2 <- dbi_copy_to(
   db, 'd2',
@@ -113,31 +116,45 @@ cat(sql)
 # execute
 execute(db, op_tree_count_null)
 
-## ----countna2------------------------------------------------------------
+## ----countna2, eval=run_vignette-----------------------------------------
 # whole process wrapped in convenience node
 d2 %.>%
   count_null_cols(., vars, "nnull") %.>%
   execute(db, .)
 
-## ----execd---------------------------------------------------------------
+## ----psql, eval=run_vignette---------------------------------------------
+# vector of columns we want to work on
+colset <- qc(v1, v2, v3)
+# build new names we want as results
+colterms <- paste0(colset, "_isNA") := colset
+map_to_char(colterms)
+
+# build an apply expression to set of columns query 
+s_tree <- d2 %.>%
+  sql_expr_set(., colterms, 
+               "CASE WHEN . IS NULL THEN 1 ELSE 0 END")
+cat(to_sql(s_tree, db))
+execute(db, s_tree)
+
+## ----execd, eval=run_vignette--------------------------------------------
 winvector_temp_db_handle <- list(db = db)
 
 data.frame(v = -2:2) %.>%
   execute(., op_tree)
 
-## ----rwpipe--------------------------------------------------------------
+## ----rwpipe, eval=run_vignette-------------------------------------------
 data.frame(v = -2:2) %.>% op_tree
 
-## ----adhocops------------------------------------------------------------
+## ----adhocops, eval=run_vignette-----------------------------------------
 data.frame(x = 5) %.>% sql_node(., "z" := "sqrt(x)")
 
-## ----isna----------------------------------------------------------------
+## ----isna, eval=run_vignette---------------------------------------------
 d %.>% 
   extend_nse(., was_na := ifelse(is.na(v), 1, 0)) %.>%
   to_sql(., db) %.>%
   cat(.)
 
-## ----logisticex----------------------------------------------------------
+## ----logisticex, eval=run_vignette---------------------------------------
 scale <- 0.237
 
 dq <- table_source("d3", 
@@ -162,19 +179,19 @@ dq <- table_source("d3",
                       'probability')) %.>%
   orderby(., 'subjectID')
 
-## ----logprops------------------------------------------------------------
+## ----logprops, eval=run_vignette-----------------------------------------
 tables_used(dq)
 
 columns_used(dq)
 
 column_names(dq)
 
-## ----rsummaryex----------------------------------------------------------
+## ----rsummaryex, eval=run_vignette---------------------------------------
 op_tree %.>%
   rsummary_node(.) %.>%
   execute(db, .)
 
-## ----assignmentpart------------------------------------------------------
+## ----assignmentpart, eval=run_vignette-----------------------------------
 ot <- table_source('d4',
                    columns = qc('a', 'b', 'c', 'd')) %.>%
   extend_nse(., 
@@ -186,7 +203,7 @@ ot <- table_source('d4',
 
 cat(format(ot))
 
-## ----ifelseblock---------------------------------------------------------
+## ----ifelseblock, eval=run_vignette--------------------------------------
 ifet <- table_source("d5",
                      columns = "test") %.>%
   extend_se(.,
@@ -201,7 +218,7 @@ ifet <- table_source("d5",
               )))
 cat(format(ifet))
 
-## ------------------------------------------------------------------------
+## ---- eval=run_vignette--------------------------------------------------
 wp <- table_source(table = 'd6',
                    columns = letters[1:5]) %.>%
   extend_nse(., res := a + b)
@@ -218,7 +235,7 @@ wn <- wp %.>%
 # pipeline
 cat(to_sql(wn, db))
 
-## ----cleanup-------------------------------------------------------------
+## ----cleanup, eval=run_vignette------------------------------------------
 rm(list = "winvector_temp_db_handle")
 DBI::dbDisconnect(db)
 

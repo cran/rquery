@@ -39,27 +39,31 @@ table.
 }
 \examples{
 
-my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-d <- dbi_copy_to(my_db, 'd',
-                data.frame(AUC = 0.6, R2 = 0.2))
-optree <- extend_se(d, c("v" := "AUC + R2", "x" := "pmax(AUC,v)"))
+if (requireNamespace("RSQLite", quietly = TRUE)) {
+  my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  d <- dbi_copy_to(my_db, 'd',
+                   data.frame(AUC = 0.6, R2 = 0.2))
+  optree <- extend_se(d, c("v" := "AUC + R2", "x" := "pmax(AUC,v)"))
 
-print(optree)
+  print(optree)
 
-cat(format(optree))
+  cat(format(optree))
 
-execute(my_db, optree)
+  execute(my_db, optree) \%.>\%
+     print(.)
 
-execute(data.frame(AUC = 1, R2 = 2), optree)
+  execute(data.frame(AUC = 1, R2 = 2), optree) \%.>\%
+     print(.)
 
-# land result in database
-res_hdl <- execute(my_db, optree, table_name = "res")
-print(res_hdl)
-DBI::dbGetQuery(my_db, to_sql(res_hdl, my_db))
-DBI::dbReadTable(my_db, res_hdl$table_name)
-DBI::dbRemoveTable(my_db, res_hdl$table_name)
+  # land result in database
+  res_hdl <- execute(my_db, optree, table_name = "res")
+  print(res_hdl)
+  print(DBI::dbGetQuery(my_db, to_sql(res_hdl, my_db)))
+  print(DBI::dbReadTable(my_db, res_hdl$table_name))
+  DBI::dbRemoveTable(my_db, res_hdl$table_name)
 
-DBI::dbDisconnect(my_db)
+  DBI::dbDisconnect(my_db)
+}
 
 }
 \seealso{

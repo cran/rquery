@@ -21,27 +21,31 @@ Build a query that counts the number of nulls in each row.
 }
 \examples{
 
- my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
- winvector_temp_db_handle <- list(
-   db = DBI::dbConnect(RSQLite::SQLite(), ":memory:")
- )
- RSQLite::initExtension(winvector_temp_db_handle$db)
+if (requireNamespace("RSQLite", quietly = TRUE)) {
+  my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  winvector_temp_db_handle <- list(
+    db = my_db
+  )
+  RSQLite::initExtension(winvector_temp_db_handle$db)
 
- d <- dbi_copy_to(my_db, 'd',
-                  data.frame(AUC = c(0.6, 0.5, NA),
-                             R2 = c(1.0, 0.9, NA)))
- op_tree <- d \%.>\% count_null_cols(., c("AUC", "R2"), "nnull")
- cat(format(op_tree))
- sql <- to_sql(op_tree, my_db)
- cat(sql)
- DBI::dbGetQuery(my_db, sql)
+  d <- dbi_copy_to(my_db, 'd',
+                   data.frame(AUC = c(0.6, 0.5, NA),
+                              R2 = c(1.0, 0.9, NA)))
+  op_tree <- d \%.>\% count_null_cols(., c("AUC", "R2"), "nnull")
+  cat(format(op_tree))
+  sql <- to_sql(op_tree, my_db)
+  cat(sql)
+  print(DBI::dbGetQuery(my_db, sql))
 
- # ad-hoc mode
- data.frame(AUC=c(1,NA,0.5), R2=c(NA,1,0)) \%.>\% op_tree
+  # ad-hoc mode
+  data.frame(AUC=c(1,NA,0.5), R2=c(NA,1,0)) \%.>\%
+     op_tree \%.>\%
+     print(.)
 
- # cleanup
- rm(list = "winvector_temp_db_handle")
- DBI::dbDisconnect(my_db)
+  # cleanup
+  rm(list = "winvector_temp_db_handle")
+  DBI::dbDisconnect(my_db)
+}
 
 }
 \seealso{

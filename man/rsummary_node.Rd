@@ -4,20 +4,17 @@
 \alias{rsummary_node}
 \title{Create an rsumary relop operator node.}
 \usage{
-rsummary_node(source, ..., incoming_table_name = mk_tmp_name_source("rin")(),
-  outgoing_table_name = mk_tmp_name_source("rout")(), overwrite = TRUE,
-  temporary = TRUE)
+rsummary_node(source, ..., quartiles = FALSE,
+  tmp_name_source = wrapr::mk_tmp_name_source("sn"), temporary = TRUE)
 }
 \arguments{
 \item{source}{incoming source (relop node or data.frame).}
 
 \item{...}{force later arguments to be by name}
 
-\item{incoming_table_name}{character, name of incoming table.}
+\item{quartiles}{logical, if TRUE add Q1 (25\%), median (50\%), Q3 (75\%) quartiles.}
 
-\item{outgoing_table_name}{character, name of table to write.}
-
-\item{overwrite}{logical, if TRUE overwrite tables}
+\item{tmp_name_source}{wrapr::mk_tmp_name_source(), temporary name generator.}
 
 \item{temporary}{logical, if TRUE use temporary tables}
 }
@@ -29,32 +26,34 @@ Create an rsumary relop operator node.
 }
 \examples{
 
- d <- data.frame(p= c(TRUE, FALSE, NA),
-                 s= NA,
-                 w= 1:3,
-                 x= c(NA,2,3),
-                 y= factor(c(3,5,NA)),
-                 z= c('a',NA,'a'),
-                 stringsAsFactors=FALSE)
- db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
- RSQLite::initExtension(db)
- DBI::dbWriteTable(db, "dRemote", d,
-                   overwrite = TRUE,
-                   temporary = TRUE)
+if (requireNamespace("RSQLite", quietly = TRUE)) {
+  d <- data.frame(p= c(TRUE, FALSE, NA),
+                  s= NA,
+                  w= 1:3,
+                  x= c(NA,2,3),
+                  y= factor(c(3,5,NA)),
+                  z= c('a',NA,'a'),
+                  stringsAsFactors=FALSE)
+  db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  RSQLite::initExtension(db)
+  dbi_copy_to(db, "dRemote", d,
+              overwrite = TRUE,
+              temporary = TRUE)
 
- ops <- dbi_table(db, "dRemote") \%.>\%
-   extend_nse(., v := ifelse(x>2, "x", "y")) \%.>\%
-   rsummary_node(.)
- cat(format(ops))
+  ops <- dbi_table(db, "dRemote") \%.>\%
+    extend_nse(., v := ifelse(x>2, "x", "y")) \%.>\%
+    rsummary_node(.)
+  cat(format(ops))
 
- to_sql(ops, db)
+  print(to_sql(ops, db))
 
- reshdl <- materialize(db, ops)
- DBI::dbGetQuery(db, to_sql(reshdl, db))
+  reshdl <- materialize(db, ops)
+  print(DBI::dbGetQuery(db, to_sql(reshdl, db)))
 
- DBI::dbDisconnect(db)
+  DBI::dbDisconnect(db)
+}
 
 }
 \seealso{
-\code{\link{non_sql_node}}
+\code{\link{quantile_node}}, \code{\link{non_sql_node}}
 }

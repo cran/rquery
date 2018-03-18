@@ -39,7 +39,11 @@ are listed [here](https://github.com/WinVector/rquery/blob/master/README.md)).
 
 Let's set up our environment so we can work with examples.
 
-```{r setup}
+```{r chpkg} 
+run_vignette <- requireNamespace("RSQLite", quietly = TRUE)
+```
+
+```{r setup, eval=run_vignette}
 library("rquery")
 
 # example database connection
@@ -72,7 +76,7 @@ two queries by nesting.  We will demonstrate both methods.
 
 The define the column twice solution looks like the following.
 
-```{r defcoltwice}
+```{r defcoltwice, eval=run_vignette}
 DBI::dbGetQuery(db, "
   SELECT
     *,
@@ -89,9 +93,10 @@ same query that it is produced.
 The nested method looks like the following, we produce the column 
 `absv` in one query and then wrap that in another query 
 to later use the column.  For expressions longer than `ABS(v)` this
-is the preferred solution.
+is the preferred solution (until one moves to something like common
+table expressions).
 
-```{r nestsql}
+```{r nestsql, eval=run_vignette}
 DBI::dbGetQuery(db, "
   SELECT
     *,
@@ -119,7 +124,7 @@ be [bound to a keyboard shortcut](https://github.com/WinVector/addinexamplesWV) 
 
 The `rquery` realization of the above calculation is as follows:
 
-```{r rquerypipe1}
+```{r rquerypipe1, eval=run_vignette}
 op_tree <- d %.>%
   sql_node(., "absv" := "ABS(v)") %.>%
   sql_node(., "delta" := "absv - v")
@@ -133,7 +138,7 @@ few examples and move onto more convenient higher level relational nodes.
 
 We can view the `SQL` translation of the operations tree as follows:
 
-```{r printsql, comment=""}
+```{r printsql, comment="", eval=run_vignette}
 cat(to_sql(op_tree, db))
 ```
 
@@ -145,7 +150,7 @@ oriented features).  The extra `SELECT` step to pull data from the inner
 table is used by `rquery` for important column narrowing steps, and 
 can actually improve query performance.
 
-```{r rquerypipe11, comment=""}
+```{r rquerypipe11, comment="", eval=run_vignette}
 op_tree <- d %.>%
   sql_node(., "absv" := list(list("ABS(", quote(v), ")"))) %.>%
   sql_node(., "delta" := list(list(quote(absv),"-", quote(v))))
@@ -160,13 +165,13 @@ identifiers without additional help.
 
 `op_tree` itself is a an object with its own presentation format:
 
-```{r printoptree}
+```{r printoptree, eval=run_vignette}
 cat(format(op_tree))
 ```
 
 `op_tree` stores an number of important summaries about the proposed query:
 
-```{r opsummaries}
+```{r opsummaries, eval=run_vignette}
 column_names(op_tree)
 
 tables_used(op_tree)
@@ -178,7 +183,7 @@ columns_used(op_tree)
 
 We can add nodes to an `op_tree` to build larger operator trees (or pipelines).
 
-```{r addop}
+```{r addop, eval=run_vignette}
 op_tree <- op_tree %.>%
   sql_node(., "prod" := "absv * delta")
 
@@ -191,7 +196,7 @@ variable when adding an operator we get an thrown exception (note: a `sql_node()
 being added must have its variables marked as above for pre-checking to occur, 
 relational nodes will get this checking automatically).
 
-```{r addoperror, error=TRUE}
+```{r addoperror, error=TRUE, eval=run_vignette}
 op_tree <- op_tree %.>%
   sql_node(., "z" := list(list("1 + ", quote(z))))
 ```
@@ -202,7 +207,7 @@ We can express non-trivial operations in `sql_node()`s.  For example
 we can build a node the calculates for each row how many columns
 contain `NA`/`NULL` as is demonstrated here.
 
-```{r countna}
+```{r countna, eval=run_vignette}
 # load up example data
 d2 <- dbi_copy_to(
   db, 'd2',
@@ -247,13 +252,32 @@ execute(db, op_tree_count_null)
 And, as this is an important capability, this exact functionality
 is wrapped in [`count_null_cols()`](https://winvector.github.io/rquery/reference/count_null_cols.html).
 
-```{r countna2}
+```{r countna2, eval=run_vignette}
 # whole process wrapped in convenience node
 d2 %.>%
   count_null_cols(., vars, "nnull") %.>%
   execute(db, .)
 ```
 
+## Working with sets of columns
+
+There is a method to apply a parameterized `SQL` expression to a set
+of columns.
+
+```{r psql, eval=run_vignette}
+# vector of columns we want to work on
+colset <- qc(v1, v2, v3)
+# build new names we want as results
+colterms <- paste0(colset, "_isNA") := colset
+map_to_char(colterms)
+
+# build an apply expression to set of columns query 
+s_tree <- d2 %.>%
+  sql_expr_set(., colterms, 
+               "CASE WHEN . IS NULL THEN 1 ELSE 0 END")
+cat(to_sql(s_tree, db))
+execute(db, s_tree)
+```
 
 # `SQL` first
 
@@ -279,7 +303,7 @@ the `SQL` service provider.  This provider defaults to `RSQlite` or can be
 set by setting the global variable `winvector_temp_db_handle`.  We demonstrate
 this below.
 
-```{r execd}
+```{r execd, eval=run_vignette}
 winvector_temp_db_handle <- list(db = db)
 
 data.frame(v = -2:2) %.>%
@@ -288,7 +312,7 @@ data.frame(v = -2:2) %.>%
 
 When using the `wrapr` dot pipe the above can be abbreviated as:
 
-```{r rwpipe}
+```{r rwpipe, eval=run_vignette}
 data.frame(v = -2:2) %.>% op_tree
 ```
 
@@ -298,7 +322,7 @@ The above calculation is managed by [`wrapr` dot pipe
 `rquery` operators can be used directly (without any table description nodes)
 when working with in-memory `data.frame`s.
 
-```{r adhocops}
+```{r adhocops, eval=run_vignette}
 data.frame(x = 5) %.>% sql_node(., "z" := "sqrt(x)")
 ```
 
@@ -358,7 +382,7 @@ With relational operators the user can work fast and work further away from synt
 For example some `R` operators (such as `is.na`) are translated to `SQL` analogues
 (in this case `IS NULL`).
 
-```{r isna}
+```{r isna, eval=run_vignette}
 d %.>% 
   extend_nse(., was_na := ifelse(is.na(v), 1, 0)) %.>%
   to_sql(., db) %.>%
@@ -380,7 +404,7 @@ does not have the window functions required to execute it.  `PostgreSQL`, `Spark
 other databases do have the necessary functionality.  The pipeline is a good example of a non-trivial
 sequence of relational nodes.
 
-```{r logisticex}
+```{r logisticex, eval=run_vignette}
 scale <- 0.237
 
 dq <- table_source("d3", 
@@ -416,7 +440,7 @@ a missing column name).
 Even though we are not going to run this query here, we can still 
 check some properties of the query.
 
-```{r logprops}
+```{r logprops, eval=run_vignette}
 tables_used(dq)
 
 columns_used(dq)
@@ -432,20 +456,15 @@ Not all data transform steps can conveniently be written as a single `SQL`
 statement. To work around this potential limitation `rquery` supplies a special
 type of node called [`non_sql_node()`](https://winvector.github.io/rquery/reference/non_sql_node.html).
 `non_sql_node()` is used to implement arbitrary table to table transforms as
-`rquery` pipeline steps.  Two important examples of `non_sql_node()` are
-[`materialize_node()`](https://winvector.github.io/rquery/reference/materialize_node.html)
-and [`rsummary_node()`](https://winvector.github.io/rquery/reference/rsummary_node.html).
-
-`materialize_node()` can be used to land intermediate results into
-a table.  This can be used both to save intermediate calculation stages
-and to break up the complexity of long data processing pipelines.
+`rquery` pipeline steps.  Two prototypical `non_sql_node()` is
+[`rsummary_node()`](https://winvector.github.io/rquery/reference/rsummary_node.html).
 
 `rsummary_node()` builds a table of summary information about another
 database table.  The format is each column of the original table 
 produces a row of summary information in the result table.  Here
 is a simple example.
 
-```{r rsummaryex}
+```{r rsummaryex, eval=run_vignette}
 op_tree %.>%
   rsummary_node(.) %.>%
   execute(db, .)
@@ -472,7 +491,7 @@ performant results.  This allows the user to write large
 
 Here is an example.
 
-```{r assignmentpart}
+```{r assignmentpart, eval=run_vignette}
 ot <- table_source('d4',
                    columns = qc('a', 'b', 'c', 'd')) %.>%
   extend_nse(., 
@@ -495,7 +514,7 @@ be used to simulate block-oriented if-else semantics as seen in
 systems such as `SAS` (also meaning `rquery` can be critical porting code from `SAS` to `SQL` based `R`).
 This allows coordinated assignments such as the following:
 
-```{r ifelseblock}
+```{r ifelseblock, eval=run_vignette}
 ifet <- table_source("d5",
                      columns = "test") %.>%
   extend_se(.,
@@ -544,7 +563,7 @@ has show significant additional performance advantages
 
 From a coding point of view the automatic narrowing effect looks like this.
 
-```{r}
+```{r, eval=run_vignette}
 wp <- table_source(table = 'd6',
                    columns = letters[1:5]) %.>%
   extend_nse(., res := a + b)
@@ -580,7 +599,7 @@ For working with `R` at a big data scale (say using `PostgreSQL` or `Spark`)
 
 # Appendix: Always clean up on the way out
 
-```{r cleanup}
+```{r cleanup, eval=run_vignette}
 rm(list = "winvector_temp_db_handle")
 DBI::dbDisconnect(db)
 ```

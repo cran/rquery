@@ -6,7 +6,7 @@
 \usage{
 non_sql_node(source, f, ..., incoming_table_name, columns_used,
   outgoing_table_name, columns_produced, display_form, orig_columns = TRUE,
-  overwrite = TRUE, temporary = TRUE)
+  temporary = TRUE)
 }
 \arguments{
 \item{source}{source to work from (data.frame or relop node)}
@@ -27,16 +27,16 @@ non_sql_node(source, f, ..., incoming_table_name, columns_used,
 
 \item{orig_columns}{logical if TRUE select all original columns.}
 
-\item{overwrite}{logical, if TRUE attempt to replace tables.}
-
 \item{temporary}{logical, if TRUE mark tables temporary.}
 }
 \value{
 sql node.
 }
 \description{
-Wrap a non-SQL node.
+Note: non-SQL nodes are allowed to delete/overwrite both
+both the incoming and outgoing tables, so do not point them
+to non-temporary structures.
 }
 \seealso{
-\code{\link{rsummary_node}}, \code{\link{materialize_node}}
+\code{\link{rsummary_node}}
 }

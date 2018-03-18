@@ -23,29 +23,23 @@ Default DB uses RSQLite (so some functions are not supported).
 }
 \examples{
 
-db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-winvector_temp_db_handle <- list(
-  db = db
-)
-RSQLite::initExtension(winvector_temp_db_handle$db)
+if (requireNamespace("RSQLite", quietly = TRUE)) {
+  db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  winvector_temp_db_handle <- list(
+    db = db
+  )
+  RSQLite::initExtension(winvector_temp_db_handle$db)
 
-d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
-DBI::dbWriteTable(db, "d", d)
-d2 <- data.frame(AUC = 0.0, R2 = 0, D = 0, z = 0)
+  optree <- table_source("d", c("AUC", "R2", "D")) \%.>\%
+  	extend_nse(., c := sqrt(R2)) \%.>\%
+    orderby(., rev_cols = "R2")
 
-optree <- table_source("d", c("AUC", "R2", "D")) \%.>\%
-	extend_nse(., c := sqrt(R2)) \%.>\%
-  orderby(., rev_cols = "R2")
+  d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
+  rquery_apply_to_data_frame(d, optree) \%.>\%
+     print(.)
 
-execute(db, optree, table_name = "res")
-DBI::dbReadTable(db, "res")
-
-d2 \%.>\% optree
-
-# show d is unharmed
-DBI::dbReadTable(db, "d")
-
-winvector_temp_db_handle <- NULL
-DBI::dbDisconnect(db)
+  winvector_temp_db_handle <- NULL
+  DBI::dbDisconnect(db)
+}
 
 }

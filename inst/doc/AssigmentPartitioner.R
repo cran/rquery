@@ -1,4 +1,7 @@
-## ----ex1, comment=""-----------------------------------------------------
+## ----chpkg---------------------------------------------------------------
+run_vignette <- requireNamespace("RSQLite", quietly = TRUE)
+
+## ----ex1, comment="", eval=run_vignette----------------------------------
 library("rquery")
 
 # example data
@@ -62,15 +65,15 @@ plan <- d1 %.>%
 
 cat(format(plan))
 
-## ----sql1, comment=""----------------------------------------------------
+## ----sql1, comment="", eval=run_vignette---------------------------------
 sql <- to_sql(plan, my_db)
 cat(sql)
 
-## ----exec1---------------------------------------------------------------
+## ----exec1, eval=run_vignette--------------------------------------------
 DBI::dbGetQuery(my_db, sql) %.>%
   knitr::kable(.)
 
-## ----reuse, comment=""---------------------------------------------------
+## ----reuse, comment="", eval=run_vignette--------------------------------
 plan2 <- d1 %.>%
   extend_nse(.,
    choice = rand_a>=0.5, 
@@ -117,11 +120,11 @@ plan2 <- d1 %.>%
 
 cat(format(plan2))
 
-## ----exec2---------------------------------------------------------------
+## ----exec2, eval=run_vignette--------------------------------------------
 sql2 <- to_sql(plan2, my_db)
 DBI::dbGetQuery(my_db, sql2) %.>%
   knitr::kable(.)
 
-## ----cleanup-------------------------------------------------------------
+## ----cleanup, eval=run_vignette------------------------------------------
 DBI::dbDisconnect(my_db)
 

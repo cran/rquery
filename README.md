@@ -5,11 +5,13 @@
 
 [`rquery`](https://winvector.github.io/rquery/) is a query generator based on [Codd's relational algebra](https://en.wikipedia.org/wiki/Relational_algebra) (updated to reflect lessons learned from working with [`R`](https://www.r-project.org), [`SQL`](https://en.wikipedia.org/wiki/SQL), and [`dplyr`](https://CRAN.R-project.org/package=dplyr) at big data scale in production). One goal of this experiment is to see if `SQL` would be more fun teachable if it had a sequential data-flow or pipe notation.
 
-`rquery` is currently experimental, and not yet recommended for production use.
+`rquery` is currently currenlty recommended for user with `Spark` and `PostgreSQL` (and with non-window functionality with `RSQLite`).
 
 To install: `devtools::install_github("WinVector/rquery")`.
 
 A good place to start is the [`rquery` introductory vignette](https://winvector.github.io/rquery/articles/rquery_intro.html).
+
+![](https://github.com/WinVector/rquery/raw/master/tools/rquery.jpg)
 
 Discussion
 ==========
@@ -165,13 +167,13 @@ cat(to_sql(dq, my_db, source_limit = 1000))
            `d`.`assessmentTotal`
           FROM
            `d` LIMIT 1000
-          ) tsql_05711726525993815334_0000000000
-         ) tsql_05711726525993815334_0000000001
-       ) tsql_05711726525993815334_0000000002
-      ) tsql_05711726525993815334_0000000003
+          ) tsql_01807067351453452812_0000000000
+         ) tsql_01807067351453452812_0000000001
+       ) tsql_01807067351453452812_0000000002
+      ) tsql_01807067351453452812_0000000003
       WHERE `rank` = `count`
-     ) tsql_05711726525993815334_0000000004
-    ) tsql_05711726525993815334_0000000005 ORDER BY `subjectID`
+     ) tsql_01807067351453452812_0000000004
+    ) tsql_01807067351453452812_0000000005 ORDER BY `subjectID`
 
 The query is large, but due to its regular structure it should be very amenable to query optimization.
 
@@ -198,7 +200,7 @@ columns_used(dq)
     ## $d
     ## [1] "subjectID"       "surveyCategory"  "assessmentTotal"
 
-Part of the plan is: the additional record-keeping in the operator nodes would let a potentially powerful query optimizer work over the flow before it gets translated to `SQL` (perhaps an extension of or successor to [`seplyr`](https://winvector.github.io/seplyr/), which re-plans over `dplyr::mutate()` expressions). At the very least restricting to columns later used and folding selects together would be achievable. One should have a good chance at optimization as the representation is fairly high-level, and many of the operators are relational (meaning there are known legal transforms a query optimizer can use). The flow itself is represented as follows:
+The additional record-keeping in the operator nodes allows checking and optimization (such as [query narrowing](http://www.win-vector.com/blog/2017/12/how-to-greatly-speed-up-your-spark-queries/)). The flow itself is represented as follows:
 
 ``` r
 cat(format(dq))
@@ -219,4 +221,68 @@ cat(format(dq))
      select_columns(., subjectID, diagnosis, probability) %.>%
      orderby(., subjectID)
 
-We also can stand `rquery` up on non-`DBI` sources such as [`SparkR`](https://github.com/WinVector/rquery/blob/master/extras/SparkRExample.md) and perhaps even [`data.table`](https://github.com/WinVector/rquery/blob/master/extras/data_table.md).
+`rquery` also includes a number of useful utilities (both as nodes and as functions).
+
+``` r
+quantile_cols(my_db, "d")
+```
+
+    ##   quantile_probability subjectID      surveyCategory assessmentTotal
+    ## 1                 0.00         1 positive re-framing               2
+    ## 2                 0.25         1 positive re-framing               2
+    ## 3                 0.50         1 positive re-framing               3
+    ## 4                 0.75         2 withdrawal behavior               4
+    ## 5                 1.00         2 withdrawal behavior               5
+    ##   irrelevantCol1 irrelevantCol2
+    ## 1         irrel1         irrel2
+    ## 2         irrel1         irrel2
+    ## 3         irrel1         irrel2
+    ## 4         irrel1         irrel2
+    ## 5         irrel1         irrel2
+
+``` r
+rsummary(my_db, "d")
+```
+
+    ##            column index     class nrows nna nunique min max mean        sd
+    ## 1       subjectID     1   numeric     4   0      NA   1   2  1.5 0.5773503
+    ## 2  surveyCategory     2 character     4   0       2  NA  NA   NA        NA
+    ## 3 assessmentTotal     3   numeric     4   0      NA   2   5  3.5 1.2909944
+    ## 4  irrelevantCol1     4 character     4   0       1  NA  NA   NA        NA
+    ## 5  irrelevantCol2     5 character     4   0       1  NA  NA   NA        NA
+    ##                lexmin              lexmax
+    ## 1                <NA>                <NA>
+    ## 2 positive re-framing withdrawal behavior
+    ## 3                <NA>                <NA>
+    ## 4              irrel1              irrel1
+    ## 5              irrel2              irrel2
+
+``` r
+dq %.>% 
+  quantile_node(.) %.>%
+  execute(my_db, .)
+```
+
+    ##   quantile_probability           diagnosis probability subjectID
+    ## 1                 0.00 positive re-framing   0.5589742         1
+    ## 2                 0.25 positive re-framing   0.5589742         1
+    ## 3                 0.50 positive re-framing   0.5589742         1
+    ## 4                 0.75 withdrawal behavior   0.6706221         2
+    ## 5                 1.00 withdrawal behavior   0.6706221         2
+
+``` r
+dq %.>% 
+  rsummary_node(.) %.>%
+  execute(my_db, .)
+```
+
+    ##        column index     class nrows nna nunique       min       max
+    ## 1   subjectID     1   numeric     2   0     NaN 1.0000000 2.0000000
+    ## 2   diagnosis     2 character     2   0       2       NaN       NaN
+    ## 3 probability     3   numeric     2   0     NaN 0.5589742 0.6706221
+    ##        mean         sd              lexmin              lexmax
+    ## 1 1.5000000 0.70710678                  NA                  NA
+    ## 2       NaN        NaN positive re-framing withdrawal behavior
+    ## 3 0.6147982 0.07894697                  NA                  NA
+
+We also could stand `rquery` up on non-`DBI` sources such as [`SparkR`](https://github.com/WinVector/rquery/blob/master/extras/SparkRExample.md) and perhaps even [`data.table`](https://github.com/WinVector/rquery/blob/master/extras/data_table.md).

@@ -9,7 +9,7 @@ be copied into database.}
   pipe_name = NULL)
 }
 \arguments{
-\item{pipe_left_arg}{data.frame}
+\item{pipe_left_arg}{data.frame or DBI database connection}
 
 \item{pipe_right_arg}{rquery relop operation tree}
 
@@ -23,6 +23,42 @@ data.frame
 \description{
 Execute pipeline treating pipe_left_arg as local data to
 be copied into database.
+}
+\examples{
+
+if (requireNamespace("RSQLite", quietly = TRUE)) {
+  # set up example database and
+  # db execution helper
+  db <- DBI::dbConnect(RSQLite::SQLite(),
+                       ":memory:")
+  RSQLite::initExtension(db)
+  winvector_temp_db_handle <- list(db = db)
+
+  # operations pipeline/tree
+  optree <- table_source("d", "x") \%.>\%
+    extend_nse(., y = x*x)
+
+  # wrapr dot pipe wrapr_function dispatch
+  # causes this statment to apply optree
+  # to d.
+  data.frame(x = 1:3) \%.>\% optree \%.>\% print(.)
+
+  # remote example
+  dbi_copy_to(db, "d",
+              data.frame(x = 7:8),
+              overwrite = TRUE,
+              temporary = TRUE)
+
+  # wrapr dot pipe wrapr_function dispatch
+  # causes this statment to apply optree
+  # to db.
+  db \%.>\% optree \%.>\% print(.)
+
+  # clean up
+  rm(list = "winvector_temp_db_handle")
+  DBI::dbDisconnect(db)
+}
+
 }
 \seealso{
 \code{\link{rquery_apply_to_data_frame}}

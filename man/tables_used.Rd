@@ -19,14 +19,16 @@ Return vector of table names used.
 }
 \examples{
 
-my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-d1 <- dbi_copy_to(my_db, 'd1',
-                 data.frame(AUC = 0.6, R2 = 0.2))
-d2 <- dbi_copy_to(my_db, 'd2',
-                 data.frame(AUC = 0.6, D = 0.3))
-eqn <- natural_join(d1, d2)
-cat(format(eqn))
-print(tables_used(eqn))
-DBI::dbDisconnect(my_db)
+if (requireNamespace("RSQLite", quietly = TRUE)) {
+  my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  d1 <- dbi_copy_to(my_db, 'd1',
+                    data.frame(AUC = 0.6, R2 = 0.2))
+  d2 <- dbi_copy_to(my_db, 'd2',
+                    data.frame(AUC = 0.6, D = 0.3))
+  optree <- natural_join(d1, d2)
+  cat(format(optree))
+  print(tables_used(optree))
+  DBI::dbDisconnect(my_db)
+}
 
 }

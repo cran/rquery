@@ -53,25 +53,28 @@ summarize_columns <- function(db, tableName,
 #' @param db database connection.
 #' @param tableName name of table.
 #' @param ... force additional arguments to be bound by name.
-#' @param countUniqueNum logical, if true include unique non-NA counts for numeric cols.
+#' @param countUniqueNum logical, if TRUE include unique non-NA counts for numeric cols.
+#' @param quartiles logical, if TRUE add Q1 (25\%), median (50\%), Q3 (75\%) quartiles.
 #' @param cols if not NULL set of columns to restrict to.
-#' @return summary of columns.
+#' @return data.frame summary of columns.
 #'
 #' @examples
 #'
-#' d <- data.frame(p= c(TRUE, FALSE, NA),
-#'                 s= NA,
-#'                 w= 1:3,
-#'                 x= c(NA,2,3),
-#'                 y= factor(c(3,5,NA)),
-#'                 z= c('a',NA,'a'),
-#'                 stringsAsFactors=FALSE)
-#' db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#' RSQLite::initExtension(db)
-#' DBI::dbWriteTable(db, "dRemote", d,
-#'    overwrite = TRUE, temporary = TRUE)
-#' rsummary(db, "dRemote")
-#' DBI::dbDisconnect(db)
+#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#'   d <- data.frame(p= c(TRUE, FALSE, NA),
+#'                   s= NA,
+#'                   w= 1:3,
+#'                   x= c(NA,2,3),
+#'                   y= factor(c(3,5,NA)),
+#'                   z= c('a',NA,'a'),
+#'                   stringsAsFactors=FALSE)
+#'   db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+#'   RSQLite::initExtension(db)
+#'   dbi_copy_to(db, "dRemote", d,
+#'               overwrite = TRUE, temporary = TRUE)
+#'   print(rsummary(db, "dRemote"))
+#'   DBI::dbDisconnect(db)
+#' }
 #'
 #' @export
 #'
@@ -79,6 +82,7 @@ rsummary <- function(db,
                      tableName,
                      ...,
                      countUniqueNum = FALSE,
+                     quartiles = FALSE,
                      cols = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::rsummary")
   localSample <- DBI::dbGetQuery(db, paste0("SELECT * FROM ",
@@ -92,11 +96,7 @@ rsummary <- function(db,
   }
   nrows <- 0
   if(nrow(localSample)>0) {
-    nrowst <- DBI::dbGetQuery(db,
-                              paste0("SELECT COUNT(1) FROM ",
-                                    DBI::dbQuoteIdentifier(db,
-                                                           tableName)))
-    nrows <- nrowst[[1]][[1]]
+    nrows <- dbi_nrow(db, tableName)
   }
   cmap <- seq_len(length(cnames))
   names(cmap) <- cnames
@@ -141,7 +141,7 @@ rsummary <- function(db,
   null_stats <- summarize_columns(db, tableName,
                                   "SUM( CASE WHEN (",
                                   workingCols,
-                                  "IS NULL ) THEN 1 ELSE 0 END )")
+                                  "IS NULL ) THEN 1.0 ELSE 0.0 END )")
   res <- populate_column(res, "nna", null_stats)
   # limit down to populated columns
   unpop_cols <- res$column[res$nna>=res$nrows]
@@ -188,7 +188,7 @@ rsummary <- function(db,
                        " WHERE ",
                        DBI::dbQuoteIdentifier(db, ci),
                        " IS NOT NULL")
-        vdev <- DBI::dbGetQuery(db, qdev)[[1]][[1]]
+        vdev <- as.numeric(DBI::dbGetQuery(db, qdev)[[1]][[1]])
         res$sd[[idx]] <- sqrt(vdev/(ngood-1.0))
       }
     }
@@ -205,7 +205,7 @@ rsummary <- function(db,
                            " IS NOT NULL GROUP BY ",
                            DBI::dbQuoteIdentifier(db, ci),
                            " ) TMPTAB ")
-          vcount <- DBI::dbGetQuery(db, qcount)[[1]][[1]]
+          vcount <- as.numeric(DBI::dbGetQuery(db, qcount)[[1]][[1]])
           res$nunique[[idx]] <- vcount
         }
       }
@@ -287,7 +287,7 @@ rsummary <- function(db,
                          " IS NOT NULL GROUP BY ",
                          DBI::dbQuoteIdentifier(db, ci),
                          " ) TMPTAB ")
-        vcount <- DBI::dbGetQuery(db, qcount)[[1]][[1]]
+        vcount <- as.numeric(DBI::dbGetQuery(db, qcount)[[1]][[1]])
         res$lexmin[[idx]] <- vmin
         res$lexmax[[idx]] <- vmax
         res$nunique[[idx]] <- vcount
@@ -296,6 +296,20 @@ rsummary <- function(db,
   }
   res <- res[order(res$index),]
   rownames(res) <- NULL
+  if(quartiles) {
+    qs <- quantile_cols(db, tableName,
+                        c(0.25, 0.5, 0.75), "rquery_probs_col",
+                        numericCols)
+    res$Q1 <- NA_real_
+    res$median <- NA_real_
+    res$Q3 <- NA_real_
+    for(ci in numericCols) {
+      idx <- which(res$column == ci)[[1]]
+      res$Q1[[idx]] <- qs[[ci]][[1]]
+      res$median[[idx]] <- qs[[ci]][[2]]
+      res$Q3[[idx]] <- qs[[ci]][[3]]
+    }
+  }
   res
 }
 
@@ -303,49 +317,49 @@ rsummary <- function(db,
 #' Create an rsumary relop operator node.
 #'
 #' @param source incoming source (relop node or data.frame).
-#' @param incoming_table_name character, name of incoming table.
-#' @param outgoing_table_name character, name of table to write.
 #' @param ... force later arguments to be by name
-#' @param overwrite logical, if TRUE overwrite tables
+#' @param quartiles logical, if TRUE add Q1 (25\%), median (50\%), Q3 (75\%) quartiles.
+#' @param tmp_name_source wrapr::mk_tmp_name_source(), temporary name generator.
 #' @param temporary logical, if TRUE use temporary tables
 #' @return rsummary node
 #'
-#' @seealso \code{\link{non_sql_node}}
+#' @seealso \code{\link{quantile_node}}, \code{\link{non_sql_node}}
 #'
 #' @examples
 #'
-#'  d <- data.frame(p= c(TRUE, FALSE, NA),
-#'                  s= NA,
-#'                  w= 1:3,
-#'                  x= c(NA,2,3),
-#'                  y= factor(c(3,5,NA)),
-#'                  z= c('a',NA,'a'),
-#'                  stringsAsFactors=FALSE)
-#'  db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'  RSQLite::initExtension(db)
-#'  DBI::dbWriteTable(db, "dRemote", d,
-#'                    overwrite = TRUE,
-#'                    temporary = TRUE)
+#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#'   d <- data.frame(p= c(TRUE, FALSE, NA),
+#'                   s= NA,
+#'                   w= 1:3,
+#'                   x= c(NA,2,3),
+#'                   y= factor(c(3,5,NA)),
+#'                   z= c('a',NA,'a'),
+#'                   stringsAsFactors=FALSE)
+#'   db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+#'   RSQLite::initExtension(db)
+#'   dbi_copy_to(db, "dRemote", d,
+#'               overwrite = TRUE,
+#'               temporary = TRUE)
 #'
-#'  ops <- dbi_table(db, "dRemote") %.>%
-#'    extend_nse(., v := ifelse(x>2, "x", "y")) %.>%
-#'    rsummary_node(.)
-#'  cat(format(ops))
+#'   ops <- dbi_table(db, "dRemote") %.>%
+#'     extend_nse(., v := ifelse(x>2, "x", "y")) %.>%
+#'     rsummary_node(.)
+#'   cat(format(ops))
 #'
-#'  to_sql(ops, db)
+#'   print(to_sql(ops, db))
 #'
-#'  reshdl <- materialize(db, ops)
-#'  DBI::dbGetQuery(db, to_sql(reshdl, db))
+#'   reshdl <- materialize(db, ops)
+#'   print(DBI::dbGetQuery(db, to_sql(reshdl, db)))
 #'
-#'  DBI::dbDisconnect(db)
+#'   DBI::dbDisconnect(db)
+#' }
 #'
 #' @export
 #'
 rsummary_node <- function(source,
                           ...,
-                          incoming_table_name = mk_tmp_name_source("rin")(),
-                          outgoing_table_name = mk_tmp_name_source("rout")(),
-                          overwrite = TRUE,
+                          quartiles = FALSE,
+                          tmp_name_source = wrapr::mk_tmp_name_source("sn"),
                           temporary = TRUE) {
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::rsummary_node")
   if(is.data.frame(source)) {
@@ -367,16 +381,23 @@ rsummary_node <- function(source,
                         "sd",
                         "lexmin",
                         "lexmax")
+  if(quartiles) {
+    columns_produced <- c(columns_produced,
+                          c("Q1", "median", "Q3"))
+  }
   force(temporary)
-  force(overwrite)
+  force(quartiles)
+  incoming_table_name = tmp_name_source()
+  outgoing_table_name = tmp_name_source()
   f <- function(db,
                 incoming_table_name,
                 outgoing_table_name) {
-    stable <- rsummary(db, incoming_table_name)
+    stable <- rsummary(db, incoming_table_name,
+                       quartiles = quartiles)
     dbi_copy_to(db,
                 table_name = outgoing_table_name,
                 d = stable,
-                overwrite = overwrite,
+                overwrite = TRUE,
                 temporary = temporary)
   }
   nd <- non_sql_node(source,
@@ -391,7 +412,6 @@ rsummary_node <- function(source,
                                            outgoing_table_name,
                                            ")"),
                      orig_columns = FALSE,
-                     overwrite = overwrite,
                      temporary = temporary)
   nd
 }

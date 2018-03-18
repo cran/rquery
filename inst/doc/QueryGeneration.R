@@ -3,8 +3,9 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+run_vignette <- requireNamespace("RSQLite", quietly = TRUE)
 
-## ----ex, warning=FALSE, message=FALSE, include=FALSE---------------------
+## ----ex, warning=FALSE, message=FALSE, include=FALSE, eval=run_vignette----
 library("rquery")
 
 # this db does not have window fns
@@ -32,7 +33,7 @@ d <- dbi_copy_to(my_db, 'd',
                  temporary = TRUE, 
                  overwrite = TRUE)
 
-## ----calc----------------------------------------------------------------
+## ----calc, eval=run_vignette---------------------------------------------
 scale <- 0.237
 
 dq <- d %.>%
@@ -57,9 +58,9 @@ class(my_db)
 
 sql <- to_sql(dq, db = my_db, source_limit = 1000)
 
-## ----res, echo=FALSE, comment = ' '--------------------------------------
+## ----res, echo=FALSE, comment = ' ', eval=run_vignette-------------------
 cat(sql)
 
-## ----cleanup, include=FALSE----------------------------------------------
+## ----cleanup, include=FALSE, eval=run_vignette---------------------------
 DBI::dbDisconnect(my_db)
 

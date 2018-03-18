@@ -23,30 +23,24 @@ re_write_table_names <- function(op_tree, new_name) {
 #'
 #' @examples
 #'
-#' db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#' winvector_temp_db_handle <- list(
-#'   db = db
-#' )
-#' RSQLite::initExtension(winvector_temp_db_handle$db)
+#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#'   db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+#'   winvector_temp_db_handle <- list(
+#'     db = db
+#'   )
+#'   RSQLite::initExtension(winvector_temp_db_handle$db)
 #'
-#' d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
-#' DBI::dbWriteTable(db, "d", d)
-#' d2 <- data.frame(AUC = 0.0, R2 = 0, D = 0, z = 0)
+#'   optree <- table_source("d", c("AUC", "R2", "D")) %.>%
+#'   	extend_nse(., c := sqrt(R2)) %.>%
+#'     orderby(., rev_cols = "R2")
 #'
-#' optree <- table_source("d", c("AUC", "R2", "D")) %.>%
-#' 	extend_nse(., c := sqrt(R2)) %.>%
-#'   orderby(., rev_cols = "R2")
+#'   d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
+#'   rquery_apply_to_data_frame(d, optree) %.>%
+#'      print(.)
 #'
-#' execute(db, optree, table_name = "res")
-#' DBI::dbReadTable(db, "res")
-#'
-#' d2 %.>% optree
-#'
-#' # show d is unharmed
-#' DBI::dbReadTable(db, "d")
-#'
-#' winvector_temp_db_handle <- NULL
-#' DBI::dbDisconnect(db)
+#'   winvector_temp_db_handle <- NULL
+#'   DBI::dbDisconnect(db)
+#' }
 #'
 #' @export
 #'
@@ -73,12 +67,18 @@ rquery_apply_to_data_frame <- function(d,
                           envir = env,
                           ifnotfound = list(NULL),
                           inherits = TRUE)[[1]]
+  my_db <- NULL
   if(is.null(db_handle)) {
-    my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-    RSQLite::initExtension(my_db)
-    need_close = TRUE
+    if (requireNamespace("RSQLite", quietly = TRUE)) {
+      my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+      RSQLite::initExtension(my_db)
+      need_close = TRUE
+    }
   } else {
     my_db <- db_handle$db
+  }
+  if(is.null(my_db)) {
+    stop("rquery::rquery_apply_to_data_frame no database")
   }
   dR <- dbi_copy_to(my_db,
                     inp_name,
@@ -203,7 +203,7 @@ head.relop <- function(x, ...) {
 #' Execute pipeline treating pipe_left_arg as local data to
 #' be copied into database.
 #'
-#' @param pipe_left_arg data.frame
+#' @param pipe_left_arg data.frame or DBI database connection
 #' @param pipe_right_arg rquery relop operation tree
 #' @param pipe_environment environment to execute in
 #' @param pipe_name name of pipling symbol
@@ -211,12 +211,55 @@ head.relop <- function(x, ...) {
 #'
 #' @seealso \code{\link{rquery_apply_to_data_frame}}
 #'
+#' @examples
+#'
+#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#'   # set up example database and
+#'   # db execution helper
+#'   db <- DBI::dbConnect(RSQLite::SQLite(),
+#'                        ":memory:")
+#'   RSQLite::initExtension(db)
+#'   winvector_temp_db_handle <- list(db = db)
+#'
+#'   # operations pipeline/tree
+#'   optree <- table_source("d", "x") %.>%
+#'     extend_nse(., y = x*x)
+#'
+#'   # wrapr dot pipe wrapr_function dispatch
+#'   # causes this statment to apply optree
+#'   # to d.
+#'   data.frame(x = 1:3) %.>% optree %.>% print(.)
+#'
+#'   # remote example
+#'   dbi_copy_to(db, "d",
+#'               data.frame(x = 7:8),
+#'               overwrite = TRUE,
+#'               temporary = TRUE)
+#'
+#'   # wrapr dot pipe wrapr_function dispatch
+#'   # causes this statment to apply optree
+#'   # to db.
+#'   db %.>% optree %.>% print(.)
+#'
+#'   # clean up
+#'   rm(list = "winvector_temp_db_handle")
+#'   DBI::dbDisconnect(db)
+#' }
+#'
 #' @export
+#'
 wrapr_function.relop <- function(pipe_left_arg,
                                  pipe_right_arg,
                                  pipe_environment,
                                  pipe_name = NULL) {
-  return(rquery_apply_to_data_frame(pipe_left_arg,
-                                    pipe_right_arg,
-                                    pipe_environment))
+  if(!("relop" %in% class(pipe_right_arg))) {
+    stop("rquery::wrapr_function.relop expect pipe_right_arg to be of class relop")
+  }
+  if(is.data.frame(pipe_left_arg)) {
+    return(rquery_apply_to_data_frame(pipe_left_arg,
+                                      pipe_right_arg,
+                                      pipe_environment))
+  }
+  # assume pipe_left_arg is a DB connection, execute and bring back result
+  execute(pipe_left_arg, pipe_right_arg)
 }
