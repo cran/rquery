@@ -5,7 +5,8 @@
 \title{Materialize an optree as a table.}
 \usage{
 materialize(db, optree, table_name = mk_tmp_name_source("rquery_mat")(), ...,
-  source_limit = NULL, overwrite = TRUE, temporary = FALSE)
+  limit = NULL, source_limit = NULL, overwrite = TRUE,
+  temporary = FALSE)
 }
 \arguments{
 \item{db}{DBI connecton.}
@@ -15,6 +16,8 @@ materialize(db, optree, table_name = mk_tmp_name_source("rquery_mat")(), ...,
 \item{table_name}{character, name of table to create.}
 
 \item{...}{force later arguments to bind by name.}
+
+\item{limit}{numeric if not NULL result limit (to use this, last statment must not have a limit).}
 
 \item{source_limit}{numeric if not NULL limit sources to this many rows.}
 

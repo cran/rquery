@@ -1,4 +1,54 @@
 
+#' Create materialize statement.
+#'
+#' @param db DBI connecton.
+#' @param sql character single SQL statement.
+#' @param table_name character, name of table to create.
+#' @param ... force later arguments to bind by name.
+#' @param temporary logical if TRUE try to create a temporary table.
+#' @return modified SQL
+#'
+#' @examples
+#'
+#' if(requireNamespace("RSQLite", quietly = TRUE)) {
+#'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+#'   print(materialize_sql_statement(my_db,
+#'                                   "SELECT x+1 FROM z",
+#'                                   "restable"))
+#'   DBI::dbDisconnect(my_db)
+#' }
+#'
+#' @export
+#'
+materialize_sql_statement <- function(db, sql, table_name,
+                                      ...,
+                                      temporary = FALSE) {
+  # TODO: put in more per-connection options here (including partion controls)
+  if(isTRUE(temporary)) {
+    create_temp <- getDBOption(db, "create_temporary", NULL)
+    if(is.null(create_temp)) {
+      create_temp <- !connection_is_spark(db)
+    }
+    if(!create_temp) {
+      if(getOption("rquery.verbose")) {
+        warning("setting rquery:::materialize_sql_statement setting temporary=FALSE")
+      }
+      temporary <- FALSE
+    }
+  } else {
+    temporary <- FALSE
+  }
+  storage_control <- getDBOption(db, "create_options", "")
+  sqlc <- paste("CREATE",
+                ifelse(temporary, "TEMPORARY ", ""),
+                "TABLE",
+                quote_identifier(db, table_name),
+                storage_control,
+                "AS",
+                sql)
+  sqlc
+}
+
 #' Materialize an optree as a table.
 #'
 #' Run the data query as a CREATE TABLE AS . Think of as a function
@@ -9,6 +59,7 @@
 #' @param optree relop operation tree.
 #' @param table_name character, name of table to create.
 #' @param ... force later arguments to bind by name.
+#' @param limit numeric if not NULL result limit (to use this, last statment must not have a limit).
 #' @param source_limit numeric if not NULL limit sources to this many rows.
 #' @param overwrite logical if TRUE drop an previous table.
 #' @param temporary logical if TRUE try to create a temporary table.
@@ -38,6 +89,7 @@ materialize <- function(db,
                         optree,
                         table_name = mk_tmp_name_source('rquery_mat')(),
                         ...,
+                        limit = NULL,
                         source_limit = NULL,
                         overwrite = TRUE,
                         temporary = FALSE) {
@@ -45,7 +97,12 @@ materialize <- function(db,
   if(!("relop" %in% class(optree))) {
     stop("rquery::materialize expect optree to be of class relop")
   }
+  qlimit = limit
+  if(!getDBOption(db, "use_pass_limit", TRUE)) {
+    qlimit = NULL
+  }
   sql_list <- to_sql(optree, db,
+                     limit = qlimit,
                      source_limit = source_limit)
   # establish some safe invarients
   if(length(sql_list)<1) {
@@ -66,7 +123,7 @@ materialize <- function(db,
     }
   }
   # check/clear final result
-  if(DBI::dbExistsTable(db, table_name)) {
+  if(dbi_table_exists(db, table_name)) {
     if(overwrite) {
       dbi_remove_table(db, table_name)
     } else {
@@ -92,7 +149,7 @@ materialize <- function(db,
     for(ii in seq_len(length(sql_list)-1)) {
       sqli <- sql_list[[ii]]
       if(is.character(sqli)) {
-        DBI::dbExecute(db, sqli)
+        dbi_execute(db, sqli)
         if(!is.null(to_clear)) {
           dbi_remove_table(db, to_clear)
           to_clear <- NULL
@@ -120,13 +177,19 @@ materialize <- function(db,
   }
   # work on the last node (must be SQL)
   sql <- sql_list[[length(sql_list)]]
-  sqlc <- paste0("CREATE ",
-                 ifelse(temporary, "TEMPORARY ", ""),
-                 "TABLE ",
-                 quote_identifier(db, table_name),
-                 " AS ",
-                 sql)
-  DBI::dbExecute(db, sqlc)
+  if(!is.null(limit)) {
+    # look for limit
+    haslimit <- grep("^.*[[:space:]]LIMIT[[:space:]]+[0-9]+[[:space:]]*$",
+                     sql,
+                     ignore.case = TRUE)
+    if(length(haslimit)<1) {
+      sql <- paste(sql, "LIMIT",
+                    format(ceiling(limit), scientific = FALSE))
+    }
+  }
+  sqlc <- materialize_sql_statement(db, sql, table_name,
+                                    temporary = temporary)
+  dbi_execute(db, sqlc)
   if(!is.null(to_clear)) {
     dbi_remove_table(db, to_clear)
     to_clear <- NULL
@@ -189,7 +252,7 @@ execute <- function(source,
                     optree,
                     ...,
                     table_name = NULL,
-                    limit = 1000000,
+                    limit = NULL,
                     source_limit = NULL,
                     overwrite = TRUE,
                     temporary = FALSE) {
@@ -211,16 +274,13 @@ execute <- function(source,
   }
   ref <- materialize(db, optree,
                      table_name = table_name,
+                     limit = limit,
                      source_limit = source_limit,
                      overwrite = overwrite,
                      temporary = temporary)
   res <- ref
   if(!table_name_set) {
-    sql <- to_sql(ref, db)
-    if((!is.null(limit)) && (!is.na(limit))) {
-      sql <- paste(sql, "LIMIT",
-                   format(ceiling(limit), scientific = FALSE))
-    }
+    sql <- to_sql(ref, db, limit = limit)
     res <- DBI::dbGetQuery(db, sql)
     dbi_remove_table(db, ref$table_name)
   }

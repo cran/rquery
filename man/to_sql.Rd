@@ -4,7 +4,7 @@
 \alias{to_sql}
 \title{Return SQL implementation of operation tree.}
 \usage{
-to_sql(x, db, ..., source_limit = NULL, indent_level = 0,
+to_sql(x, db, ..., limit = NULL, source_limit = NULL, indent_level = 0,
   tnum = mk_tmp_name_source("tsql"), append_cr = TRUE, using = NULL)
 }
 \arguments{
@@ -13,6 +13,8 @@ to_sql(x, db, ..., source_limit = NULL, indent_level = 0,
 \item{db}{DBI database handle or rquery_db_info object.}
 
 \item{...}{generic additional arguments (not used).}
+
+\item{limit}{numeric if not NULL limit result to this many rows.}
 
 \item{source_limit}{numeric if not NULL limit sources to this many rows.}
 

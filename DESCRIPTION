@@ -1,8 +1,8 @@
 Package: rquery
 Type: Package
 Title: Relational Query Generator for Data Manipulation at Scale
-Version: 0.4.1
-Date: 2018-03-17
+Version: 0.4.2
+Date: 2018-04-05
 Authors@R: c(
     person("John", "Mount", email = "jmount@win-vector.com", role = c("aut", "cre")),
     person(family = "Win-Vector LLC", role = c("cph"))
@@ -31,8 +31,8 @@ RoxygenNote: 6.0.1
 ByteCompile: true
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2018-03-18 04:17:43 UTC; johnmount
+Packaged: 2018-04-05 19:07:59 UTC; johnmount
 Author: John Mount [aut, cre],
   Win-Vector LLC [cph]
 Repository: CRAN
-Date/Publication: 2018-03-18 04:37:46 UTC
+Date/Publication: 2018-04-05 19:14:58 UTC

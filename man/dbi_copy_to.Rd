@@ -31,14 +31,14 @@ Local table to DBI data source.
 \examples{
 
 if (requireNamespace("RSQLite", quietly = TRUE)) {
-  my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  d <- dbi_copy_to(my_db, 'd',
+  db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  d <- dbi_copy_to(db, 'd',
                    data.frame(AUC = 0.6, R2 = 0.2))
 
-  sql <- to_sql(d, my_db)
+  sql <- to_sql(d, db)
   cat(sql)
-  print(DBI::dbGetQuery(my_db, "SELECT * FROM d"))
-  DBI::dbDisconnect(my_db)
+  print(DBI::dbGetQuery(db, "SELECT * FROM d"))
+  DBI::dbDisconnect(db)
 }
 
 }

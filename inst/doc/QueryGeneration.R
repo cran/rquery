@@ -33,6 +33,10 @@ d <- dbi_copy_to(my_db, 'd',
                  temporary = TRUE, 
                  overwrite = TRUE)
 
+dbopts <- dbi_connection_preferences(my_db)
+print(dbopts)
+options(dbopts)
+
 ## ----calc, eval=run_vignette---------------------------------------------
 scale <- 0.237
 

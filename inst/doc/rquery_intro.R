@@ -9,6 +9,10 @@ db <- DBI::dbConnect(RSQLite::SQLite(),
                      ":memory:")
 RSQLite::initExtension(db)
 
+dbopts <- dbi_connection_preferences(db)
+print(dbopts)
+options(dbopts)
+
 # example data
 d <- dbi_copy_to(
   db, 'd',

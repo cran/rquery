@@ -5,10 +5,10 @@
 \alias{commencify}
 \title{Execute a operator tree, either bringing back the result or landing it as a table.}
 \usage{
-execute(source, optree, ..., table_name = NULL, limit = 1e+06,
+execute(source, optree, ..., table_name = NULL, limit = NULL,
   source_limit = NULL, overwrite = TRUE, temporary = FALSE)
 
-commencify(source, optree, ..., table_name = NULL, limit = 1e+06,
+commencify(source, optree, ..., table_name = NULL, limit = NULL,
   source_limit = NULL, overwrite = TRUE, temporary = FALSE)
 }
 \arguments{
