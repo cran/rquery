@@ -19,10 +19,11 @@ Build structures (table name, column names, and quoting
 strategy) needed to represent data from a remote table.
 }
 \details{
-Generate a query that returns contents of a table, we
-could try to eliminate this (replace the query with the table name),
-but there are features one can work with with the query in place and
-SQL optimizers likely make this zero-cost anyway.
+Note: in examples we use \code{dbi_copy_to()} to create data.  This is only for the purpose of having
+easy portable examples.  With big data the data is usually already in the remote database or
+Spark system. The task is almost always to connect and work with this pre-existing remote data
+and the method to do this is \code{dbi_table}
+which builds a reference to a remote table given the table name.
 }
 \examples{
 
@@ -49,5 +50,5 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 
 }
 \seealso{
-\code{\link{table_source}}
+\code{\link{table_source}}, \code{\link{dbi_copy_to}}, \code{\link{materialize}}, \code{\link{execute}}, code{\link{to_sql}}
 }

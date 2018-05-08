@@ -59,5 +59,5 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 
 }
 \seealso{
-\code{\link{count_null_cols}}, \code{\link{mark_null_cols}}
+\code{\link{null_replace}}, \code{\link{count_null_cols}}, \code{\link{mark_null_cols}}
 }

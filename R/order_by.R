@@ -17,7 +17,7 @@
 #' @param ... force later arguments to be bound by name
 #' @param rev_cols order by reverse of these column names.
 #' @param limit number limit row count.
-#' @return select columns node.
+#' @return order_by node.
 #'
 #' @examples
 #'
@@ -25,9 +25,9 @@
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   d <- dbi_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2))
-#'   eqn <- orderby(d, rev_cols = "AUC", limit=4)
-#'   cat(format(eqn))
-#'   sql <- to_sql(eqn, my_db)
+#'   optree <- orderby(d, rev_cols = "AUC", limit=4)
+#'   cat(format(optree))
+#'   sql <- to_sql(optree, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
 #'   DBI::dbDisconnect(my_db)
@@ -49,11 +49,10 @@ orderby.relop <- function(source,
                     ...,
                     rev_cols = NULL,
                     limit = NULL) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::orderby.relop")
   have <- column_names(source)
-  check_have_cols(have, c(cols, rev_cols), "rquery::orderby orderterms")
+  check_have_cols(have, unique(c(cols, rev_cols)), "rquery::orderby")
   r <- list(source = list(source),
             table_name = NULL,
             parsed = NULL,
@@ -70,9 +69,8 @@ orderby.data.frame <- function(source,
                     ...,
                     rev_cols = NULL,
                     limit = NULL) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::orderby.data.frame")
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
@@ -87,23 +85,18 @@ orderby.data.frame <- function(source,
 
 
 #' @export
-format.relop_orderby <- function(x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
+format_node.relop_orderby <- function(node) {
+  ot <- c(node$orderby)
+  if(length(node$rev_orderby)>0) {
+    ot <- c(ot, paste0("desc(", node$rev_orderby, ")"))
   }
-  ot <- c(x$orderby)
-  if(length(x$rev_orderby)>0) {
-    ot <- c(ot, paste0("desc(", x$rev_orderby, ")"))
-  }
-  paste0(trimws(format(x$source[[1]]), which="right"),
-         " %.>%\n ",
-         "orderby(., ",
-         ifelse(ot>0,
+  paste0("orderby(., ",
+         ifelse(length(ot)>0,
                 paste(ot, collapse = ", "),
                 ""),
-         ifelse((length(x$limit)>0) && (length(x$orderby)>0),
+         ifelse((length(node$limit)>0) && (length(node$orderby)>0),
                 paste0(", LIMIT ",
-                       format(ceiling(x$limit), scientific = FALSE)),
+                       format(ceiling(node$limit), scientific = FALSE)),
                 ""),
          ")",
          "\n")
@@ -114,6 +107,8 @@ format.relop_orderby <- function(x, ...) {
 calc_used_relop_orderby <- function (x, ...,
                                       using = NULL,
                                       contract = FALSE) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery:::calc_used_relop_orderby")
   if(length(using)<=0) {
     using <- column_names(x)
   }
@@ -129,11 +124,13 @@ calc_used_relop_orderby <- function (x, ...,
 
 #' @export
 columns_used.relop_orderby <- function (x, ...,
-                                       using = NULL,
-                                       contract = FALSE) {
-  cols <- calc_used_relop_select_rows(x,
-                                      using = using,
-                                      contract = contract)
+                                        using = NULL,
+                                        contract = FALSE) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::columns_used.relop_orderby")
+  cols <- calc_used_relop_orderby(x,
+                                  using = using,
+                                  contract = contract)
   return(columns_used(x$source[[1]],
                       using = cols,
                       contract = contract))
@@ -150,9 +147,8 @@ to_sql.relop_orderby <- function (x,
                                   tnum = mk_tmp_name_source('tsql'),
                                   append_cr = TRUE,
                                   using = NULL) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::to_sql.relop_orderby")
   cols1 <- column_names(x$source[[1]])
   cols <- vapply(cols1,
                  function(ci) {

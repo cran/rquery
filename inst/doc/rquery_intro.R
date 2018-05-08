@@ -13,12 +13,15 @@ dbopts <- dbi_connection_preferences(db)
 print(dbopts)
 options(dbopts)
 
-# example data
-d <- dbi_copy_to(
+# copy in example data
+dbi_copy_to(
   db, 'd',
   data.frame(v = c(1, -5, 3)),
   temporary = FALSE,
   overwrite = TRUE)
+
+# produce a hande to existing table
+d <- dbi_table(db, "d")
 
 ## ----defcoltwice, eval=run_vignette--------------------------------------
 DBI::dbGetQuery(db, "
@@ -167,17 +170,14 @@ dq <- table_source("d3",
                                 assessmentTotal)) %.>%
   extend_nse(.,
              probability :=
-               exp(assessmentTotal * scale)/
-               sum(exp(assessmentTotal * scale)),
-             count := count(1),
-             partitionby = 'subjectID') %.>%
-  extend_nse(.,
-             rank := rank(),
+               exp(assessmentTotal * scale))  %.>% 
+  normalize_cols(.,
+                 "probability",
+                 partitionby = 'subjectID') %.>%
+  pick_top_k(.,
              partitionby = 'subjectID',
-             orderby = c('probability', 
-                         'surveyCategory'))  %.>%
+             rev_orderby = c('probability', 'surveyCategory')) %.>% 
   rename_columns(., 'diagnosis' := 'surveyCategory') %.>%
-  select_rows_nse(., rank == count) %.>%
   select_columns(., c('subjectID', 
                       'diagnosis', 
                       'probability')) %.>%
@@ -189,6 +189,12 @@ tables_used(dq)
 columns_used(dq)
 
 column_names(dq)
+
+## ----printlogistic, eval=run_vignette------------------------------------
+cat(format(dq))
+
+## ----printlogisticsq, eval=run_vignette----------------------------------
+cat(to_sql(dq, db))
 
 ## ----rsummaryex, eval=run_vignette---------------------------------------
 op_tree %.>%

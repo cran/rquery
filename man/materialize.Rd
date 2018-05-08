@@ -6,7 +6,7 @@
 \usage{
 materialize(db, optree, table_name = mk_tmp_name_source("rquery_mat")(), ...,
   limit = NULL, source_limit = NULL, overwrite = TRUE,
-  temporary = FALSE)
+  temporary = FALSE, precheck = FALSE)
 }
 \arguments{
 \item{db}{DBI connecton.}
@@ -24,6 +24,8 @@ materialize(db, optree, table_name = mk_tmp_name_source("rquery_mat")(), ...,
 \item{overwrite}{logical if TRUE drop an previous table.}
 
 \item{temporary}{logical if TRUE try to create a temporary table.}
+
+\item{precheck}{logical if TRUE precheck existance of table and columns.}
 }
 \value{
 table handle
@@ -37,19 +39,31 @@ in pipelines.
 
 if (requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+
   d <- dbi_copy_to(my_db, 'd',
-                   data.frame(AUC = 0.6, R2 = 0.2))
+                   data.frame(AUC = 0.6, R2 = 0.2),
+                   temporary = TRUE, overwrite = TRUE)
   optree <- extend_se(d, c("v" := "AUC + R2", "x" := "pmax(AUC,v)"))
   cat(format(optree))
-  res <- materialize(my_db, optree, "example")
+  res <- materialize(my_db, optree, "example", precheck = TRUE)
   cat(format(res))
   sql <- to_sql(res, my_db)
   cat(sql)
   print(DBI::dbGetQuery(my_db, sql))
+
+  # extra example, table that doesn't match declared structure
+  dbi_copy_to(my_db, 'd',
+              data.frame(z = 1:5),
+              temporary = TRUE, overwrite = TRUE)
+  tryCatch(
+     materialize(my_db, optree, "example", precheck = TRUE),
+     error = function(e) { as.character(e) }) \%.>\%
+     print(.)
+
   DBI::dbDisconnect(my_db)
 }
 
 }
 \seealso{
-\code{\link{execute}}
+\code{\link{dbi_table}}, \code{\link{execute}}, \code{\link{to_sql}}, \code{\link{dbi_copy_to}}, \code{\link{table_source}}
 }

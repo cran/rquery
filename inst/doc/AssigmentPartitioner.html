@@ -12,9 +12,9 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2018-04-05" />
+<meta name="date" content="2018-05-07" />
 
-<title>Assignment Paritioner</title>
+<title>Assignment Partitioner</title>
 
 
 
@@ -68,9 +68,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 
-<h1 class="title toc-ignore">Assignment Paritioner</h1>
+<h1 class="title toc-ignore">Assignment Partitioner</h1>
 <h4 class="author"><em>John Mount, Win-Vector LLC</em></h4>
-<h4 class="date"><em>2018-04-05</em></h4>
+<h4 class="date"><em>2018-05-07</em></h4>
 
 
 
@@ -205,7 +205,8 @@ plan &lt;-<span class="st"> </span>d1 <span class="op">%.&gt;%</span>
   d_2 := ifelse(choice_d, &quot;C&quot;, &quot;T&quot;),
   e_1 := ifelse(choice_e, &quot;T&quot;, &quot;C&quot;),
   e_2 := ifelse(choice_e, &quot;C&quot;, &quot;T&quot;)) %.&gt;%
- select_columns(., id, a_1, a_2, b_1, b_2, c_1, c_2, d_1, d_2, e_1, e_2)</code></pre>
+ select_columns(.,
+   id, a_1, a_2, b_1, b_2, c_1, c_2, d_1, d_2, e_1, e_2)</code></pre>
 <p>Notice <code>rquery::extend_se()</code> split the work into 3 unambiguous groups. The statements inside each group can now be executed in any order (or even in parallel) with no ambiguity of meaning or risk of error. The goal was: split into a small number of groups such that the observable execution semantics are very close to executing the original statements in order in completely separate groups (which is likely what a user intends).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sql &lt;-<span class="st"> </span><span class="kw">to_sql</span>(plan, my_db)
 <span class="kw">cat</span>(sql)</code></pre></div>
@@ -411,7 +412,8 @@ FROM (
  extend(.,
   e_1 := ifelse(choice, &quot;T&quot;, &quot;C&quot;),
   e_2 := ifelse(choice, &quot;C&quot;, &quot;T&quot;)) %.&gt;%
- select_columns(., id, a_1, a_2, b_1, b_2, c_1, c_2, d_1, d_2, e_1, e_2)</code></pre>
+ select_columns(.,
+   id, a_1, a_2, b_1, b_2, c_1, c_2, d_1, d_2, e_1, e_2)</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sql2 &lt;-<span class="st"> </span><span class="kw">to_sql</span>(plan2, my_db)
 DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(my_db, sql2) <span class="op">%.&gt;%</span>
 <span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</code></pre></div>

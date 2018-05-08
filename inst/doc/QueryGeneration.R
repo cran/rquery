@@ -9,35 +9,40 @@ run_vignette <- requireNamespace("RSQLite", quietly = TRUE)
 library("rquery")
 
 # this db does not have window fns
-my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-
-d <- dbi_copy_to(my_db, 'd',
-                 data.frame(
-                   subjectID = c(1,                   
-                                 1,
-                                 2,                   
-                                 2),
-                   surveyCategory = c(
-                     'withdrawal behavior',
-                     'positive re-framing',
-                     'withdrawal behavior',
-                     'positive re-framing'
-                   ),
-                   assessmentTotal = c(5,                 
-                                       2,
-                                       3,                  
-                                       4),
-                   irrelevantCol1 = "irrel1",
-                   irrelevantCol2 = "irrel2",
-                   stringsAsFactors = FALSE),
-                 temporary = TRUE, 
-                 overwrite = TRUE)
+my_db <- DBI::dbConnect(RSQLite::SQLite(), 
+                        ":memory:")
 
 dbopts <- dbi_connection_preferences(my_db)
 print(dbopts)
 options(dbopts)
 
+# copy in example data
+dbi_copy_to(my_db, 'd',
+            data.frame(
+              subjectID = c(1,                   
+                            1,
+                            2,                   
+                            2),
+              surveyCategory = c(
+                'withdrawal behavior',
+                'positive re-framing',
+                'withdrawal behavior',
+                'positive re-framing'
+              ),
+              assessmentTotal = c(5,                 
+                                  2,
+                                  3,                  
+                                  4),
+              irrelevantCol1 = "irrel1",
+              irrelevantCol2 = "irrel2",
+              stringsAsFactors = FALSE),
+            temporary = TRUE, 
+            overwrite = TRUE)
+
 ## ----calc, eval=run_vignette---------------------------------------------
+# produce a hande to existing table
+d <- dbi_table(my_db, "d")
+
 scale <- 0.237
 
 dq <- d %.>%
@@ -60,9 +65,12 @@ dq <- d %.>%
 
 class(my_db)
 
-sql <- to_sql(dq, db = my_db, source_limit = 1000)
+## ----pf, echo=FALSE, comment = ' ', eval=run_vignette--------------------
+cat(format(dq))
 
 ## ----res, echo=FALSE, comment = ' ', eval=run_vignette-------------------
+sql <- to_sql(dq, db = my_db, source_limit = 1000)
+
 cat(sql)
 
 ## ----cleanup, include=FALSE, eval=run_vignette---------------------------

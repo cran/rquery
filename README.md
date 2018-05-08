@@ -5,9 +5,9 @@
 
 [`rquery`](https://winvector.github.io/rquery/) is a query generator based on [Codd's relational algebra](https://en.wikipedia.org/wiki/Relational_algebra) (updated to reflect lessons learned from working with [`R`](https://www.r-project.org), [`SQL`](https://en.wikipedia.org/wiki/SQL), and [`dplyr`](https://CRAN.R-project.org/package=dplyr) at big data scale in production). One goal of this experiment is to see if `SQL` would be more fun teachable if it had a sequential data-flow or pipe notation.
 
-`rquery` is currently currenlty recommended for user with `Spark` and `PostgreSQL` (and with non-window functionality with `RSQLite`).
+`rquery` is currently recommended for user with `Spark` and `PostgreSQL` (and with non-window functionality with `RSQLite`).
 
-To install: `devtools::install_github("WinVector/rquery")`.
+To install: `devtools::install_github("WinVector/rquery")` or `install.packages("rquery")`.
 
 A good place to start is the [`rquery` introductory vignette](https://winvector.github.io/rquery/articles/rquery_intro.html).
 
@@ -33,7 +33,7 @@ There are many prior relational algebra inspired specialized query languages. Ju
 
 The primary relational operators include:
 
--   [`extend()`](https://winvector.github.io/rquery/reference/extend_nse.html). Extend adds derived columns to a relation table. With a sufficiently powerful `SQL` provider this includes ordered and partitioned window functions. This operator also includes built-in [`seplyr`](https://winvector.github.io/seplyr/)-style [assignment partitioning](https://winvector.github.io/seplyr/articles/MutatePartitioner.html).
+-   [`extend()`](https://winvector.github.io/rquery/reference/extend_nse.html). Extend adds derived columns to a relation table. With a sufficiently powerful `SQL` provider this includes ordered and partitioned window functions. This operator also includes built-in [`seplyr`](https://winvector.github.io/seplyr/)-style [assignment partitioning](https://winvector.github.io/seplyr/articles/MutatePartitioner.html). `extend()` can also alter existing columns, though we note this is not always a relational operation (it can lose row uniqueness).
 -   [`project()`](https://winvector.github.io/rquery/reference/project_nse.html). Project is usually *portrayed* as the equivalent to column selection, though the original definition includes aggregation. In our opinion the original relational nature of the operator is best captured by moving `SQL`'s "`GROUP BY`" aggregation functionality.
 -   [`natural_join()`](https://winvector.github.io/rquery/reference/natural_join.html). This a specialized relational join operator, using all common columns as an equi-join condition.
 -   [`theta_join()`](https://winvector.github.io/rquery/reference/theta_join_nse.html). This is the relational join operator allowing an arbitrary matching predicate.
@@ -44,6 +44,8 @@ The primary non-relational (traditional `SQL`) operators are:
 
 -   [`select_columns()`](https://winvector.github.io/rquery/reference/select_columns.html). This allows choice of columns (central to `SQL`), but is not a relational operator as it can damage row-uniqueness.
 -   [`orderby()`](https://winvector.github.io/rquery/reference/orderby.html). Row order is not a concept in the relational algebra (and also not maintained in most `SQL` implementations). This operator is only useful when used with its `limit=` option, or as the last step as data comes out of the relation store and is moved to `R` (where row-order is usually maintained).
+-   [`map_column_values()`](https://winvector.github.io/rquery/reference/map_column_values.html) re-map values in columns (very useful for re-coding data).
+-   [`unionall()`](https://winvector.github.io/rquery/reference/unionall.html) concatenate tables.
 
 The primary missing relational operators are:
 
@@ -64,7 +66,7 @@ Let's work a non-trivial example: the `dplyr` pipeline from [Let’s Have Some S
 
 ``` r
 library("rquery")
-use_spark <- TRUE
+use_spark <- FALSE
 
 if(use_spark) {
   my_db <- sparklyr::spark_connect(version='2.2.0', 
@@ -74,8 +76,7 @@ if(use_spark) {
                       "create_options",
                       "USING PARQUET OPTIONS ('compression'='snappy')")
 } else {
-  # driver <- RPostgreSQL::PostgreSQL()
-  driver <- RPostgres::Postgres()
+  driver <- RPostgreSQL::PostgreSQL()
   my_db <- DBI::dbConnect(driver,
                           host = 'localhost',
                           port = 5432,
@@ -87,60 +88,70 @@ dbopts <- dbi_connection_preferences(my_db)
 print(dbopts)
 ```
 
-    ## $rquery.DBIConnection_spark_connection_spark_shell_connection.use_pass_limit
+    ## $rquery.PostgreSQLConnection.use_pass_limit
     ## [1] TRUE
     ## 
-    ## $rquery.DBIConnection_spark_connection_spark_shell_connection.use_DBI_dbExistsTable
+    ## $rquery.PostgreSQLConnection.use_DBI_dbExistsTable
     ## [1] TRUE
     ## 
-    ## $rquery.DBIConnection_spark_connection_spark_shell_connection.use_DBI_dbListFields
+    ## $rquery.PostgreSQLConnection.use_DBI_dbListFields
     ## [1] FALSE
     ## 
-    ## $rquery.DBIConnection_spark_connection_spark_shell_connection.use_DBI_dbRemoveTable
+    ## $rquery.PostgreSQLConnection.use_DBI_dbRemoveTable
     ## [1] FALSE
     ## 
-    ## $rquery.DBIConnection_spark_connection_spark_shell_connection.use_DBI_dbExecute
+    ## $rquery.PostgreSQLConnection.use_DBI_dbExecute
     ## [1] TRUE
     ## 
-    ## $rquery.DBIConnection_spark_connection_spark_shell_connection.create_temporary
-    ## [1] FALSE
-    ## 
-    ## $rquery.DBIConnection_spark_connection_spark_shell_connection.control_temporary
+    ## $rquery.PostgreSQLConnection.create_temporary
     ## [1] TRUE
     ## 
-    ## $rquery.DBIConnection_spark_connection_spark_shell_connection.control_rownames
-    ## [1] FALSE
+    ## $rquery.PostgreSQLConnection.control_temporary
+    ## [1] TRUE
+    ## 
+    ## $rquery.PostgreSQLConnection.control_rownames
+    ## [1] TRUE
 
 ``` r
 options(dbopts)
 print(getDBOption(my_db, "create_options"))
 ```
 
-    ## [1] "USING PARQUET OPTIONS ('compression'='snappy')"
+    ## NULL
 
 ``` r
-d <- dbi_copy_to(my_db, 'd',
-                 data.frame(
-                   subjectID = c(1,                   
-                                 1,
-                                 2,                   
-                                 2),
-                   surveyCategory = c(
-                     'withdrawal behavior',
-                     'positive re-framing',
-                     'withdrawal behavior',
-                     'positive re-framing'
-                   ),
-                   assessmentTotal = c(5,                 
-                                       2,
-                                       3,                  
-                                       4),
-                   irrelevantCol1 = "irrel1",
-                   irrelevantCol2 = "irrel2",
-                   stringsAsFactors = FALSE),
-                 temporary = TRUE, 
-                 overwrite = !use_spark)
+# copy data in so we have an example
+dbi_copy_to(my_db, 'd',
+            data.frame(
+              subjectID = c(1,                   
+                            1,
+                            2,                   
+                            2),
+              surveyCategory = c(
+                'withdrawal behavior',
+                'positive re-framing',
+                'withdrawal behavior',
+                'positive re-framing'
+              ),
+              assessmentTotal = c(5,                 
+                                  2,
+                                  3,                  
+                                  4),
+              irrelevantCol1 = "irrel1",
+              irrelevantCol2 = "irrel2",
+              stringsAsFactors = FALSE),
+            temporary = TRUE, 
+            overwrite = TRUE)
 ```
+
+    ## [1] "table('d')"
+
+``` r
+# produce a hande to existing table
+d <- dbi_table(my_db, "d")
+```
+
+Note: in examples we use `dbi_copy_to()` to create data. This is only for the purpose of having easy portable examples. With big data the data is usually already in the remote database or Spark system. The task is almost always to connect and work with this pre-existing remote data and the method to do this is [`dbi_table()`](https://winvector.github.io/rquery/reference/dbi_table.html), which builds a reference to a remote table given the table name. The suggested pattern for working with remote tables is to get inputs via [`dbi_table()`](https://winvector.github.io/rquery/reference/dbi_table.html) and land remote results with [`materialze()`](https://winvector.github.io/rquery/reference/materialize.html). To work with local data one can copy data from memory to the database with [`dbi_copy_to()`](https://winvector.github.io/rquery/reference/dbi_copy_to.html) and bring back results with [`execute()`](https://winvector.github.io/rquery/reference/execute.html) (though be aware operation on remote non-memory data is `rquery`'s primary intent).
 
 First we show the Spark/database version of the original example data:
 
@@ -148,8 +159,9 @@ First we show the Spark/database version of the original example data:
 class(my_db)
 ```
 
-    ## [1] "spark_connection"       "spark_shell_connection"
-    ## [3] "DBIConnection"
+    ## [1] "PostgreSQLConnection"
+    ## attr(,"package")
+    ## [1] "RPostgreSQL"
 
 ``` r
 print(d)
@@ -159,8 +171,7 @@ print(d)
 
 ``` r
 d %.>%
-  rquery::to_sql(., my_db) %.>%
-  DBI::dbGetQuery(my_db, .) %.>%
+  execute(my_db, .) %.>%
   knitr::kable(.)
 ```
 
@@ -179,31 +190,32 @@ scale <- 0.237
 dq <- d %.>%
   extend_nse(.,
              probability :=
-               exp(assessmentTotal * scale)/
-               sum(exp(assessmentTotal * scale)),
-             count := count(1),
-             partitionby = 'subjectID') %.>%
-  extend_nse(.,
-             rank := rank(),
+               exp(assessmentTotal * scale))  %.>% 
+  normalize_cols(.,
+                 "probability",
+                 partitionby = 'subjectID') %.>%
+  pick_top_k(.,
              partitionby = 'subjectID',
-             orderby = c('probability', 'surveyCategory'))  %.>%
+             rev_orderby = c('probability', 'surveyCategory')) %.>% 
   rename_columns(., 'diagnosis' := 'surveyCategory') %.>%
-  select_rows_nse(., rank == count) %.>%
   select_columns(., c('subjectID', 
                       'diagnosis', 
                       'probability')) %.>%
-  orderby(., 'subjectID')
+  orderby(., cols = 'subjectID')
 ```
 
 We then generate our result:
 
 ``` r
-execute(my_db, dq, source_limit = 1000)
+dq %.>%
+  execute(my_db, .) %.>%
+  knitr::kable(.)
 ```
 
-    ##   subjectID           diagnosis probability
-    ## 1         1 withdrawal behavior   0.6706221
-    ## 2         2 positive re-framing   0.5589742
+|  subjectID| diagnosis           |  probability|
+|----------:|:--------------------|------------:|
+|          1| withdrawal behavior |    0.6706221|
+|          2| positive re-framing |    0.5589742|
 
 We see we have quickly reproduced the original result using the new database operators. This means such a calculation could easily be performed at a "big data" scale (using a database or `Spark`; in this case we would not take the results back, but instead use `CREATE TABLE tname AS` to build a remote materialized view of the results).
 
@@ -215,45 +227,47 @@ cat(to_sql(dq, my_db, source_limit = 1000))
 
     SELECT * FROM (
      SELECT
-      `subjectID`,
-      `diagnosis`,
-      `probability`
+      "subjectID",
+      "diagnosis",
+      "probability"
      FROM (
-      SELECT * FROM (
-       SELECT
-        `count` AS `count`,
-        `probability` AS `probability`,
-        `rank` AS `rank`,
-        `subjectID` AS `subjectID`,
-        `surveyCategory` AS `diagnosis`
-       FROM (
+      SELECT
+       "probability" AS "probability",
+       "subjectID" AS "subjectID",
+       "surveyCategory" AS "diagnosis"
+      FROM (
+       SELECT * FROM (
         SELECT
-         `count`,
-         `probability`,
-         `subjectID`,
-         `surveyCategory`,
-         rank ( ) OVER (  PARTITION BY `subjectID` ORDER BY `probability`, `surveyCategory` ) AS `rank`
+         "probability",
+         "subjectID",
+         "surveyCategory",
+         row_number ( ) OVER (  PARTITION BY "subjectID" ORDER BY "probability" DESC, "surveyCategory" DESC ) AS "row_number"
         FROM (
          SELECT
-          `subjectID`,
-          `surveyCategory`,
-          `assessmentTotal`,
-          exp ( `assessmentTotal` * 0.237 ) / sum ( exp ( `assessmentTotal` * 0.237 ) ) OVER (  PARTITION BY `subjectID` ) AS `probability`,
-          count ( 1 ) OVER (  PARTITION BY `subjectID` ) AS `count`
+          "subjectID",
+          "surveyCategory",
+          "probability" / sum ( "probability" ) OVER (  PARTITION BY "subjectID" ) AS "probability"
          FROM (
           SELECT
-           `d`.`subjectID`,
-           `d`.`surveyCategory`,
-           `d`.`assessmentTotal`
-          FROM
-           `d` LIMIT 1000
-          ) tsql_39619266287678669305_0000000000
-         ) tsql_39619266287678669305_0000000001
-       ) tsql_39619266287678669305_0000000002
-      ) tsql_39619266287678669305_0000000003
-      WHERE `rank` = `count`
-     ) tsql_39619266287678669305_0000000004
-    ) tsql_39619266287678669305_0000000005 ORDER BY `subjectID`
+           "subjectID",
+           "surveyCategory",
+           "assessmentTotal",
+           exp ( "assessmentTotal" * 0.237 )  AS "probability"
+          FROM (
+           SELECT
+            "d"."subjectID",
+            "d"."surveyCategory",
+            "d"."assessmentTotal"
+           FROM
+            "d" LIMIT 1000
+           ) tsql_67969601266551974931_0000000000
+          ) tsql_67969601266551974931_0000000001
+         ) tsql_67969601266551974931_0000000002
+       ) tsql_67969601266551974931_0000000003
+       WHERE "row_number" <= 1
+      ) tsql_67969601266551974931_0000000004
+     ) tsql_67969601266551974931_0000000005
+    ) tsql_67969601266551974931_0000000006 ORDER BY "subjectID"
 
 The query is large, but due to its regular structure it should be very amenable to query optimization.
 
@@ -265,7 +279,7 @@ The above optimization is possible because the `rquery` representation is an int
 column_names(dq)
 ```
 
-    ## [1] "diagnosis"   "probability" "subjectID"
+    ## [1] "subjectID"   "diagnosis"   "probability"
 
 ``` r
 tables_used(dq)
@@ -288,18 +302,29 @@ cat(format(dq))
 
     table('d') %.>%
      extend(.,
-      probability := exp(assessmentTotal * scale) / sum(exp(assessmentTotal * scale)),
-      count := count(1),
+      probability := exp(assessmentTotal * scale)) %.>%
+     extend(.,
+      probability := probability / sum(probability),
       p= subjectID) %.>%
      extend(.,
-      rank := rank(),
+      row_number := row_number(),
       p= subjectID,
-      o= probability, surveyCategory) %.>%
+      o= "probability" DESC, "surveyCategory" DESC) %.>%
+     select_rows(.,
+       row_number <= 1) %.>%
      rename(.,
       c('diagnosis' = 'surveyCategory')) %.>%
-     select_rows(., rank = count) %.>%
-     select_columns(., subjectID, diagnosis, probability) %.>%
+     select_columns(.,
+       subjectID, diagnosis, probability) %.>%
      orderby(., subjectID)
+
+``` r
+dq %.>%
+  op_diagram(.) %.>% 
+  DiagrammeR::grViz(.)
+```
+
+![](https://github.com/WinVector/rquery/raw/master/tools/pipe_diagram.png)
 
 `rquery` also includes a number of useful utilities (both as nodes and as functions).
 
@@ -343,12 +368,12 @@ dq %.>%
   execute(my_db, .)
 ```
 
-    ##   quantile_probability           diagnosis probability subjectID
-    ## 1                 0.00 positive re-framing   0.5589742         1
-    ## 2                 0.25 positive re-framing   0.5589742         1
-    ## 3                 0.50 positive re-framing   0.5589742         1
-    ## 4                 0.75 withdrawal behavior   0.6706221         2
-    ## 5                 1.00 withdrawal behavior   0.6706221         2
+    ##   quantile_probability subjectID           diagnosis probability
+    ## 1                 0.00         1 positive re-framing   0.5589742
+    ## 2                 0.25         1 positive re-framing   0.5589742
+    ## 3                 0.50         1 positive re-framing   0.5589742
+    ## 4                 0.75         2 withdrawal behavior   0.6706221
+    ## 5                 1.00         2 withdrawal behavior   0.6706221
 
 ``` r
 dq %.>% 
@@ -357,12 +382,25 @@ dq %.>%
 ```
 
     ##        column index     class nrows nna nunique       min       max
-    ## 1   subjectID     1   numeric     2   0     NaN 1.0000000 2.0000000
-    ## 2   diagnosis     2 character     2   0       2       NaN       NaN
-    ## 3 probability     3   numeric     2   0     NaN 0.5589742 0.6706221
+    ## 1   subjectID     1   numeric     2   0      NA 1.0000000 2.0000000
+    ## 2   diagnosis     2 character     2   0       2        NA        NA
+    ## 3 probability     3   numeric     2   0      NA 0.5589742 0.6706221
     ##        mean         sd              lexmin              lexmax
-    ## 1 1.5000000 0.70710678                  NA                  NA
-    ## 2       NaN        NaN positive re-framing withdrawal behavior
-    ## 3 0.6147982 0.07894697                  NA                  NA
+    ## 1 1.5000000 0.70710678                <NA>                <NA>
+    ## 2        NA         NA positive re-framing withdrawal behavior
+    ## 3 0.6147982 0.07894697                <NA>                <NA>
+
+We have found most big-data projects either require joining very many tables (something `rquery` join planners help with, please see [here](https://github.com/WinVector/rquery/blob/master/extras/JoinController.md) and [here](https://github.com/WinVector/rquery/blob/master/extras/JoinController.md)) or they require working with wide data-marts (where `rquery` query narrowing helps, please see [here](https://github.com/WinVector/rquery/blob/master/extras/PerfTest.md)).
 
 We also could stand `rquery` up on non-`DBI` sources such as [`SparkR`](https://github.com/WinVector/rquery/blob/master/extras/SparkRExample.md) and perhaps even [`data.table`](https://github.com/WinVector/rquery/blob/master/extras/data_table.md).
+
+See also
+========
+
+For deeper dives into specific topics, please see also:
+
+-   [Join Controller](https://github.com/WinVector/rquery/blob/master/extras/JoinController.md)
+-   [Join Dependency Sorting](https://github.com/WinVector/rquery/blob/master/extras/DependencySorting.md)
+-   [PerfTest](https://github.com/WinVector/rquery/blob/master/extras/PerfTest.md)
+-   [Assignment Partitioner](https://github.com/WinVector/rquery/blob/master/extras/AssigmentPartitioner.md)
+-   [DifferentDBs](https://github.com/WinVector/rquery/blob/master/extras/ExtraDBs.md)

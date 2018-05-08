@@ -47,3 +47,6 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 }
 
 }
+\seealso{
+\code{\link{dbi_table}}, \code{\link{materialize}}, \code{\link{execute}}, \code{\link{dbi_copy_to}}, \code{\link{table_source}}
+}

@@ -1,8 +1,8 @@
 Package: rquery
 Type: Package
 Title: Relational Query Generator for Data Manipulation at Scale
-Version: 0.4.2
-Date: 2018-04-05
+Version: 0.4.3
+Date: 2018-05-07
 Authors@R: c(
     person("John", "Mount", email = "jmount@win-vector.com", role = c("aut", "cre")),
     person(family = "Win-Vector LLC", role = c("cph"))
@@ -25,14 +25,14 @@ License: GPL-3
 Encoding: UTF-8
 Depends: R (>= 3.4.0), wrapr (>= 1.3.0)
 Imports: DBI, utils
-Suggests: RSQLite, knitr, rmarkdown, testthat
+Suggests: RSQLite, igraph, DiagrammeR, knitr, rmarkdown, testthat
 LazyData: true
 RoxygenNote: 6.0.1
 ByteCompile: true
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2018-04-05 19:07:59 UTC; johnmount
+Packaged: 2018-05-08 02:10:00 UTC; johnmount
 Author: John Mount [aut, cre],
   Win-Vector LLC [cph]
 Repository: CRAN
-Date/Publication: 2018-04-05 19:14:58 UTC
+Date/Publication: 2018-05-08 03:51:56 UTC

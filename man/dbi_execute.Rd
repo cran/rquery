@@ -17,3 +17,6 @@ nothing
 \description{
 Execute a query.
 }
+\seealso{
+\code{\link{dbi_table}}
+}

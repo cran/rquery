@@ -2,8 +2,7 @@
 
 #' Table data source.
 #'
-#' Build structures (table name, column names, and quoting
-#' strategy) needed to represent data from a remote table.
+#' Build minimal structures (table name and column names) needed to represent data from a remote table.
 #'
 #' Generate a query that returns contents of a table, we
 #' could try to eliminate this (replace the query with the table name),
@@ -32,7 +31,7 @@
 #'   DBI::dbDisconnect(my_db)
 #' }
 #'
-#' @seealso \code{\link{dbi_table}}
+#' @seealso \code{\link{dbi_table}}, \code{\link{dbi_copy_to}}, \code{\link{materialize}}, \code{\link{execute}}, code{\link{to_sql}}
 #'
 #' @export
 #'
@@ -55,16 +54,18 @@ table_source <- function(table_name, columns) {
 #' Build structures (table name, column names, and quoting
 #' strategy) needed to represent data from a remote table.
 #'
-#' Generate a query that returns contents of a table, we
-#' could try to eliminate this (replace the query with the table name),
-#' but there are features one can work with with the query in place and
-#' SQL optimizers likely make this zero-cost anyway.
+#' Note: in examples we use \code{dbi_copy_to()} to create data.  This is only for the purpose of having
+#' easy portable examples.  With big data the data is usually already in the remote database or
+#' Spark system. The task is almost always to connect and work with this pre-existing remote data
+#' and the method to do this is \code{dbi_table}
+#' which builds a reference to a remote table given the table name.
+#'
 #'
 #' @param db database connection
 #' @param table_name name of table
 #' @return a relop representation of the data
 #'
-#' @seealso \code{\link{table_source}}
+#' @seealso \code{\link{table_source}}, \code{\link{dbi_copy_to}}, \code{\link{materialize}}, \code{\link{execute}}, code{\link{to_sql}}
 #'
 #' @examples
 #'
@@ -178,14 +179,12 @@ to_sql.relop_table_source <- function (x,
 }
 
 #' @export
-format.relop_table_source <- function(x, ...) {
-  wrapr::stop_if_dot_args(substitute(list(...)),
-                          "rquery::format.relop_table_source")
+format_node.relop_table_source <- function(node) {
   sym <- ""
-  if(!is.null(x$data)) {
+  if(!is.null(node$data)) {
     sym <- "+"
   }
-  paste0("table", sym, "('", x$table_name, "')",
+  paste0("table", sym, "('", node$table_name, "')",
          "\n")
 }
 

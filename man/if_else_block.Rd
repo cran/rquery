@@ -4,14 +4,19 @@
 \alias{if_else_block}
 \title{Simulate a per-row block-\code{if(){}else{}}.}
 \usage{
-if_else_block(testexpr, thenexprs = NULL, elseexprs = NULL)
+if_else_block(testexpr, ..., thenexprs = NULL, elseexprs = NULL)
 }
 \arguments{
 \item{testexpr}{character containing the test expression.}
 
+\item{...}{force later arguments to bind by name.}
+
 \item{thenexprs}{named character then assignments (altering columns, not creating).}
 
 \item{elseexprs}{named character else assignments (altering columns, not creating).}
+}
+\value{
+sequence of statemens for extend_se().
 }
 \description{
 This device uses expression-\code{ifelse(,,)} to simulate the
@@ -57,10 +62,10 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
       qae(edited := 1)))
   print(program)
 
-  trf <- extend_se(d, program)
-  cat(format(trf))
+  optree <- extend_se(d, program)
+  cat(format(optree))
 
-  sql <- to_sql(trf, my_db)
+  sql <- to_sql(optree, my_db)
   cat(sql)
 
   print(DBI::dbGetQuery(my_db, sql))
@@ -77,4 +82,7 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
   DBI::dbDisconnect(my_db)
 }
 
+}
+\seealso{
+\code{\link{if_else_op}}
 }

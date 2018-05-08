@@ -17,3 +17,6 @@ numeric row count
 \description{
 Count rows and return as numeric
 }
+\seealso{
+\code{\link{dbi_table}}
+}

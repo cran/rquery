@@ -22,15 +22,17 @@ extend_impl <- function(source, parsed,
                         partitionby = NULL,
                         orderby = NULL,
                         rev_orderby = NULL) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery:::extend_impl")
   have <- column_names(source)
-  check_have_cols(have, partitionby, "rquery::extend partitionby")
-  check_have_cols(have, orderby, "rquery::extend orderby")
-  # these checks are easy by the no same block use rule
-  check_have_cols(have, merge_fld(parsed, "symbols_used"), "rquery::extend terms")
-  check_have_cols(have, merge_fld(parsed, "free_symbols"), "rquery::extend terms")
+  required_cols <- sort(unique(c(
+    merge_fld(parsed, "symbols_used"),
+    merge_fld(parsed, "free_symbols"),
+    partitionby,
+    orderby,
+    rev_orderby
+  )))
+  check_have_cols(have, required_cols, "rquery::extend")
   assignments <- unpack_assignments(source, parsed)
   r <- list(source = list(source),
             table_name = NULL,
@@ -39,6 +41,7 @@ extend_impl <- function(source, parsed,
             orderby = orderby,
             rev_orderby = rev_orderby,
             assignments = assignments,
+            required_cols = required_cols,
             columns = names(assignments))
   r <- relop_decorate("relop_extend", r)
   r
@@ -101,16 +104,16 @@ extend_impl_list <- function(source, parsed,
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   d <- dbi_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2))
-#'   eqn <- extend_se(d, c("v" := "AUC + R2", "x" := "pmax(AUC,v)"))
-#'   cat(format(eqn))
-#'   sql <- to_sql(eqn, my_db)
+#'   optree <- extend_se(d, c("v" := "AUC + R2", "x" := "pmax(AUC,v)"))
+#'   cat(format(optree))
+#'   sql <- to_sql(optree, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
 #'
 #'   # SQLite can not run the following query
-#'   eqn2 <- extend_se(d, "v" := "rank()",
+#'   optree2 <- extend_se(d, "v" := "rank()",
 #'                     partitionby = "AUC", orderby = "R2")
-#'   sql2 <- to_sql(eqn2, my_db)
+#'   sql2 <- to_sql(optree2, my_db)
 #'   cat(sql2)
 #'
 #'   DBI::dbDisconnect(my_db)
@@ -134,9 +137,8 @@ extend_se.relop <- function(source, assignments,
                             orderby = NULL,
                             rev_orderby = NULL,
                             env = parent.frame()) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::extend_se.relop")
   parsed <- parse_se(source, assignments, env = env)
   extend_impl_list(source = source,
                    parsed = parsed,
@@ -152,9 +154,8 @@ extend_se.data.frame <- function(source, assignments,
                                  orderby = NULL,
                                  rev_orderby = NULL,
                                  env = parent.frame()) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::extend_se.data.frame")
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- table_source(tmp_name, colnames(source))
   dnode$data <- source
@@ -190,9 +191,9 @@ extend_se.data.frame <- function(source, assignments,
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   d <- dbi_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2))
-#'   eqn <- extend_nse(d, v := ifelse(AUC>0.5, R2, 1.0))
-#'   cat(format(eqn))
-#'   sql <- to_sql(eqn, my_db)
+#'   optree <- extend_nse(d, v := ifelse(AUC>0.5, R2, 1.0))
+#'   cat(format(optree))
+#'   sql <- to_sql(optree, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
 #'   DBI::dbDisconnect(my_db)
@@ -249,33 +250,29 @@ extend_nse.data.frame <- function(source,
 
 #' @export
 column_names.relop_extend <- function (x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::column_names.relop_extend")
   sort(unique(c(column_names(x$source[[1]]), x$columns)))
 }
 
 
 #' @export
-format.relop_extend <- function(x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+format_node.relop_extend <- function(node) {
   pterms <- ""
-  if(length(x$partitionby)>0) {
+  if(length(node$partitionby)>0) {
     pterms <- paste0(",\n  p= ",
-                     paste(x$partitionb, collapse = ", "))
+                     paste(node$partitionb, collapse = ", "))
   }
   oterms <- ""
   ocols <- NULL
-  if(length(x$orderby)>0) {
-    ocols <- vapply(x$orderby,
+  if(length(node$orderby)>0) {
+    ocols <- vapply(node$orderby,
                     function(ci) {
                       paste0("\"", ci, "\"")
                     }, character(1))
   }
-  if(length(x$rev_orderby)>0) {
-    rcols <- vapply(x$rev_orderby,
+  if(length(node$rev_orderby)>0) {
+    rcols <- vapply(node$rev_orderby,
                     function(ci) {
                       paste0("\"", ci, "\" DESC")
                     }, character(1))
@@ -283,16 +280,14 @@ format.relop_extend <- function(x, ...) {
   }
   if(length(ocols)>0) {
     oterms <- paste0(",\n  o= ",
-      paste(x$orderby, collapse = ", "))
+      paste(ocols, collapse = ", "))
   }
-  origTerms <- vapply(x$parsed,
+  origTerms <- vapply(node$parsed,
                       function(pi) {
                         paste(as.character(pi$presentation), collapse = ' ')
                       }, character(1))
   aterms <- paste(origTerms, collapse = ",\n  ")
-  paste0(trimws(format(x$source[[1]]), which="right"),
-         " %.>%\n ",
-         "extend(.,\n  ",
+  paste0("extend(.,\n  ",
          aterms,
          pterms,
          oterms,
@@ -324,9 +319,8 @@ calc_used_relop_extend <- function (x,
 columns_used.relop_extend <- function (x, ...,
                                        using = NULL,
                                        contract = FALSE) {
-  if(length(list(...))>0) {
-    stop("rquery:columns_used: unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::columns_used.relop_extend")
   cols <- calc_used_relop_extend(x,
                                  using = using,
                                  contract = contract)
@@ -346,9 +340,8 @@ to_sql.relop_extend <- function (x,
                                  tnum = mk_tmp_name_source('tsql'),
                                  append_cr = TRUE,
                                  using = NULL) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::to_sql.relop_extend")
   # re-quote expr
   re_quoted <- redo_parse_quoting(x$parsed, db)
   re_assignments <- unpack_assignments(x$source[[1]], re_quoted)

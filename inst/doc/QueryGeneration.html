@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2018-04-05" />
+<meta name="date" content="2018-05-07" />
 
 <title>Query Generation</title>
 
@@ -70,12 +70,17 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Query Generation</h1>
 <h4 class="author"><em>John Mount</em></h4>
-<h4 class="date"><em>2018-04-05</em></h4>
+<h4 class="date"><em>2018-05-07</em></h4>
 
 
 
+<p>This is a very brief place-holder example (not executed, as <code>SQLite</code> does not have the needed window functions). For more details please see the fuller note: <a href="https://winvector.github.io/rquery/index.html"><code>rquery README</code></a>.</p>
 <p>The primary purpose of <code>rquery</code> is <code>SQL</code> query generation. We demonstrate this below.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">scale &lt;-<span class="st"> </span><span class="fl">0.237</span>
+<p>Note: in examples we use <code>dbi_copy_to()</code> to create data. This is only for the purpose of having easy portable examples. With big data the data is usually already in the remote database or Spark system. The task is almost always to connect and work with this pre-existing remote data and the method to do this is <a href="https://winvector.github.io/rquery/reference/dbi_table.html"><code>dbi_table()</code></a>, which builds a reference to a remote table given the table name.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># produce a hande to existing table</span>
+d &lt;-<span class="st"> </span><span class="kw">dbi_table</span>(my_db, <span class="st">&quot;d&quot;</span>)
+
+scale &lt;-<span class="st"> </span><span class="fl">0.237</span>
 
 dq &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">extend_nse</span>(.,
@@ -98,10 +103,25 @@ dq &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span>
 <span class="kw">class</span>(my_db)
 <span class="co">#&gt; [1] &quot;SQLiteConnection&quot;</span>
 <span class="co">#&gt; attr(,&quot;package&quot;)</span>
-<span class="co">#&gt; [1] &quot;RSQLite&quot;</span>
-
-sql &lt;-<span class="st"> </span><span class="kw">to_sql</span>(dq, <span class="dt">db =</span> my_db, <span class="dt">source_limit =</span> <span class="dv">1000</span>)</code></pre></div>
-<p><code>to_sql()</code> SQL:</p>
+<span class="co">#&gt; [1] &quot;RSQLite&quot;</span></code></pre></div>
+<p>Presentation format (see also <a href="https://winvector.github.io/rquery/reference/op_diagram.html"><code>op_diagram()</code></a>):</p>
+<pre><code>  table('d') %.&gt;%
+   extend(.,
+    probability := exp(assessmentTotal * scale) / sum(exp(assessmentTotal * scale)),
+    count := count(1),
+    p= subjectID) %.&gt;%
+   extend(.,
+    rank := rank(),
+    p= subjectID,
+    o= &quot;probability&quot;, &quot;surveyCategory&quot;) %.&gt;%
+   rename(.,
+    c('diagnosis' = 'surveyCategory')) %.&gt;%
+   select_rows(.,
+     rank = count) %.&gt;%
+   select_columns(.,
+     subjectID, diagnosis, probability) %.&gt;%
+   orderby(., subjectID)</code></pre>
+<p><code>to_sql()</code> SQL (see also <a href="https://winvector.github.io/rquery/reference/materialize.html"><code>materialize()</code></a>):</p>
 <pre><code>  SELECT * FROM (
    SELECT
     `subjectID`,

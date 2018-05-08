@@ -4,16 +4,19 @@
 \alias{rquery_apply_to_data_frame}
 \title{Execture optree in an enviroment where d is the only data.}
 \usage{
-rquery_apply_to_data_frame(d, optree, env = parent.frame(), limit = NULL)
+rquery_apply_to_data_frame(d, optree, ..., limit = NULL,
+  env = parent.frame())
 }
 \arguments{
 \item{d}{data.frame}
 
 \item{optree}{rquery rel_op operation tree.}
 
-\item{env}{environment to look for "winvector_temp_db_handle" in.}
+\item{...}{force later arguments to bind by name.}
 
-\item{limit}{numeric if not null limit result to this many rows.}
+\item{limit}{integer, if not NULL limit result to no more than this many rows.}
+
+\item{env}{environment to look for "winvector_temp_db_handle" in.}
 }
 \value{
 data.frame result
@@ -35,8 +38,17 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
     orderby(., rev_cols = "R2")
 
   d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
-  rquery_apply_to_data_frame(d, optree) \%.>\%
-     print(.)
+  v <- rquery_apply_to_data_frame(d, optree)
+  print(v)
+
+  # now load up a table without an R2 column,
+  # want to show this is caught
+  d <- data.frame(z = 1)
+  tryCatch(
+     rquery_apply_to_data_frame(d, optree),
+     error = function(e) { as.character(e) }
+    ) \%.>\%
+    print(.)
 
   winvector_temp_db_handle <- NULL
   DBI::dbDisconnect(db)

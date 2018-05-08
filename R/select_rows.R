@@ -12,9 +12,9 @@
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   d <- dbi_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2))
-#'   eqn <- select_rows_se(d, "AUC >= 0.5")
-#'   cat(format(eqn))
-#'   sql <- to_sql(eqn, my_db)
+#'   optree <- select_rows_se(d, "AUC >= 0.5")
+#'   cat(format(optree))
+#'   sql <- to_sql(optree, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
 #'   DBI::dbDisconnect(my_db)
@@ -30,15 +30,16 @@ select_rows_se <- function(source, expr,
 select_rows_se.relop <- function(source, expr,
                                  env = parent.frame()) {
   have <- column_names(source)
-  vnam <- setdiff(paste("rquery_select_condition", 1:(length(have)+1), sep = "_"),
-                  have)[[1]]
-  parsed <- parse_se(source, vnam := expr, env = env)
-  assignments <- unpack_assignments(source, parsed)
+  parsed <- parse_se(source, expr, env = env,
+                     check_names = FALSE)
+  assignments <- unpack_assignments(source, parsed,
+                                    check_is_assignment = FALSE)
   parsed[[1]]$symbols_produced <- character(0)
   r <- list(source = list(source),
             table_name = NULL,
             parsed = parsed,
-            expr = assignments)
+            expr = assignments,
+            presentation = expr)
   r <- relop_decorate("relop_select_rows", r)
   r
 }
@@ -69,10 +70,10 @@ select_rows_se.data.frame <- function(source, expr,
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   d <- dbi_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2, z = 3))
-#'   eqn <- select_rows_nse(d, AUC >= 0.5) %.>%
+#'   optree <- select_rows_nse(d, AUC >= 0.5) %.>%
 #'     select_columns(., "R2")
-#'   cat(format(eqn))
-#'   sql <- to_sql(eqn, my_db)
+#'   cat(format(optree))
+#'   sql <- to_sql(optree, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
 #'   DBI::dbDisconnect(my_db)
@@ -90,15 +91,16 @@ select_rows_nse.relop <- function(source, expr,
                             env = parent.frame()) {
   exprq <- substitute(expr)
   have <- column_names(source)
-  vnam <- setdiff(paste("rquery_select_condition", 1:(length(have)+1), sep = "_"),
-                  have)[[1]]
-  parsed <- parse_nse(source, list(exprq), env = env)
-  parsed[[1]]$symbols_produced <- vnam
-  assignments <- unpack_assignments(source, parsed)
+  parsed <- parse_nse(source, list(exprq), env = env,
+                      check_names = FALSE)
+  assignments <- unpack_assignments(source, parsed,
+                                    check_is_assignment = FALSE)
   parsed[[1]]$symbols_produced <- character(0)
   r <- list(source = list(source),
+            table_name = NULL,
             parsed = parsed,
-            expr = assignments)
+            expr = assignments,
+            presentation = parsed[[1]]$presentation)
   r <- relop_decorate("relop_select_rows", r)
   r
 }
@@ -119,13 +121,8 @@ select_rows_nse.data.frame <- function(source, expr,
 
 
 #' @export
-format.relop_select_rows <- function(x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
-  paste0(trimws(format(x$source[[1]]), which="right"),
-         " %.>%\n ",
-         "select_rows(., ", x$parsed[[1]]$presentation, ")",
+format_node.relop_select_rows <- function(node) {
+  paste0("select_rows(.,\n   ", node$presentation, ")",
          "\n")
 }
 
@@ -133,6 +130,8 @@ format.relop_select_rows <- function(x, ...) {
 calc_used_relop_select_rows <- function (x, ...,
                                          using = NULL,
                                          contract = FALSE) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery:::calc_used_relop_select_rows")
   if(length(using)<=0) {
     using <- column_names(x)
   }
@@ -150,6 +149,8 @@ calc_used_relop_select_rows <- function (x, ...,
 columns_used.relop_select_rows <- function (x, ...,
                                          using = NULL,
                                          contract = FALSE) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::columns_used.relop_select_rows")
   cols <- calc_used_relop_select_rows(x,
                                       using = using,
                                       contract = contract)
@@ -169,9 +170,8 @@ to_sql.relop_select_rows <- function (x,
                                       tnum = mk_tmp_name_source('tsql'),
                                       append_cr = TRUE,
                                       using = NULL) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::to_sql.relop_select_rows")
   # re-quote expr
   re_quoted <- redo_parse_quoting(x$parsed, db)
   re_expr <- unpack_assignments(x$source[[1]], re_quoted,

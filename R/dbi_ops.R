@@ -9,6 +9,8 @@
 #' @param table_name character table name
 #' @return logical TRUE if table exists.
 #'
+#' @seealso \code{\link{dbi_table}}
+#'
 #' @export
 #'
 dbi_table_exists <- function(db, table_name) {
@@ -64,6 +66,8 @@ dbi_colnames <- function(db, table_name) {
 #' @param table_name character, name of table to create.
 #' @return logical TRUE if table existed, else FALSE
 #'
+#' @seealso \code{\link{dbi_table}}
+#'
 #' @export
 #'
 dbi_remove_table <- function(db, table_name) {
@@ -88,13 +92,18 @@ dbi_remove_table <- function(db, table_name) {
 #' @param q character query
 #' @return nothing
 #'
+#' @seealso \code{\link{dbi_table}}
+#'
+#' @export
+#'
 dbi_execute <- function(db, q) {
+  res <- NULL
   if(getDBOption(db, "use_DBI_dbExecute", TRUE)) {
-    DBI::dbExecute(db, q)
+    res <- DBI::dbExecute(db, q)
   } else {
     DBI::dbGetQuery(db, q)
   }
-  NULL
+  res
 }
 
 # try not to use this too many places, prefer the configs
@@ -113,6 +122,8 @@ connection_is_spark <- function(db) {
 #' @param temporary passed to \code{\link[DBI]{dbWriteTable}}.
 #' @param rowidcolumn character, name to land row-ids.
 #' @return a relop representation of the data
+#'
+#' @seealso \code{\link{dbi_table}}, \code{\link{table_source}}, \code{\link{materialize}}, \code{\link{execute}}, \code{\link{to_sql}}
 #'
 #' @examples
 #'
@@ -195,6 +206,8 @@ dbi_copy_to <- function(db, table_name, d,
 #' @param db database connetion
 #' @param table_name character, name of table
 #' @return numeric row count
+#'
+#' @seealso \code{\link{dbi_table}}
 #'
 #' @export
 #'

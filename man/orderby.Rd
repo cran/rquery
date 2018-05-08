@@ -18,7 +18,7 @@ orderby(source, cols = NULL, ..., rev_cols = NULL, limit = NULL)
 \item{limit}{number limit row count.}
 }
 \value{
-select columns node.
+order_by node.
 }
 \description{
 Order a table by a set of columns (not general expressions) and
@@ -38,9 +38,9 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   d <- dbi_copy_to(my_db, 'd',
                    data.frame(AUC = 0.6, R2 = 0.2))
-  eqn <- orderby(d, rev_cols = "AUC", limit=4)
-  cat(format(eqn))
-  sql <- to_sql(eqn, my_db)
+  optree <- orderby(d, rev_cols = "AUC", limit=4)
+  cat(format(optree))
+  sql <- to_sql(optree, my_db)
   cat(sql)
   print(DBI::dbGetQuery(my_db, sql))
   DBI::dbDisconnect(my_db)

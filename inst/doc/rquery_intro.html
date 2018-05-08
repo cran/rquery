@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2018-04-05" />
+<meta name="date" content="2018-05-07" />
 
 <title>rquery Introduction</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">rquery Introduction</h1>
 <h4 class="author"><em>John Mount, Win-Vector LLC</em></h4>
-<h4 class="date"><em>2018-04-05</em></h4>
+<h4 class="date"><em>2018-05-07</em></h4>
 
 
 
@@ -118,13 +118,17 @@ dbopts &lt;-<span class="st"> </span><span class="kw">dbi_connection_preferences
 ## [1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">options</span>(dbopts)
 
-<span class="co"># example data</span>
-d &lt;-<span class="st"> </span><span class="kw">dbi_copy_to</span>(
+<span class="co"># copy in example data</span>
+<span class="kw">dbi_copy_to</span>(
   db, <span class="st">'d'</span>,
   <span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="op">-</span><span class="dv">5</span>, <span class="dv">3</span>)),
   <span class="dt">temporary =</span> <span class="ot">FALSE</span>,
   <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## [1] &quot;table('d')&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># produce a hande to existing table</span>
+d &lt;-<span class="st"> </span><span class="kw">dbi_table</span>(db, <span class="st">&quot;d&quot;</span>)</code></pre></div>
 <p><code>d</code> is a “table description” which is just the name of a table and the names of expected columns. <code>d</code> does not store data or a database reference (making it safe to serialize/de-serialize). All <code>rquery</code> operation trees or pipelines must start either with a table description or a <code>data.frame</code>. We will discuss table descriptions later.</p>
+<p>Note: in examples we use <code>dbi_copy_to()</code> to create data. This is only for the purpose of having easy portable examples. With big data the data is usually already in the remote database or Spark system. The task is almost always to connect and work with this pre-existing remote data and the method to do this is <a href="https://winvector.github.io/rquery/reference/dbi_table.html"><code>dbi_table()</code></a>, which builds a reference to a remote table given the table name. The suggested pattern for working with remote tables is to get inputs via <a href="https://winvector.github.io/rquery/reference/dbi_table.html"><code>dbi_table()</code></a> and land remote results with <a href="https://winvector.github.io/rquery/reference/materialize.html"><code>materialze()</code></a>. To work with local data one can copy data from memory to the database with <a href="https://winvector.github.io/rquery/reference/dbi_copy_to.html"><code>dbi_copy_to()</code></a> and bring back results with <a href="https://winvector.github.io/rquery/reference/execute.html"><code>execute()</code></a> (though be aware operation on remote non-memory data is <code>rquery</code>’s primary intent).</p>
 <p>For our first example we will introduce a new column and perform a calculation using this column. This is achieved in <code>SQL</code> by writing code in one of two styles: defining the first new column twice (once to land the value and once to use), or sequencing two queries by nesting. We will demonstrate both methods.</p>
 <p>The define the column twice solution looks like the following.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(db, <span class="st">&quot;</span>
@@ -165,19 +169,20 @@ d &lt;-<span class="st"> </span><span class="kw">dbi_copy_to</span>(
 <span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;absv&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;ABS(v)&quot;</span>) <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;delta&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;absv - v&quot;</span>)
 <span class="kw">execute</span>(db, op_tree)</code></pre></div>
-<pre><code>##    v absv delta
-## 1  1    1     0
-## 2 -5    5    10
-## 3  3    3     0</code></pre>
+<pre><code>##   absv delta  v
+## 1    1     0  1
+## 2    5    10 -5
+## 3    3     0  3</code></pre>
 <p>The above is what we call “piped <code>SQL</code>” and represents a major convenience for users as the details of how to compose the statements are left to the package. The <code>sql_node()</code> is a very powerful node. We will use it in our first few examples and move onto more convenient higher level relational nodes.</p>
 <p>We can view the <code>SQL</code> translation of the operations tree as follows:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">to_sql</span>(op_tree, db))</code></pre></div>
 <pre><code>SELECT
- *,
- absv - v AS `delta`
+ `absv` AS `absv`,
+ absv - v AS `delta`,
+ `v` AS `v`
 FROM (
  SELECT
-  *,
+  `v` AS `v`,
   ABS(v) AS `absv`
  FROM (
   SELECT
@@ -192,11 +197,12 @@ FROM (
 <span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;delta&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">list</span>(<span class="kw">list</span>(<span class="kw">quote</span>(absv),<span class="st">&quot;-&quot;</span>, <span class="kw">quote</span>(v))))
 <span class="kw">cat</span>(<span class="kw">to_sql</span>(op_tree, db))</code></pre></div>
 <pre><code>SELECT
- *,
- `absv` - `v` AS `delta`
+ `absv` AS `absv`,
+ `absv` - `v` AS `delta`,
+ `v` AS `v`
 FROM (
  SELECT
-  *,
+  `v` AS `v`,
   ABS( `v` ) AS `absv`
  FROM (
   SELECT
@@ -215,9 +221,9 @@ FROM (
 ##  sql_node(.,
 ##           delta := absv - v,
 ##              *=TRUE)</code></pre>
-<p><code>op_tree</code> stores an number of important summaries about the proposed query:</p>
+<p>The <code>op_tree</code> supplies an number of important summaries about the proposed query:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">column_names</span>(op_tree)</code></pre></div>
-<pre><code>## [1] &quot;delta&quot; &quot;absv&quot;  &quot;v&quot;</code></pre>
+<pre><code>## [1] &quot;absv&quot;  &quot;delta&quot; &quot;v&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">tables_used</span>(op_tree)</code></pre></div>
 <pre><code>## [1] &quot;d&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">columns_used</span>(op_tree)</code></pre></div>
@@ -292,8 +298,10 @@ op_tree_count_null &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</sp
 sql &lt;-<span class="st"> </span><span class="kw">to_sql</span>(op_tree_count_null, db)
 <span class="kw">cat</span>(sql)</code></pre></div>
 <pre><code>## SELECT
-##  *,
-##  0 + (CASE WHEN ( `v1` IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( `v2` IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( `v3` IS NULL ) THEN 1.0 ELSE 0.0 END) AS `num_missing`
+##  `v3` AS `v3`,
+##  0 + (CASE WHEN ( `v1` IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( `v2` IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( `v3` IS NULL ) THEN 1.0 ELSE 0.0 END) AS `num_missing`,
+##  `v1` AS `v1`,
+##  `v2` AS `v2`
 ## FROM (
 ##  SELECT
 ##   `d2`.`v1`,
@@ -304,21 +312,21 @@ sql &lt;-<span class="st"> </span><span class="kw">to_sql</span>(op_tree_count_n
 ## ) tsql_48999109988716345118_0000000000</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># execute</span>
 <span class="kw">execute</span>(db, op_tree_count_null)</code></pre></div>
-<pre><code>##   v1   v2 v3 num_missing
-## 1  1 &lt;NA&gt; NA           2
-## 2  2    b NA           1
-## 3 NA &lt;NA&gt;  7           2
-## 4  3    c  8           0</code></pre>
+<pre><code>##   v3 num_missing v1   v2
+## 1 NA           2  1 &lt;NA&gt;
+## 2 NA           1  2    b
+## 3  7           2 NA &lt;NA&gt;
+## 4  8           0  3    c</code></pre>
 <p>And, as this is an important capability, this exact functionality is wrapped in <a href="https://winvector.github.io/rquery/reference/count_null_cols.html"><code>count_null_cols()</code></a>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># whole process wrapped in convenience node</span>
 d2 <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">count_null_cols</span>(., vars, <span class="st">&quot;nnull&quot;</span>) <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">execute</span>(db, .)</code></pre></div>
-<pre><code>##   v1   v2 v3 nnull
-## 1  1 &lt;NA&gt; NA     2
-## 2  2    b NA     1
-## 3 NA &lt;NA&gt;  7     2
-## 4  3    c  8     0</code></pre>
+<pre><code>##   v3 nnull v1   v2
+## 1 NA     2  1 &lt;NA&gt;
+## 2 NA     1  2    b
+## 3  7     2 NA &lt;NA&gt;
+## 4  8     0  3    c</code></pre>
 </div>
 </div>
 <div id="working-with-sets-of-columns" class="section level2">
@@ -336,12 +344,12 @@ s_tree &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span>
                <span class="st">&quot;CASE WHEN . IS NULL THEN 1 ELSE 0 END&quot;</span>)
 <span class="kw">cat</span>(<span class="kw">to_sql</span>(s_tree, db))</code></pre></div>
 <pre><code>## SELECT
-##  CASE WHEN `v1` IS NULL THEN 1 ELSE 0 END AS `v1_isNA`,
-##  CASE WHEN `v2` IS NULL THEN 1 ELSE 0 END AS `v2_isNA`,
-##  CASE WHEN `v3` IS NULL THEN 1 ELSE 0 END AS `v3_isNA`,
 ##  v1 AS `v1`,
 ##  v2 AS `v2`,
-##  v3 AS `v3`
+##  v3 AS `v3`,
+##  CASE WHEN `v1` IS NULL THEN 1 ELSE 0 END AS `v1_isNA`,
+##  CASE WHEN `v2` IS NULL THEN 1 ELSE 0 END AS `v2_isNA`,
+##  CASE WHEN `v3` IS NULL THEN 1 ELSE 0 END AS `v3_isNA`
 ## FROM (
 ##  SELECT
 ##   `d2`.`v1`,
@@ -351,11 +359,11 @@ s_tree &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span>
 ##   `d2`
 ## ) tsql_57668660136678033503_0000000000</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">execute</span>(db, s_tree)</code></pre></div>
-<pre><code>##   v1_isNA v2_isNA v3_isNA v1   v2 v3
-## 1       0       1       1  1 &lt;NA&gt; NA
-## 2       0       0       1  2    b NA
-## 3       1       1       0 NA &lt;NA&gt;  7
-## 4       0       0       0  3    c  8</code></pre>
+<pre><code>##   v1   v2 v3 v1_isNA v2_isNA v3_isNA
+## 1  1 &lt;NA&gt; NA       0       1       1
+## 2  2    b NA       0       0       1
+## 3 NA &lt;NA&gt;  7       1       1       0
+## 4  3    c  8       0       0       0</code></pre>
 </div>
 </div>
 <div id="sql-first" class="section level1">
@@ -371,26 +379,26 @@ s_tree &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span>
 
 <span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="op">-</span><span class="dv">2</span><span class="op">:</span><span class="dv">2</span>) <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">execute</span>(., op_tree)</code></pre></div>
-<pre><code>##    v absv delta prod
-## 1 -2    2     4    8
-## 2 -1    1     2    2
-## 3  0    0     0    0
-## 4  1    1     0    0
-## 5  2    2     0    0</code></pre>
+<pre><code>##    v prod absv delta
+## 1 -2    8    2     4
+## 2 -1    2    1     2
+## 3  0    0    0     0
+## 4  1    0    1     0
+## 5  2    0    2     0</code></pre>
 <p>When using the <code>wrapr</code> dot pipe the above can be abbreviated as:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="op">-</span><span class="dv">2</span><span class="op">:</span><span class="dv">2</span>) <span class="op">%.&gt;%</span><span class="st"> </span>op_tree</code></pre></div>
-<pre><code>##    v absv delta prod
-## 1 -2    2     4    8
-## 2 -1    1     2    2
-## 3  0    0     0    0
-## 4  1    1     0    0
-## 5  2    2     0    0</code></pre>
+<pre><code>##    v prod absv delta
+## 1 -2    8    2     4
+## 2 -1    2    1     2
+## 3  0    0    0     0
+## 4  1    0    1     0
+## 5  2    0    2     0</code></pre>
 <p>The above calculation is managed by <a href="https://github.com/WinVector/wrapr/blob/master/extras/wrapr_pipe.pdf"><code>wrapr</code> dot pipe <code>S3</code> <code>wrapr_function</code></a> extensions.</p>
 <p><code>rquery</code> operators can be used directly (without any table description nodes) when working with in-memory <code>data.frame</code>s.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="dv">5</span>) <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">sql_node</span>(., <span class="st">&quot;z&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;sqrt(x)&quot;</span>)</code></pre></div>
 <pre><code>##   x        z
 ## 1 5 2.236068</code></pre>
-<p>The above calculation is triggered by <code>S3</code> override of any of <code>print()</code>, <code>as.data.frame()</code> and <code>head()</code>. Remote tables need an <code>execuite()</code> or <code>materialize()</code> step to specify the database connection.</p>
+<p>The above calculation is triggered by <code>S3</code> override of any of <code>print()</code>, <code>as.data.frame()</code> and <code>head()</code>. Remote tables need an <code>execute()</code> or <code>materialize()</code> step to specify the database connection.</p>
 </div>
 <div id="table-descriptions" class="section level1">
 <h1>Table descriptions</h1>
@@ -430,7 +438,6 @@ s_tree &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span>
 ##  FROM
 ##   `d`
 ##  ) tsql_72414376057825575488_0000000000</code></pre>
-<pre><code>## NULL</code></pre>
 <p>The exact translation depends on the database (which is why <code>to_sql()</code> takes a database argument). Some care has to be taken as <code>SQL</code> types are different than <code>R</code> types (in particular for some databases logical types are not numeric).</p>
 <p>With a database that supplies window functions one can quickly work the “logistic scoring by hand” example from<br />
 from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for-the-part-time-r-user/">Let’s Have Some Sympathy For The Part-time R User</a>. This example worked with <code>rquery</code> code that works with both <code>PostgreSQL</code> and <code>Spark</code> can be found <a href="https://github.com/WinVector/rquery/blob/master/README.md">here</a>.</p>
@@ -443,17 +450,14 @@ dq &lt;-<span class="st"> </span><span class="kw">table_source</span>(<span clas
                                 assessmentTotal)) <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">extend_nse</span>(.,
              probability <span class="op">:</span><span class="er">=</span>
-<span class="st">               </span><span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)<span class="op">/</span>
-<span class="st">               </span><span class="kw">sum</span>(<span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)),
-             count <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">count</span>(<span class="dv">1</span>),
-             <span class="dt">partitionby =</span> <span class="st">'subjectID'</span>) <span class="op">%.&gt;%</span>
-<span class="st">  </span><span class="kw">extend_nse</span>(.,
-             rank <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">rank</span>(),
+<span class="st">               </span><span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale))  <span class="op">%.&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">normalize_cols</span>(.,
+                 <span class="st">&quot;probability&quot;</span>,
+                 <span class="dt">partitionby =</span> <span class="st">'subjectID'</span>) <span class="op">%.&gt;%</span>
+<span class="st">  </span><span class="kw">pick_top_k</span>(.,
              <span class="dt">partitionby =</span> <span class="st">'subjectID'</span>,
-             <span class="dt">orderby =</span> <span class="kw">c</span>(<span class="st">'probability'</span>, 
-                         <span class="st">'surveyCategory'</span>))  <span class="op">%.&gt;%</span>
+             <span class="dt">rev_orderby =</span> <span class="kw">c</span>(<span class="st">'probability'</span>, <span class="st">'surveyCategory'</span>)) <span class="op">%.&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">rename_columns</span>(., <span class="st">'diagnosis'</span> <span class="op">:</span><span class="er">=</span><span class="st"> 'surveyCategory'</span>) <span class="op">%.&gt;%</span>
-<span class="st">  </span><span class="kw">select_rows_nse</span>(., rank <span class="op">==</span><span class="st"> </span>count) <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">select_columns</span>(., <span class="kw">c</span>(<span class="st">'subjectID'</span>, 
                       <span class="st">'diagnosis'</span>, 
                       <span class="st">'probability'</span>)) <span class="op">%.&gt;%</span>
@@ -466,7 +470,73 @@ dq &lt;-<span class="st"> </span><span class="kw">table_source</span>(<span clas
 <pre><code>## $d3
 ## [1] &quot;subjectID&quot;       &quot;surveyCategory&quot;  &quot;assessmentTotal&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">column_names</span>(dq)</code></pre></div>
-<pre><code>## [1] &quot;diagnosis&quot;   &quot;probability&quot; &quot;subjectID&quot;</code></pre>
+<pre><code>## [1] &quot;subjectID&quot;   &quot;diagnosis&quot;   &quot;probability&quot;</code></pre>
+<p>The operations can be printed as an operations tree.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">format</span>(dq))</code></pre></div>
+<pre><code>## table('d3') %.&gt;%
+##  extend(.,
+##   probability := exp(assessmentTotal * scale)) %.&gt;%
+##  extend(.,
+##   probability := probability / sum(probability),
+##   p= subjectID) %.&gt;%
+##  extend(.,
+##   row_number := row_number(),
+##   p= subjectID,
+##   o= &quot;probability&quot; DESC, &quot;surveyCategory&quot; DESC) %.&gt;%
+##  select_rows(.,
+##    row_number &lt;= 1) %.&gt;%
+##  rename(.,
+##   c('diagnosis' = 'surveyCategory')) %.&gt;%
+##  select_columns(.,
+##    subjectID, diagnosis, probability) %.&gt;%
+##  orderby(., subjectID)</code></pre>
+<p>Notice the returned presentation is not exactly the set of nodes we specified. This is because of the nodes we used (<code>normalize_cols()</code> and <code>pick_top_k()</code>) are actually higher-order nodes (implemented in terms of nodes). Also <code>extend()</code> nodes are re-factored to be unambiguous in their use and re-use of column names.</p>
+<p>We can also exhibit the <code>SQL</code> this operations tree renders, to (though the <code>SQLite</code> database we are using in vignettes does not have the required window-functions to execute it; we suggest using <code>PostgreSQL</code>).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">to_sql</span>(dq, db))</code></pre></div>
+<pre><code>## SELECT * FROM (
+##  SELECT
+##   `subjectID`,
+##   `diagnosis`,
+##   `probability`
+##  FROM (
+##   SELECT
+##    `probability` AS `probability`,
+##    `subjectID` AS `subjectID`,
+##    `surveyCategory` AS `diagnosis`
+##   FROM (
+##    SELECT * FROM (
+##     SELECT
+##      `probability`,
+##      `subjectID`,
+##      `surveyCategory`,
+##      row_number ( ) OVER (  PARTITION BY `subjectID` ORDER BY `probability` DESC, `surveyCategory` DESC ) AS `row_number`
+##     FROM (
+##      SELECT
+##       `subjectID`,
+##       `surveyCategory`,
+##       `probability` / sum ( `probability` ) OVER (  PARTITION BY `subjectID` ) AS `probability`
+##      FROM (
+##       SELECT
+##        `subjectID`,
+##        `surveyCategory`,
+##        `assessmentTotal`,
+##        exp ( `assessmentTotal` * 0.237 )  AS `probability`
+##       FROM (
+##        SELECT
+##         `d3`.`subjectID`,
+##         `d3`.`surveyCategory`,
+##         `d3`.`assessmentTotal`
+##        FROM
+##         `d3`
+##        ) tsql_88285858144118776056_0000000000
+##       ) tsql_88285858144118776056_0000000001
+##      ) tsql_88285858144118776056_0000000002
+##    ) tsql_88285858144118776056_0000000003
+##    WHERE `row_number` &lt;= 1
+##   ) tsql_88285858144118776056_0000000004
+##  ) tsql_88285858144118776056_0000000005
+## ) tsql_88285858144118776056_0000000006 ORDER BY `subjectID`</code></pre>
+<p>The above query is long, but actually quite performant.</p>
 <p>To see the query executed, please see <a href="https://github.com/WinVector/rquery/blob/master/README.md">here</a>.</p>
 </div>
 <div id="non-sql-nodes" class="section level1">
@@ -478,9 +548,9 @@ dq &lt;-<span class="st"> </span><span class="kw">table_source</span>(<span clas
 <span class="st">  </span><span class="kw">execute</span>(db, .)</code></pre></div>
 <pre><code>##   column index   class nrows nna nunique min max       mean        sd
 ## 1      v     1 numeric     3   0      NA  -5   3 -0.3333333  4.163332
-## 2   absv     2 numeric     3   0      NA   1   5  3.0000000  2.000000
-## 3  delta     3 numeric     3   0      NA   0  10  3.3333333  5.773503
-## 4   prod     4 numeric     3   0      NA   0  50 16.6666667 28.867513
+## 2   prod     2 numeric     3   0      NA   0  50 16.6666667 28.867513
+## 3   absv     3 numeric     3   0      NA   1   5  3.0000000  2.000000
+## 4  delta     4 numeric     3   0      NA   0  10  3.3333333  5.773503
 ##   lexmin lexmax
 ## 1     NA     NA
 ## 2     NA     NA
@@ -574,7 +644,7 @@ dq &lt;-<span class="st"> </span><span class="kw">table_source</span>(<span clas
 ##   `d6`.`e`
 ##  FROM
 ##   `d6`
-##  ) tsql_55836841395051423259_0000000000</code></pre>
+##  ) tsql_31602941834594284081_0000000000</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># longer pipeline</span>
 wn &lt;-<span class="st"> </span>wp <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">select_columns</span>(., <span class="st">&quot;res&quot;</span>)
@@ -596,8 +666,8 @@ wn &lt;-<span class="st"> </span>wp <span class="op">%.&gt;%</span>
 ##    `d6`.`b`
 ##   FROM
 ##    `d6`
-##   ) tsql_31602941834594284081_0000000000
-## ) tsql_31602941834594284081_0000000001</code></pre>
+##   ) tsql_30287613790029703802_0000000000
+## ) tsql_30287613790029703802_0000000001</code></pre>
 <p>A graph of the the effects of this kind of narrowing (for <code>dplyr</code> by hand as <code>dplyr</code> currently does not have the above type of automatic query analysis/optimization) shows the sensitivity to this optimization.</p>
 <blockquote>
 <p><img src="data:image/png;base64,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"></p>
@@ -607,6 +677,18 @@ wn &lt;-<span class="st"> </span>wp <span class="op">%.&gt;%</span>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
 <p><code>rquery</code> is new package, but it is already proving to be correct (avoiding <a href="http://www.win-vector.com/blog/2018/01/advisory-on-multiple-assignment-dplyrmutate-on-databases/">known data processing issues</a>) and <a href="http://www.win-vector.com/blog/2018/01/advisory-on-multiple-assignment-dplyrmutate-on-databases/">performant</a>. For working with <code>R</code> at a big data scale (say using <code>PostgreSQL</code> or <code>Spark</code>) <code>rquery</code> is the right specialized tool for specifying data manipulation.</p>
+</div>
+<div id="see-also" class="section level1">
+<h1>See also</h1>
+<p>For deeper dives into specific topics, please see also:</p>
+<ul>
+<li><a href="https://winvector.github.io/rquery/index.html"><code>rquery README</code></a></li>
+<li><a href="https://github.com/WinVector/rquery/blob/master/extras/JoinController.md">Join Controller</a></li>
+<li><a href="https://github.com/WinVector/rquery/blob/master/extras/DependencySorting.md">Join Dependency Sorting</a></li>
+<li><a href="https://github.com/WinVector/rquery/blob/master/extras/PerfTest.md">PerfTest</a></li>
+<li><a href="https://github.com/WinVector/rquery/blob/master/extras/AssigmentPartitioner.md">Assignment Partitioner</a></li>
+<li><a href="https://github.com/WinVector/rquery/blob/master/extras/ExtraDBs.md">DifferentDBs</a></li>
+</ul>
 <hr />
 </div>
 <div id="appendix-always-clean-up-on-the-way-out" class="section level1">

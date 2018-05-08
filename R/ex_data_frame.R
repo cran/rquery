@@ -17,8 +17,9 @@ re_write_table_names <- function(op_tree, new_name) {
 #'
 #' @param d data.frame
 #' @param optree rquery rel_op operation tree.
+#' @param ... force later arguments to bind by name.
+#' @param limit integer, if not NULL limit result to no more than this many rows.
 #' @param env environment to look for "winvector_temp_db_handle" in.
-#' @param limit numeric if not null limit result to this many rows.
 #' @return data.frame result
 #'
 #' @examples
@@ -35,8 +36,17 @@ re_write_table_names <- function(op_tree, new_name) {
 #'     orderby(., rev_cols = "R2")
 #'
 #'   d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
-#'   rquery_apply_to_data_frame(d, optree) %.>%
-#'      print(.)
+#'   v <- rquery_apply_to_data_frame(d, optree)
+#'   print(v)
+#'
+#'   # now load up a table without an R2 column,
+#'   # want to show this is caught
+#'   d <- data.frame(z = 1)
+#'   tryCatch(
+#'      rquery_apply_to_data_frame(d, optree),
+#'      error = function(e) { as.character(e) }
+#'     ) %.>%
+#'     print(.)
 #'
 #'   winvector_temp_db_handle <- NULL
 #'   DBI::dbDisconnect(db)
@@ -46,8 +56,10 @@ re_write_table_names <- function(op_tree, new_name) {
 #'
 rquery_apply_to_data_frame <- function(d,
                                        optree,
-                                       env = parent.frame(),
-                                       limit = NULL) {
+                                       ...,
+                                       limit = NULL,
+                                       env = parent.frame()) {
+  wrapr::stop_if_dot_args(substitute(list(...)), "rquery::rquery_apply_to_data_frame")
   if(!is.data.frame(d)) {
     stop("rquery::rquery_apply_to_data_frame d must be a data.frame")
   }
@@ -57,6 +69,12 @@ rquery_apply_to_data_frame <- function(d,
   tabNames <- tables_used(optree)
   if(length(tabNames)!=1) {
     stop("rquery::rquery_apply_to_data_frame optree must reference exactly one table")
+  }
+  cols_used <- columns_used(optree)[[tabNames]]
+  missing <- setdiff(cols_used, colnames(d))
+  if(length(missing)>0) {
+    stop(paste("rquery::rquery_apply_to_data_frame d missing required columns:",
+         paste(missing, collapse = ", ")))
   }
   tmp_name_source <- mk_tmp_name_source('rqatmp')
   inp_name <- tmp_name_source()
@@ -85,17 +103,22 @@ rquery_apply_to_data_frame <- function(d,
                     d,
                     temporary = TRUE,
                     overwrite = FALSE)
-  materialize(my_db,
-              optree,
-              table_name = res_name,
-              overwrite = TRUE,
-              temporary = TRUE)
-  sql <- paste("SELECT * FROM",
-               DBI::dbQuoteIdentifier(my_db, res_name))
-  if(!is.null(limit)) {
-    sql <- paste(sql, "LIMIT",
-                 format(ceiling(limit), scientific = FALSE))
+  ref <- materialize(my_db,
+                     optree,
+                     limit = limit,
+                     table_name = res_name,
+                     overwrite = TRUE,
+                     temporary = TRUE,
+                     precheck = FALSE)
+  # if last step is order we have to re-do that
+  # as order is not well define in materialized tables
+  if("relop_orderby" %in% class(optree)) {
+    ref <- ref  %.>%
+      orderby(.,
+              cols = optree$orderby,
+              rev_cols = optree$rev_orderby)
   }
+  sql <- sql <- to_sql(ref, my_db, limit = limit)
   res <- DBI::dbGetQuery(my_db, sql)
   dbi_remove_table(my_db, inp_name)
   dbi_remove_table(my_db, res_name)
@@ -200,6 +223,20 @@ head.relop <- function(x, ...) {
   }
 }
 
+#' @export
+summary.relop <- function(object, ...) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::summary.relop")
+  res <- execute_embeded_data_frame(object,
+                                    env = parent.frame())
+  if(!is.null(res)) {
+    summary(res)
+  } else {
+    format(object)
+  }
+}
+
+
 #' Execute pipeline treating pipe_left_arg as local data to
 #' be copied into database.
 #'
@@ -258,7 +295,7 @@ wrapr_function.relop <- function(pipe_left_arg,
   if(is.data.frame(pipe_left_arg)) {
     return(rquery_apply_to_data_frame(pipe_left_arg,
                                       pipe_right_arg,
-                                      pipe_environment))
+                                      env = pipe_environment))
   }
   # assume pipe_left_arg is a DB connection, execute and bring back result
   execute(pipe_left_arg, pipe_right_arg)

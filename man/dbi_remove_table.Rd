@@ -17,3 +17,6 @@ logical TRUE if table existed, else FALSE
 \description{
 Remove table
 }
+\seealso{
+\code{\link{dbi_table}}
+}

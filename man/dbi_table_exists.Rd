@@ -17,3 +17,6 @@ logical TRUE if table exists.
 \description{
 Check if a table exists.
 }
+\seealso{
+\code{\link{dbi_table}}
+}

@@ -1,6 +1,5 @@
 
 # define relational op, basis for this package.
-# in addition to methods below, our nodes implement: format() and print().
 #
 # Each node should be a list with named entries:
 #   source: list of nodes supplying values to this node.
@@ -42,13 +41,22 @@ column_names <- function (x, ...) {
   UseMethod("column_names", x)
 }
 
+
+
 #' @export
 column_names.relop <- function (x, ...) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::column_names.relop")
-  subs <- lapply(x$source,
-                 column_names)
-  return(sort(unique(unlist(subs))))
+  inputs <- unlist(lapply(x$source,
+                          column_names))
+  inputs[!duplicated(inputs)]
+}
+
+#' @export
+column_names.data.frame <- function (x, ...) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::column_names.data.frame")
+  colnames(x)
 }
 
 
@@ -138,9 +146,9 @@ tables_used.relop <- function(node, ...) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::tables_used.relop")
   tabs <- lapply(node$source,
-         function(si) {
-           tables_used(si)
-         })
+                 function(si) {
+                   tables_used(si)
+                 })
   tabs <- sort(unique(unlist(tabs)))
   tabs
 }
@@ -160,6 +168,8 @@ tables_used.relop <- function(node, ...) {
 #' @param append_cr logical if TRUE end with CR.
 #' @param using character, if not NULL set of columns used from above.
 #' @return SQL command
+#'
+#' @seealso \code{\link{dbi_table}}, \code{\link{materialize}}, \code{\link{execute}}, \code{\link{dbi_copy_to}}, \code{\link{table_source}}
 #'
 #' @examples
 #'
@@ -201,5 +211,46 @@ dimnames.relop <- function(x) {
 dim.relop <- function(x) {
   # not populating number of rows, as that can be expensive
   c(NA_real_, length(column_names(x)))
+}
+
+#' Format a single node for printing.
+#'
+#' @param node node of operator tree to be formatted
+#' @return character disply form of the node
+#'
+#' @export
+format_node <- function(node) {
+  UseMethod("format_node", node)
+}
+
+#' @export
+as.character.relop <- function(x, ...) {
+  wrapr::stop_if_dot_args(substitute(list(...)), "as.character.relop")
+  format_node(x)
+}
+
+#' @export
+format.relop <- function(x, ...) {
+  wrapr::stop_if_dot_args(substitute(list(...)), "format.relop")
+  ndstr <- format_node(x)
+  if(length(x$source)<1) {
+    return(ndstr)
+  }
+  if(length(x$source)==1) {
+    return(paste0(trimws(format(x$source[[1]]), which = "right"),
+                  " %.>%\n ",
+                  trimws(ndstr, which = "both"),
+                  "\n"))
+  }
+  inputs <- vapply(x$source,
+                   function(vi) {
+                     trimws(format(vi), which = "both")
+                   }, character(1))
+
+  return(paste0("(\n ",
+                paste(inputs, collapse = ",\n "),
+                ") %.>%\n ",
+                trimws(ndstr, which = "both"),
+                "\n"))
 }
 

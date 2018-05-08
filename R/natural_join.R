@@ -4,7 +4,7 @@
 #' Natural join is a join by identity on all common columns
 #' (or only common columns specified in a non-\code{NULL} \code{by} argument).
 #' Any common columns not specified in a non-\code{NULL} \code{by} argument
-#' are coalesced.
+#' are coalesced into a single column prefering the first or "a" table.
 #'
 #' @param a source to select from.
 #' @param b source to select from.
@@ -21,9 +21,9 @@
 #'                     data.frame(AUC = 0.6, R2 = 0.2, D = NA))
 #'   d2 <- dbi_copy_to(my_db, 'd2',
 #'                     data.frame(AUC = 0.6, D = 0.3))
-#'   eqn <- natural_join(d1, d2, by = 'AUC')
-#'   cat(format(eqn))
-#'   sql <- to_sql(eqn, my_db)
+#'   optree <- natural_join(d1, d2, by = 'AUC')
+#'   cat(format(optree))
+#'   sql <- to_sql(optree, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
 #'   DBI::dbDisconnect(my_db)
@@ -51,8 +51,17 @@ natural_join.relop <- function(a, b,
   }
   usesa <- column_names(a)
   usesb <- column_names(b)
+  common <- intersect(usesa, usesb)
   if(is.null(by)) {
-    by = intersect(usesa, usesb)
+    by <- common
+    print(paste("rquery::natural_join.relop joining by ",
+                paste(by, collapse = ", ")))
+  } else {
+    bads <- setdiff(by, common)
+    if(length(bads)>0) {
+      stop(paste("rquery::natural_join.relop can not join by",
+                 paste(bads, collapse = ", ")))
+    }
   }
   r <- list(source = list(a, b),
             table_name = NULL,
@@ -88,12 +97,22 @@ natural_join.data.frame <- function(a, b,
 }
 
 
+#' @export
+format_node.relop_natural_join <- function(node) {
+  paste0("natural_join(.1, .2,",
+         "  j= ",
+         node$jointype,
+         ", by= ",
+         paste(node$by, collapse = ", "),
+         ")",
+         "\n")
+}
+
 
 #' @export
 format.relop_natural_join <- function(x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "format.relop_natural_join")
   a <- trimws(format(x$source[[1]]), which = "right")
   b <- trimws(format(x$source[[2]]), which = "right")
   b <- gsub("\n", "\n  ", b, fixed = TRUE)

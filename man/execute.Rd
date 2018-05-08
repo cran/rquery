@@ -6,10 +6,12 @@
 \title{Execute a operator tree, either bringing back the result or landing it as a table.}
 \usage{
 execute(source, optree, ..., table_name = NULL, limit = NULL,
-  source_limit = NULL, overwrite = TRUE, temporary = FALSE)
+  source_limit = NULL, overwrite = TRUE, temporary = FALSE,
+  precheck = FALSE)
 
 commencify(source, optree, ..., table_name = NULL, limit = NULL,
-  source_limit = NULL, overwrite = TRUE, temporary = FALSE)
+  source_limit = NULL, overwrite = TRUE, temporary = FALSE,
+  precheck = FALSE)
 }
 \arguments{
 \item{source}{data.frame or DBI connection.}
@@ -27,6 +29,8 @@ commencify(source, optree, ..., table_name = NULL, limit = NULL,
 \item{overwrite}{logical if TRUE drop an previous table.}
 
 \item{temporary}{logical if TRUE try to create a temporary table.}
+
+\item{precheck}{logical if TRUE precheck existance of table and columns.}
 }
 \value{
 data.frame or table handle.
@@ -49,11 +53,11 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 
   cat(format(optree))
 
-  execute(my_db, optree) \%.>\%
-     print(.)
+  v <- execute(my_db, optree)
+  print(v)
 
-  execute(data.frame(AUC = 1, R2 = 2), optree) \%.>\%
-     print(.)
+  v2 <- execute(data.frame(AUC = 1, R2 = 2), optree)
+  print(v2)
 
   # land result in database
   res_hdl <- execute(my_db, optree, table_name = "res")
@@ -67,5 +71,5 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 
 }
 \seealso{
-\code{\link{materialize}}, \code{\link{to_sql}}
+\code{\link{materialize}}, \code{\link{dbi_table}}, \code{\link{to_sql}}, \code{\link{dbi_copy_to}}, \code{\link{table_source}}
 }

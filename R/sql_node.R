@@ -1,4 +1,17 @@
 
+# order new_names to try and capture as much
+# of old_names order as possible (old_names can have duplicates
+# and overalp with new_names)
+#
+# ex: order(names(c("a", "b", "c"), c("d", "b", "a")))
+# # c("a", "b", "d")
+order_names <- function(old_names, new_names) {
+  old_names <- c(old_names, new_names)
+  idxs <- match(new_names, old_names)
+  idxs <- rank(idxs)
+  new_names[idxs]
+}
+
 
 #' Make a general SQL node.
 #'
@@ -90,11 +103,21 @@ sql_node.relop <- function(source, exprs,
     stop(paste("rquery::sql_node.relop undefined columns:",
                paste(undef, collapse = ", ")))
   }
+  if(length(unique(names(exprs)))!=length(exprs)) {
+    stop("rquery::sql_node bad assignment name")
+  }
+  srcnames <- column_names(source)
+  newnames <- names(exprs)
+  if(orig_columns) {
+    newnames <- c(newnames, setdiff(srcnames, newnames))
+  }
+  cols <- order_names(srcnames, newnames)
   r <- list(source = list(source),
             table_name = NULL,
             parsed = NULL,
             exprs = exprs,
             mods = mods,
+            cols = cols,
             orig_columns = orig_columns)
   r <- relop_decorate("relop_sql", r)
   r
@@ -121,42 +144,33 @@ sql_node.data.frame <- function(source, exprs,
 #' @export
 column_names.relop_sql <- function (x, ...) {
   wrapr::stop_if_dot_args(substitute(list(...)), "column_names.relop_sql")
-  nms <- names(x$exprs)
-  if(x$orig_columns) {
-    nms <- c(nms, column_names(x$source[[1]]))
-  }
-  nms
+  x$cols
 }
 
 
 
 #' @export
-format.relop_sql <- function(x, ...) {
-  wrapr::stop_if_dot_args(substitute(list(...)), "format.relop_sql")
-  if(!is.null(x$display_form)) {
-    str <- paste0(trimws(format(x$source[[1]]), which = "right"),
-           " %.>%\n ",
-           "sql_node(.,\n",
-           "          ", x$display_form,
+format_node.relop_sql <- function(node) {
+  if(!is.null(node$display_form)) {
+    str <- paste0("sql_node(.,\n",
+           "          ", node$display_form,
            ")\n")
     return(str)
   }
-  exprtxt <- vapply(x$exprs,
+  exprtxt <- vapply(node$exprs,
                     function(ei) {
                       paste(as.character(ei), collapse = " ")
                     }, character(1))
-  assignments <- paste(names(x$exprs), ":=", exprtxt)
+  assignments <- paste(names(node$exprs), ":=", exprtxt)
   modsstr <- ""
   indent_sep <- "\n             "
-  if(!is.null(x$mods)) {
-    modsstr <- paste(";\n          ", x$mods)
+  if(!is.null(node$mods)) {
+    modsstr <- paste(";\n          ", node$mods)
   }
-  paste0(trimws(format(x$source[[1]]), which = "right"),
-         " %.>%\n ",
-         "sql_node(.,\n",
+  paste0("sql_node(.,\n",
          "          ", paste(assignments, collapse = indent_sep),
          modsstr,
-         ",", indent_sep, "*=", x$orig_columns,
+         ",", indent_sep, "*=", node$orig_columns,
          ")\n")
 }
 
@@ -166,6 +180,7 @@ format.relop_sql <- function(x, ...) {
 columns_used.relop_sql <- function (x, ...,
                                     using = NULL,
                                     contract = FALSE) {
+  wrapr::stop_if_dot_args(substitute(list(...)), "columns_used.relop_sql")
   # assume using all columns
   return(columns_used(x$source[[1]],
                       using = NULL,
@@ -181,9 +196,10 @@ prep_sql_toks <- function(db, ei) {
                 function(eij) {
                   if(is.list(eij)) {
                     eij <- eij[[1]]
-                    if(is.character(eij)) {
-                      return(quote_string(db, eij))
+                    if(is.character(eij) || is.factor(eij) ) {
+                      return(quote_string(db, as.character(eij)))
                     }
+                    return(quote_literal(db, eij))
                   }
                   if(is.name(eij)) {
                     return(quote_identifier(db, as.character(eij)))
@@ -213,9 +229,22 @@ to_sql.relop_sql <- function (x,
                        prep_sql_toks(db, ei)
                      }, character(1))
   cols <- paste(sqlexprs, "AS", colsA)
+  names(cols) <- names(x$exprs)
   if(x$orig_columns) {
-    cols <- c("*", cols)
+    extras <- setdiff(column_names(x$source[[1]]),
+                      names(x$exprs))
+    if(length(extras)>0) {
+      qcols <- vapply(extras,
+                      function(ci) {
+                        quote_identifier(db, ci)
+                      }, character(1))
+      qcols <- paste(qcols, "AS", qcols)
+      names(qcols) <- extras
+      cols <- c(qcols, cols)
+    }
   }
+  cols <- cols[x$cols]
+  names(cols) <- NULL
   qlimit = limit
   if(!getDBOption(db, "use_pass_limit", TRUE)) {
     qlimit = NULL

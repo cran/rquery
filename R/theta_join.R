@@ -61,9 +61,9 @@ build_col_name_map <- function(colsa, colsb, suffix) {
 #'                     data.frame(AUC = 0.6, R2 = 0.2))
 #'   d2 <- dbi_copy_to(my_db, 'd2',
 #'                     data.frame(AUC2 = 0.4, R2 = 0.3))
-#'   eqn <- theta_join_se(d1, d2, "AUC >= AUC2")
-#'   cat(format(eqn))
-#'   sql <- to_sql(eqn, my_db)
+#'   optree <- theta_join_se(d1, d2, "AUC >= AUC2")
+#'   cat(format(optree))
+#'   sql <- to_sql(optree, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
 #'   DBI::dbDisconnect(my_db)
@@ -101,7 +101,8 @@ theta_join_se.relop <- function(a, b,
                   have)[[1]]
   parsed <- parse_se(a, vnam := expr,
                      env = env,
-                     have = have)
+                     have = have,
+                     check_names = FALSE)
   assignments <- unpack_assignments(a, parsed,
                                     have = have)
   parsed[[1]]$symbols_produced <- character(0)
@@ -169,9 +170,9 @@ theta_join_se.data.frame <- function(a, b,
 #'                     data.frame(AUC = 0.6, R2 = 0.2))
 #'   d2 <- dbi_copy_to(my_db, 'd2',
 #'                     data.frame(AUC2 = 0.4, R2 = 0.3))
-#'   eqn <- theta_join_nse(d1, d2, AUC >= AUC2)
-#'   cat(format(eqn))
-#'   sql <- to_sql(eqn, my_db)
+#'   optree <- theta_join_nse(d1, d2, AUC >= AUC2)
+#'   cat(format(optree))
+#'   sql <- to_sql(optree, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
 #'   DBI::dbDisconnect(my_db)
@@ -208,7 +209,8 @@ theta_join_nse.relop <- function(a, b,
                   have)[[1]]
   parsed <- parse_nse(a, list(exprq),
                       env = env,
-                      have = have)
+                      have = have,
+                      check_names = FALSE)
   parsed[[1]]$symbols_produced <- vnam
   assignments <- unpack_assignments(a, parsed,
                                     have = have)
@@ -263,10 +265,20 @@ column_names.relop_theta_join <- function (x, ...) {
 
 
 #' @export
+format_node.relop_theta_join <- function(node) {
+  paste0("theta_join(.1, .2,\n",
+         "  j= ",
+         node$jointype,
+         "; on= ",
+         paste(node$parsed[[1]]$presentation, collapse = ", "),
+         ")",
+         "\n")
+}
+
+#' @export
 format.relop_theta_join <- function(x, ...) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
-  }
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "format.relop_theta_join")
   a <- trimws(format(x$source[[1]]), which = "right")
   b <- trimws(format(x$source[[2]]), which = "right")
   b <- gsub("\n", "\n  ", b, fixed = TRUE)

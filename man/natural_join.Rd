@@ -24,7 +24,7 @@ natural_join node.
 Natural join is a join by identity on all common columns
 (or only common columns specified in a non-\code{NULL} \code{by} argument).
 Any common columns not specified in a non-\code{NULL} \code{by} argument
-are coalesced.
+are coalesced into a single column prefering the first or "a" table.
 }
 \examples{
 
@@ -34,9 +34,9 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
                     data.frame(AUC = 0.6, R2 = 0.2, D = NA))
   d2 <- dbi_copy_to(my_db, 'd2',
                     data.frame(AUC = 0.6, D = 0.3))
-  eqn <- natural_join(d1, d2, by = 'AUC')
-  cat(format(eqn))
-  sql <- to_sql(eqn, my_db)
+  optree <- natural_join(d1, d2, by = 'AUC')
+  cat(format(optree))
+  sql <- to_sql(optree, my_db)
   cat(sql)
   print(DBI::dbGetQuery(my_db, sql))
   DBI::dbDisconnect(my_db)

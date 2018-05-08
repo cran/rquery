@@ -15,8 +15,7 @@ table_source(table_name, columns)
 a relop representation of the data
 }
 \description{
-Build structures (table name, column names, and quoting
-strategy) needed to represent data from a remote table.
+Build minimal structures (table name and column names) needed to represent data from a remote table.
 }
 \details{
 Generate a query that returns contents of a table, we
@@ -44,5 +43,5 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 
 }
 \seealso{
-\code{\link{dbi_table}}
+\code{\link{dbi_table}}, \code{\link{dbi_copy_to}}, \code{\link{materialize}}, \code{\link{execute}}, code{\link{to_sql}}
 }
