@@ -9,9 +9,9 @@
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d <- dbi_copy_to(my_db, 'd',
+#'   d <- rq_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2))
 #'   optree <- drop_columns(d, 'AUC')
 #'   cat(format(optree))
@@ -62,8 +62,7 @@ drop_columns.data.frame <- function(source, drops,
     stop("rquery::drop_columns must drop at least 1 column")
   }
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
-  dnode <- table_source(tmp_name, colnames(source))
-  dnode$data <- source
+  dnode <- mk_td(tmp_name, colnames(source))
   enode <- drop_columns(dnode, drops, strict = strict)
   return(enode)
 }
@@ -87,8 +86,7 @@ format_node.relop_drop_columns <- function(node) {
 
 
 calc_using_relop_drop_columns <- function(x, ...,
-                                          using = NULL,
-                                          contract = FALSE) {
+                                          using = NULL) {
   cols <- x$columns
   if(length(using)>0) {
     missing <- setdiff(using, x$columns)
@@ -103,14 +101,11 @@ calc_using_relop_drop_columns <- function(x, ...,
 
 #' @export
 columns_used.relop_drop_columns <- function (x, ...,
-                                             using = NULL,
-                                             contract = FALSE) {
+                                             using = NULL) {
   cols <- calc_using_relop_drop_columns(x,
-                                        using = using,
-                                        contract = contract)
+                                        using = using)
   return(columns_used(x$source[[1]],
-                      using = cols,
-                      contract = contract))
+                      using = cols))
 }
 
 #' @export

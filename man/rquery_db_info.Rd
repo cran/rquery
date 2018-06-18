@@ -4,12 +4,26 @@
 \alias{rquery_db_info}
 \title{Build a db information stand-in}
 \usage{
-rquery_db_info(indentifier_quote_char, string_quote_char)
+rquery_db_info(..., connection = NULL, is_dbi = FALSE,
+  indentifier_quote_char = NULL, string_quote_char = NULL,
+  overrides = NULL, note = "", connection_options = list())
 }
 \arguments{
-\item{indentifier_quote_char}{character}
+\item{...}{force all arguments to be by name.}
 
-\item{string_quote_char}{character}
+\item{connection}{connection handle to database or Spark.}
+
+\item{is_dbi}{if TRUE the database connection can be used with DBI.}
+
+\item{indentifier_quote_char}{character, quote to put around identifiers.}
+
+\item{string_quote_char}{character, quote to put around strings.}
+
+\item{overrides}{named list of functions to place in info.}
+
+\item{note}{character note to add to display form.}
+
+\item{connection_options}{names list of per-connection options.}
 }
 \value{
 rquery_db_info object

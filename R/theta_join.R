@@ -1,12 +1,16 @@
 
-#' build a map of original column names to unambigous column names
+#' build a map of original column names to unambigous column names.
+#'
+#' Principles: non-colliding columns keep their original names.
+#' Initially colliding columns are not to collide with anything else.
+#' Same suffix strategy used on all altered columns.
 #'
 #' @param colsa character columns from table a
 #' @param colsb character columns from table b
 #' @param suffix  character length 2, suffices to disambiguate columns.
 #' @return list length 2 of name column lists
 #'
-#' # build_col_name_map(c("a", "a_a"), c("a"), c("_a", ""))
+#' # build_col_name_map(c("a", "a_a", "b"), c("a", "c"), c("_a", ""))
 #'
 #' @noRd
 #'
@@ -14,30 +18,36 @@ build_col_name_map <- function(colsa, colsb, suffix) {
   if(suffix[[1]]==suffix[[2]]) {
     stop("rquery::build_col_name_map suffix entries must differ")
   }
+  if(length(colsa)!=length(unique(colsa))) {
+    stop("rquery::build_col_name_map colsa already not unique")
+  }
+  if(length(colsb)!=length(unique(colsb))) {
+    stop("rquery::build_col_name_map colsb already not unique")
+  }
+  # optimistic: names are already disjoint
   mapa <- colsa
   names(mapa) <- colsa
   mapb <- colsb
   names(mapb) <- colsb
   overlap = intersect(colsa, colsb)
-  for(oi in overlap) {
-    oia <- paste0(oi, suffix[[1]])
-    oib <- paste0(oi, suffix[[2]])
-    ova <- oia
-    ovb <- oib
-    retry_count = 1
-    while(TRUE) {
-      others <- unique(c(mapa[setdiff(colsa, oi)],
-                         mapb[setdiff(colsa, oi)]))
-      if(length(intersect(others, c(ova, ovb)))<=0) {
-        break
-      }
-      ova <- paste(oia, retry_count, sep = "_")
-      ovb <- paste(oib, retry_count, sep = "_")
-    }
-    mapa[[oi]] <- ova
-    mapb[[oi]] <- ovb
+  if(length(overlap)<=0) {
+    return(list("a" = mapa, "b" = mapb))
   }
-  list("a" = mapa, "b" = mapb)
+  n_target <- length(colsa) + length(colsb)
+  fixl <- ""
+  fixr <- ""
+  try_num <- 0
+  while(TRUE) {
+    mapa[[overlap]] <- paste0(overlap, suffix[[1]], fixl)
+    mapb[[overlap]] <- paste0(overlap, suffix[[2]], fixr)
+    # altered names can collide with other names in either vector
+    if(length(unique(c(as.character(mapa), as.character(mapb)))) == n_target) {
+      return(list("a" = mapa, "b" = mapb))
+    }
+    try_num <- try_num + 1
+    fixl <- paste0("_l", try_num)
+    fixr <- paste0("_r", try_num)
+  }
 }
 
 #' Make a theta_join node.
@@ -55,11 +65,11 @@ build_col_name_map <- function(colsa, colsb, suffix) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d1 <- dbi_copy_to(my_db, 'd1',
+#'   d1 <- rq_copy_to(my_db, 'd1',
 #'                     data.frame(AUC = 0.6, R2 = 0.2))
-#'   d2 <- dbi_copy_to(my_db, 'd2',
+#'   d2 <- rq_copy_to(my_db, 'd2',
 #'                     data.frame(AUC2 = 0.4, R2 = 0.3))
 #'   optree <- theta_join_se(d1, d2, "AUC >= AUC2")
 #'   cat(format(optree))
@@ -99,14 +109,14 @@ theta_join_se.relop <- function(a, b,
   vnam <- setdiff(paste("rquery_thetajoin_condition",
                         1:(length(have)+1), sep = "_"),
                   have)[[1]]
-  parsed <- parse_se(a, vnam := expr,
+  parsed <- parse_se(a, vnam %:=% expr,
                      env = env,
                      have = have,
                      check_names = FALSE)
   assignments <- unpack_assignments(a, parsed,
                                     have = have)
   parsed[[1]]$symbols_produced <- character(0)
-  parsed[[1]]$presentation <- gsub("^.*:= ", "", parsed[[1]]$presentation)
+  parsed[[1]]$presentation <- gsub("^.*%:=% ", "", parsed[[1]]$presentation)
   r <- list(source = list(a, b),
             table_name = NULL,
             cmap = build_col_name_map(usesa, usesb, suffix),
@@ -133,11 +143,9 @@ theta_join_se.data.frame <- function(a, b,
   }
   nmgen <- mk_tmp_name_source("rquery_tmp")
   tmp_namea <- nmgen()
-  dnodea <- table_source(tmp_namea, colnames(a))
-  dnodea$data <- a
+  dnodea <- mk_td(tmp_namea, colnames(a))
   tmp_nameb <- nmgen()
-  dnodeb <- table_source(tmp_namea, colnames(b))
-  dnodeb$data <- b
+  dnodeb <- mk_td(tmp_namea, colnames(b))
   enode <- theta_join_se(dnodea, dnodeb,
                          expr,
                          jointype = jointype,
@@ -164,11 +172,11 @@ theta_join_se.data.frame <- function(a, b,
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d1 <- dbi_copy_to(my_db, 'd1',
+#'   d1 <- rq_copy_to(my_db, 'd1',
 #'                     data.frame(AUC = 0.6, R2 = 0.2))
-#'   d2 <- dbi_copy_to(my_db, 'd2',
+#'   d2 <- rq_copy_to(my_db, 'd2',
 #'                     data.frame(AUC2 = 0.4, R2 = 0.3))
 #'   optree <- theta_join_nse(d1, d2, AUC >= AUC2)
 #'   cat(format(optree))
@@ -215,7 +223,7 @@ theta_join_nse.relop <- function(a, b,
   assignments <- unpack_assignments(a, parsed,
                                     have = have)
   parsed[[1]]$symbols_produced <- character(0)
-  parsed[[1]]$presentation <- gsub("^.*:= ", "", parsed[[1]]$presentation)
+  parsed[[1]]$presentation <- gsub("^.*%:=% ", "", parsed[[1]]$presentation)
   r <- list(source = list(a, b),
             cmap = build_col_name_map(usesa, usesb, suffix),
             jointype = jointype,
@@ -238,13 +246,11 @@ theta_join_nse.data.frame <- function(a, b,
   }
   nmgen <- mk_tmp_name_source("rquery_tmp")
   tmp_namea <- nmgen()
-  dnodea <- table_source(tmp_namea, colnames(a))
-  dnodea$data <- a
+  dnodea <- mk_td(tmp_namea, colnames(a))
   tmp_nameb <- nmgen()
-  dnodeb <- table_source(tmp_namea, colnames(b))
-  dnodeb$data <- b
+  dnodeb <- mk_td(tmp_namea, colnames(b))
   enode <- theta_join_nse(dnodea, dnodeb,
-                          deparse(exprq),
+                          rquery_deparse(exprq),
                           jointype = jointype,
                           suffix = suffix,
                           env = env)
@@ -309,13 +315,13 @@ prepColumnNames <- function(db, tabName, tabColumns, cmap) {
 }
 
 calc_used_relop_theta_join <- function (x, ...,
-                                        using = NULL,
-                                        contract = FALSE) {
-  cols <- unique(c(column_names(x$source[[1]]),
-                   column_names(x$source[[2]])))
+                                        using = NULL) {
+  # TODO: reconsider this calculation
+  c1 <- column_names(x$source[[1]])
+  c2 <- column_names(x$source[[2]])
+  cols <- unique(c(c1, c2))
   if(length(using)>0) {
-    mpback <- c(column_names(x$source[[1]]),
-                column_names(x$source[[2]]))
+    mpback <- c(c1, c2)
     names(mpback) <- column_names(x)
     using <- unique(mpback[using])
     missing <- setdiff(using, cols)
@@ -334,19 +340,15 @@ calc_used_relop_theta_join <- function (x, ...,
 
 #' @export
 columns_used.relop_theta_join <- function (x, ...,
-                                           using = NULL,
-                                           contract = FALSE) {
+                                           using = NULL) {
   using <- calc_used_relop_theta_join(x,
-                                      using=using,
-                                      contract = contract)
+                                      using=using)
   c1 <- intersect(using, column_names(x$source[[1]]))
   s1 <- columns_used(x$source[[1]],
-                     using = c1,
-                     contract = contract)
+                     using = c1)
   c2 <- intersect(using, column_names(x$source[[2]]))
   s2 <- columns_used(x$source[[2]],
-                     using = c2,
-                     contract = contract)
+                     using = c2)
   merge_columns_used(s1, s2)
 }
 
@@ -388,8 +390,8 @@ to_sql.relop_theta_join <- function (x,
   subsqlb <- subsqlb_list[[length(subsqlb_list)]]
   taba <- tnum()
   tabb <- tnum()
-  bterms <- setdiff(column_names(x$source[[1]]),
-                    column_names(x$source[[2]]))
+  bterms <- setdiff(c1,
+                    c2)
   if(length(bterms)>0) {
     bcols <- vapply(bterms,
                     function(ci) {
@@ -397,10 +399,10 @@ to_sql.relop_theta_join <- function (x,
                     }, character(1))
   }
   prefix <- paste(rep(' ', indent_level), collapse = '')
-  cseta <- prepColumnNames(db, taba, column_names(x$source[[1]]),
+  cseta <- prepColumnNames(db, taba, c1,
                           x$cmap[['a']])
   ctermsa <- paste(cseta, collapse = paste0(",\n", prefix, " "))
-  csetb <- prepColumnNames(db, tabb, column_names(x$source[[2]]),
+  csetb <- prepColumnNames(db, tabb, c2,
                           x$cmap[['b']])
   ctermsb <- paste(csetb, collapse = paste0(",\n", prefix, " "))
   q <- paste0(prefix, "SELECT\n",

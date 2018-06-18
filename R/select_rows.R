@@ -8,9 +8,9 @@
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d <- dbi_copy_to(my_db, 'd',
+#'   d <- rq_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2))
 #'   optree <- select_rows_se(d, "AUC >= 0.5")
 #'   cat(format(optree))
@@ -48,8 +48,7 @@ select_rows_se.relop <- function(source, expr,
 select_rows_se.data.frame <- function(source, expr,
                                       env = parent.frame()) {
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
-  dnode <- table_source(tmp_name, colnames(source))
-  dnode$data <- source
+  dnode <- mk_td(tmp_name, colnames(source))
   enode <- select_rows_se(dnode, expr,
                           env = env)
   return(enode)
@@ -66,9 +65,9 @@ select_rows_se.data.frame <- function(source, expr,
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d <- dbi_copy_to(my_db, 'd',
+#'   d <- rq_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2, z = 3))
 #'   optree <- select_rows_nse(d, AUC >= 0.5) %.>%
 #'     select_columns(., "R2")
@@ -110,9 +109,8 @@ select_rows_nse.data.frame <- function(source, expr,
                             env = parent.frame()) {
   exprq <- substitute(expr)
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
-  dnode <- table_source(tmp_name, colnames(source))
-  dnode$data <- source
-  enode <- select_rows_se(dnode, deparse(exprq),
+  dnode <- mk_td(tmp_name, colnames(source))
+  enode <- select_rows_se(dnode, rquery_deparse(exprq),
                           env = env)
   return(enode)
 }
@@ -128,8 +126,7 @@ format_node.relop_select_rows <- function(node) {
 
 
 calc_used_relop_select_rows <- function (x, ...,
-                                         using = NULL,
-                                         contract = FALSE) {
+                                         using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery:::calc_used_relop_select_rows")
   if(length(using)<=0) {
@@ -147,16 +144,13 @@ calc_used_relop_select_rows <- function (x, ...,
 
 #' @export
 columns_used.relop_select_rows <- function (x, ...,
-                                         using = NULL,
-                                         contract = FALSE) {
+                                         using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::columns_used.relop_select_rows")
   cols <- calc_used_relop_select_rows(x,
-                                      using = using,
-                                      contract = contract)
+                                      using = using)
   return(columns_used(x$source[[1]],
-                      using = cols,
-                      contract = contract))
+                      using = cols))
 }
 
 

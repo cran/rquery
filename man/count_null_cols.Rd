@@ -21,14 +21,13 @@ Build a query that counts the number of nulls in each row.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+# WARNING: example tries to change rquery.rquery_db_executor option to RSQLite and back.
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  winvector_temp_db_handle <- list(
-    db = my_db
-  )
-  RSQLite::initExtension(winvector_temp_db_handle$db)
+  RSQLite::initExtension(my_db)
+  old_o <- options(list("rquery.rquery_db_executor" = list(db = my_db)))
 
-  d <- dbi_copy_to(my_db, 'd',
+  d <- rq_copy_to(my_db, 'd',
                    data.frame(AUC = c(0.6, 0.5, NA),
                               R2 = c(1.0, 0.9, NA)))
   op_tree <- d \%.>\% count_null_cols(., c("AUC", "R2"), "nnull")
@@ -43,7 +42,7 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
      print(.)
 
   # cleanup
-  rm(list = "winvector_temp_db_handle")
+  options(old_o)
   DBI::dbDisconnect(my_db)
 }
 

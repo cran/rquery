@@ -21,9 +21,9 @@ Make a select rows node.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  d <- dbi_copy_to(my_db, 'd',
+  d <- rq_copy_to(my_db, 'd',
                    data.frame(AUC = 0.6, R2 = 0.2, z = 3))
   optree <- select_rows_nse(d, AUC >= 0.5) \%.>\%
     select_columns(., "R2")

@@ -15,9 +15,9 @@
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d1 <- dbi_copy_to(my_db, 'd1',
+#'   d1 <- rq_copy_to(my_db, 'd1',
 #'                     data.frame(A = c(NA, 2, 3, NA), B = c(3, NA, 4, NA)))
 #'   optree <- null_replace(d1, qc(A, B),
 #'                          0.0, note_col = "alterations")
@@ -83,8 +83,7 @@ null_replace.data.frame <- function(src,
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::null_replace.data.frame")
   nmgen <- mk_tmp_name_source("rquery_tmp")
   tmp_namea <- nmgen()
-  dnodea <- table_source(tmp_namea, colnames(src))
-  dnodea$data <- src
+  dnodea <- mk_td(tmp_namea, colnames(src))
   enode <- null_replace(dnodea,
                         cols = cols,
                         value = value,
@@ -111,20 +110,14 @@ format_node.relop_null_replace <- function(node) {
 column_names.relop_null_replace <- function (x, ...) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::column_names.relop_null_replace")
-  c(column_names(x$src[[1]], x$note_col))
+  c(column_names(x$source[[1]], x$note_col))
 }
 
-calc_used_relop_null_replace <- function (x, ...,
-                                          using = NULL,
-                                          contract = FALSE) {
-  column_names(x$src[[1]])
-}
 
 #' @export
 columns_used.relop_null_replace <- function (x, ...,
-                                             using = NULL,
-                                             contract = FALSE) {
-  calc_used_relop_null_replace(x)
+                                             using = NULL) {
+  columns_used(x$source[[1]])
 }
 
 
@@ -159,9 +152,9 @@ to_sql.relop_null_replace <- function (x,
   cols <- column_names(x$source[[1]])
   qnames <- vapply(cols,
                    function(ci) {
-                     DBI::dbQuoteIdentifier(db, ci)
+                     quote_identifier(db, ci)
                    }, character(1))
-  tqnames <- paste0(DBI::dbQuoteIdentifier(db, tab),
+  tqnames <- paste0(quote_identifier(db, tab),
                     ".",
                     qnames)
   qexpr <- tqnames
@@ -170,7 +163,7 @@ to_sql.relop_null_replace <- function (x,
     qexpr[alter] <- paste0("CASE WHEN ",
                            tqnames[alter],
                            " IS NULL THEN ",
-                           DBI::dbQuoteLiteral(db, x$value),
+                           quote_literal(db, x$value),
                            " ELSE ",
                            tqnames[alter],
                            " END")
@@ -184,7 +177,7 @@ to_sql.relop_null_replace <- function (x,
                          " IS NULL THEN 1 ELSE 0 END )"))
     sexpr <- paste0(
       paste(sumexprs, collapse = paste0(" + \n ", prefix)),
-      " AS ", DBI::dbQuoteIdentifier(db, x$note_col),
+      " AS ", quote_identifier(db, x$note_col),
       "\n")
     texpr <- c(texpr, sexpr)
   }

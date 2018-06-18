@@ -1,4 +1,30 @@
 
+# rquery 0.5.0 2018/06/18
+
+ * Make DBI suggested.
+ * Rename dbi_ prefixes to rq_ (for now have aliases from old to new).
+ * Per-connection options.
+ * Add expand_grid()/complete_design().
+ * Get rid of embedded data cases and print-execution.
+ * Move to new wrapr ops.
+ * Rationalize names of table description methods.
+ * Add rquery_executor hook.
+ * Don't default to setting up a temporary RSQLite database.
+ * Limit wrapr re-exports.
+ * Add ability to use %:=% in parsing.
+ * Move to executor options.
+ * Separate execute() and materialize() roles.
+ * Fix natural_join() semantics and make "by" a required argument.
+
+# rquery 0.4.4 2018/05/14
+
+ * Fix if_else NA treatment.
+ * Fix orderby() limit bug.
+ * Better detection of column types: dbi_coltypes().
+ * Improve execute() performance in simple case.
+ * materialize_node().
+ * Minor documentation fixes.
+
 # rquery 0.4.3 2018/05/07
 
  * Add assign_slice(), if_else_op(), map_column_values(), and set_indicator().

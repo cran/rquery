@@ -4,13 +4,17 @@
 #' project data by grouping, and adding aggregate columns.
 #'
 #' @param source source to select from.
+#' @param ... force later arugments to bind by name.
 #' @param groupby grouping columns.
 #' @param parsed new column assignment expressions.
 #' @return project node.
 #'
 #' @noRd
 #'
-project_impl <- function(source, groupby, parsed) {
+project_impl <- function(source, ...,
+                         groupby, parsed) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery:::project_impl")
   have <- column_names(source)
   required_cols <- sort(unique(c(
     merge_fld(parsed, "symbols_used"),
@@ -18,13 +22,17 @@ project_impl <- function(source, groupby, parsed) {
     groupby
   )))
   check_have_cols(have, required_cols, "rquery::project")
-  assignments <- unpack_assignments(source, parsed)
-  producing <- names(assignments)
-  overlap <- intersect(have, producing)
-  if(length(overlap)>0) {
-    stop(paste("rquery:::project_impl produced columns must be disjoint from incoming table: ",
-               paste(overlap, collapse = ", ")))
+  parts <- partition_assignments(parsed)
+  if(length(parts)>1) {
+    stop(paste("rquery:::project_impl can not use produced column names during a project"))
   }
+  assignments <- unpack_assignments(source, parsed)
+  # producing <- names(assignments)
+  # overlap <- intersect(have, producing)
+  # if(length(overlap)>0) {
+  #   stop(paste("rquery:::project_impl produced columns must be disjoint from incoming table: ",
+  #              paste(overlap, collapse = ", ")))
+  # }
   r <- list(source = list(source),
             table_name = NULL,
             parsed = parsed,
@@ -46,17 +54,17 @@ project_impl <- function(source, groupby, parsed) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(),
 #'                           ":memory:")
-#'   d <- dbi_copy_to(
+#'   d <- rq_copy_to(
 #'     my_db, 'd',
 #'     data.frame(group = c('a', 'a', 'b', 'b'),
 #'                val = 1:4,
 #'                stringsAsFactors = FALSE))
 #'
 #'   op_tree <- d %.>%
-#'     project_se(., "group", "vmax" := "max(val)")
+#'     project_se(., groupby = "group", "vmax" %:=% "max(val)")
 #'   cat(format(op_tree))
 #'   sql <- to_sql(op_tree, my_db)
 #'   cat(sql)
@@ -64,7 +72,7 @@ project_impl <- function(source, groupby, parsed) {
 #'      print(.)
 #'
 #'   op_tree <- d %.>%
-#'     project_se(., NULL, "vmax" := "max(val)")
+#'     project_se(., groupby = NULL, "vmax" %:=% "max(val)")
 #'   cat(format(op_tree))
 #'   sql <- to_sql(op_tree, my_db)
 #'   cat(sql)
@@ -85,15 +93,14 @@ project_se <- function(source, groupby, assignments,
 project_se.relop <- function(source, groupby, assignments,
                              env = parent.frame()) {
   parsed <- parse_se(source, assignments, env = env)
-  project_impl(source, groupby, parsed)
+  project_impl(source, groupby = groupby, parsed = parsed)
 }
 
 #' @export
 project_se.data.frame <- function(source, groupby, assignments,
                                   env = parent.frame()) {
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
-  dnode <- table_source(tmp_name, colnames(source))
-  dnode$data <- source
+  dnode <- mk_td(tmp_name, colnames(source))
   enode <- project_se(dnode, groupby, assignments,
                       env = env)
   return(enode)
@@ -112,17 +119,17 @@ project_se.data.frame <- function(source, groupby, assignments,
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(),
 #'                           ":memory:")
-#'   d <- dbi_copy_to(
+#'   d <- rq_copy_to(
 #'     my_db, 'd',
 #'     data.frame(group = c('a', 'a', 'b', 'b'),
 #'                val = 1:4,
 #'                stringsAsFactors = FALSE))
 #'
 #'   op_tree <- d %.>%
-#'     project_nse(., "group", vmax := max(val))
+#'     project_nse(., groupby = "group", vmax %:=% max(val))
 #'   cat(format(op_tree))
 #'   sql <- to_sql(op_tree, my_db)
 #'   cat(sql)
@@ -130,7 +137,7 @@ project_se.data.frame <- function(source, groupby, assignments,
 #'      print(.)
 #'
 #'   op_tree <- d %.>%
-#'     project_nse(., NULL, vmax := max(val))
+#'     project_nse(., groupby = NULL, vmax %:=% max(val))
 #'   cat(format(op_tree))
 #'   sql <- to_sql(op_tree, my_db)
 #'   cat(sql)
@@ -149,18 +156,19 @@ project_nse <- function(source, groupby, ...,
 
 #' @export
 project_nse.relop <- function(source, groupby, ...,
-                        env = parent.frame()) {
+                              env = parent.frame()) {
+  # Recommend way to caputre ... unevalauted from
+  # http://adv-r.had.co.nz/Computing-on-the-language.html#substitute "Capturing unevaluated ..."
   exprs <-  eval(substitute(alist(...)))
   parsed <- parse_nse(source, exprs, env = env)
-  project_impl(source, groupby, parsed)
+  project_impl(source, groupby = groupby, parsed = parsed)
 }
 
 #' @export
 project_nse.data.frame <- function(source, groupby, ...,
                                    env = parent.frame()) {
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
-  dnode <- table_source(tmp_name, colnames(source))
-  dnode$data <- source
+  dnode <- mk_td(tmp_name, colnames(source))
   enode <- project_nse(dnode, groupby, ...,
                        env = env)
   return(enode)
@@ -192,17 +200,15 @@ format_node.relop_project <- function(node) {
 }
 
 calc_used_relop_project <- function (x,
-                                     using = NULL,
-                                     contract = FALSE) {
+                                     using = NULL) {
   cols <- column_names(x)
   if(length(using)>0) {
     cols <- using
   }
   producing <- merge_fld(x$parsed, "symbols_produced")
   expressions <- x$parsed
-  if(contract) {
-    expressions <- x$parsed[producing %in% cols]
-  }
+  # TODO: test and instantiate this
+  # expressions <- x$parsed[producing %in% cols]
   cols <- setdiff(cols, producing)
   consuming <- merge_fld(expressions, "symbols_used")
   subusing <- unique(c(cols, consuming, x$groupby, x$orderby))
@@ -211,17 +217,14 @@ calc_used_relop_project <- function (x,
 
 #' @export
 columns_used.relop_project <- function (x, ...,
-                                        using = NULL,
-                                        contract = FALSE) {
+                                        using = NULL) {
   if(length(list(...))>0) {
     stop("rquery:columns_used: unexpected arguments")
   }
   cols <- calc_used_relop_project(x,
-                                  using = using,
-                                  contract = contract)
+                                  using = using)
   columns_used(x$source[[1]],
-               using = cols,
-               contract = contract)
+               using = cols)
 }
 
 
@@ -277,9 +280,9 @@ to_sql.relop_project <- function (x,
               prefix, " ) ", tab)
   if(length(cols)>0) {
     q <- paste0(q,
-               "\n",
-               prefix, "GROUP BY\n",
-               prefix, " ", paste(cols, collapse = ", "))
+                "\n",
+                prefix, "GROUP BY\n",
+                prefix, " ", paste(cols, collapse = ", "))
   }
   if(!is.null(limit)) {
     q <- paste(q, "LIMIT",

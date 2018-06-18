@@ -27,9 +27,9 @@ Please see \code{vignette('DependencySorting', package = 'rquery')} and \code{vi
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  ex <- rquery:::example_employee_date(my_db)
+  ex <- example_employee_date(my_db)
   print(describe_tables(my_db, ex$tableName,
                          keyInspector = key_inspector_sqlite))
   DBI::dbDisconnect(my_db)

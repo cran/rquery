@@ -40,7 +40,7 @@ unpack_assignments <- function(source, parsed,
     }
     if(check_is_assignment) {
       if(length(si$symbols_produced)!=1) {
-        stop("each assignment must be of the form name := expr")
+        stop("each assignment must be of the form name := expr or name %:=% expr")
       }
     }
     if(length(si$symbols_produced)==1) {
@@ -69,8 +69,9 @@ parse_se <- function(source, assignments, env,
   }
   nms <- names(assignments)
   # R-like db-info for presentation
-  db_inf <- rquery_db_info(indentifier_quote_char = '`',
-                           string_quote_char = '"')
+  db_inf <- rquery_db_info(indentifier_quote_char = '"',
+                           string_quote_char = '\'',
+                           is_dbi = FALSE)
   parsed <- vector(n, mode = 'list')
   for(i in seq_len(n)) {
     ni <- nms[[i]]
@@ -112,11 +113,17 @@ parse_nse <- function(source, exprs, env,
   }
   nms <- names(exprs)
   # R-like db-info for presentation
-  db_inf <- rquery_db_info(indentifier_quote_char = '`',
-                           string_quote_char = '"')
+  db_inf <- rquery_db_info(indentifier_quote_char = '"',
+                           string_quote_char = '\'',
+                           is_dbi = FALSE)
   parsed <- vector(n, mode = 'list')
   for(i in seq_len(n)) {
     ni <- nms[[i]]
+    if(!is.null(ni)) {
+      if(is.na(ni) || (nchar(ni)<=0)) {
+        ni <- NULL
+      }
+    }
     ei <- exprs[[i]]
     pi <- tokenize_for_SQL(ei,
                         colnames = have,
@@ -179,5 +186,10 @@ merge_columns_used <- function(cu1, cu2) {
                })
   names(cu) <- nms
   cu
+}
+
+rquery_deparse <- function(item) {
+  paste(as.character(deparse(item, width.cutoff = 500L)),
+        collapse = "\n ")
 }
 

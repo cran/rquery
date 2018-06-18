@@ -4,7 +4,7 @@
 \alias{natural_join}
 \title{Make a natural_join node.}
 \usage{
-natural_join(a, b, ..., jointype = "INNER", by = NULL)
+natural_join(a, b, ..., jointype = "INNER", by)
 }
 \arguments{
 \item{a}{source to select from.}
@@ -15,30 +15,54 @@ natural_join(a, b, ..., jointype = "INNER", by = NULL)
 
 \item{jointype}{type of join ('INNER', 'LEFT', 'RIGHT', 'FULL').}
 
-\item{by}{set of columns to match.}
+\item{by}{character, set of columns to match.}
 }
 \value{
 natural_join node.
 }
 \description{
-Natural join is a join by identity on all common columns
-(or only common columns specified in a non-\code{NULL} \code{by} argument).
-Any common columns not specified in a non-\code{NULL} \code{by} argument
+Natural join is a join by identity on all common columns specified in the \code{by}
+argument.
+Any common columns not specified in the \code{by} argument
 are coalesced into a single column prefering the first or "a" table.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
-  my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  d1 <- dbi_copy_to(my_db, 'd1',
-                    data.frame(AUC = 0.6, R2 = 0.2, D = NA))
-  d2 <- dbi_copy_to(my_db, 'd2',
-                    data.frame(AUC = 0.6, D = 0.3))
-  optree <- natural_join(d1, d2, by = 'AUC')
-  cat(format(optree))
-  sql <- to_sql(optree, my_db)
-  cat(sql)
-  print(DBI::dbGetQuery(my_db, sql))
+if(requireNamespace("DBI", quietly = TRUE) &&
+   requireNamespace("RSQLite", quietly = TRUE)) {
+  my_db <- DBI::dbConnect(RSQLite::SQLite(),
+                          ":memory:")
+
+  d1 <- rq_copy_to(
+    my_db, 'd1',
+    build_frame(
+      "key", "val", "val1" |
+        "a"  , 1  ,  10    |
+        "b"  , 2  ,  11    |
+        "c"  , 3  ,  12    ))
+  d2 <- rq_copy_to(
+    my_db, 'd2',
+    build_frame(
+      "key", "val", "val2" |
+        "a"  , 5  ,  13    |
+        "b"  , 6  ,  14    |
+        "d"  , 7  ,  15    ))
+
+  # key matching join
+  optree <- natural_join(d1, d2,
+                         jointype = "LEFT", by = 'key')
+  execute(my_db, optree) \%.>\%
+    print(.)
+
+  # full cross-product join
+  # (usually with jointype = "FULL", but "LEFT" is more
+  # compatible with rquery field merg semantics).
+  optree2 <- natural_join(d1, d2,
+                          jointype = "LEFT", by = NULL)
+  execute(my_db, optree2) \%.>\%
+    print(.)
+  # notice ALL non-"by" fields take coalese to left table.
+
   DBI::dbDisconnect(my_db)
 }
 

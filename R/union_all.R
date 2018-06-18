@@ -2,7 +2,7 @@
 #' Make an unionall node (not a relational operation).
 #'
 #'
-#' Concatenate tables.
+#' Concatenate tables by rows.
 #'
 #'
 #' @param sources list of relop trees or list of data.frames
@@ -10,9 +10,9 @@
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d <- dbi_copy_to(my_db, 'd',
+#'   d <- rq_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2))
 #'   optree <- unionall(list(d, d, d))
 #'   cat(format(optree))
@@ -50,8 +50,7 @@ unionall <- function(sources) {
     sources_tmp <- lapply(1:ns,
                           function(i) {
                             tmp_name <- tmp_name_source()
-                            dnode <- table_source(tmp_name, cols)
-                            dnode$data <- sources[[i]]
+                            dnode <- mk_td(tmp_name, cols)
                             dnode
                           })
     return(unionall(sources_tmp))
@@ -108,9 +107,8 @@ column_names.relop_unionall <- function (x, ...) {
 
 #' @export
 columns_used.relop_unionall <- function (x, ...,
-                                          using = NULL,
-                                          contract = FALSE) {
-  columns_used(x$source[[1]], using = using, contract = contract)
+                                          using = NULL) {
+  columns_used(x$source[[1]], using = using)
 }
 
 
@@ -159,7 +157,7 @@ to_sql.relop_unionall <- function (x,
   }
   cols <- vapply(cols,
                  function(ci) {
-                   DBI::dbQuoteIdentifier(db, ci)
+                   quote_identifier(db, ci)
                  }, character(1))
   cols <- paste(cols, collapse = ", ")
   inputs <- paste("SELECT ", cols, " FROM ( ", inputs, ")", tmps)

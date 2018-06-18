@@ -26,7 +26,7 @@ Please see \code{vignette('DependencySorting', package = 'rquery')} and \code{vi
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   # example data
   DBI::dbWriteTable(my_db,
@@ -67,6 +67,4 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 }
 \seealso{
 \code{\link{describe_tables}}, \code{\link{build_join_plan}}, \code{\link{inspect_join_plan}}, \code{\link{graph_join_plan}}
-
-TODO: parameterize the implementation provider (right now hard-coded for \code{dplr}, but at least also direct \code{SQL} is a good extension).
 }

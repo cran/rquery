@@ -4,7 +4,7 @@
 \alias{orderby}
 \title{Make an orderby node (not a relational operation).}
 \usage{
-orderby(source, cols = NULL, ..., rev_cols = NULL, limit = NULL)
+orderby(source, cols = NULL, ..., reverse = NULL, limit = NULL)
 }
 \arguments{
 \item{source}{source to select from.}
@@ -13,7 +13,7 @@ orderby(source, cols = NULL, ..., rev_cols = NULL, limit = NULL)
 
 \item{...}{force later arguments to be bound by name}
 
-\item{rev_cols}{order by reverse of these column names.}
+\item{reverse}{character, which columns to reverse ordering of.}
 
 \item{limit}{number limit row count.}
 }
@@ -34,11 +34,11 @@ which does preserve row order).
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  d <- dbi_copy_to(my_db, 'd',
+  d <- rq_copy_to(my_db, 'd',
                    data.frame(AUC = 0.6, R2 = 0.2))
-  optree <- orderby(d, rev_cols = "AUC", limit=4)
+  optree <- orderby(d, cols = "AUC", reverse = "AUC", limit=4)
   cat(format(optree))
   sql <- to_sql(optree, my_db)
   cat(sql)

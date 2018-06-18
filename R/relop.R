@@ -23,13 +23,13 @@ relop_decorate <- function(class_name, r) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d1 <- dbi_copy_to(my_db, 'd1',
+#'   d1 <- rq_copy_to(my_db, 'd1',
 #'                     data.frame(AUC = 0.6, R2 = 0.2))
-#'   d2 <- dbi_copy_to(my_db, 'd2',
+#'   d2 <- rq_copy_to(my_db, 'd2',
 #'                     data.frame(AUC = 0.6, D = 0.3))
-#'   optree <- natural_join(d1, d2)
+#'   optree <- natural_join(d1, d2, by = "AUC")
 #'   cat(format(optree))
 #'   print(column_names(optree))
 #'   DBI::dbDisconnect(my_db)
@@ -66,18 +66,17 @@ column_names.data.frame <- function (x, ...) {
 #' @param x rquery operation tree.
 #' @param ... generic additional arguments (not used)
 #' @param using character, if not NULL set of columns used from above.
-#' @param contract logical, if TRUE perform unused value elimination.
 #' @return vector of table qualified column names.
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d1 <- dbi_copy_to(my_db, 'd1',
+#'   d1 <- rq_copy_to(my_db, 'd1',
 #'                     data.frame(AUC = 0.6, R2 = 0.2))
-#'   d2 <- dbi_copy_to(my_db, 'd2',
+#'   d2 <- rq_copy_to(my_db, 'd2',
 #'                     data.frame(AUC = 0.6, D = 0.3))
-#'   optree <- natural_join(d1, d2)
+#'   optree <- natural_join(d1, d2, by = "AUC")
 #'   cat(format(optree))
 #'   print(columns_used(optree))
 #'   DBI::dbDisconnect(my_db)
@@ -87,16 +86,14 @@ column_names.data.frame <- function (x, ...) {
 #'
 columns_used <- function (x,
                           ...,
-                          using = NULL,
-                          contract = FALSE) {
+                          using = NULL) {
   UseMethod("columns_used", x)
 }
 
 #' @export
 columns_used.relop <- function (x,
                                 ...,
-                                using = NULL,
-                                contract = FALSE) {
+                                using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::columns_used.relop")
   subs <- lapply(x$source,
@@ -123,13 +120,13 @@ columns_used.relop <- function (x,
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d1 <- dbi_copy_to(my_db, 'd1',
+#'   d1 <- rq_copy_to(my_db, 'd1',
 #'                     data.frame(AUC = 0.6, R2 = 0.2))
-#'   d2 <- dbi_copy_to(my_db, 'd2',
+#'   d2 <- rq_copy_to(my_db, 'd2',
 #'                     data.frame(AUC = 0.6, D = 0.3))
-#'   optree <- natural_join(d1, d2)
+#'   optree <- natural_join(d1, d2, by = "AUC")
 #'   cat(format(optree))
 #'   print(tables_used(optree))
 #'   DBI::dbDisconnect(my_db)
@@ -169,17 +166,17 @@ tables_used.relop <- function(node, ...) {
 #' @param using character, if not NULL set of columns used from above.
 #' @return SQL command
 #'
-#' @seealso \code{\link{dbi_table}}, \code{\link{materialize}}, \code{\link{execute}}, \code{\link{dbi_copy_to}}, \code{\link{table_source}}
+#' @seealso \code{\link{db_td}}, \code{\link{materialize}}, \code{\link{execute}}, \code{\link{rq_copy_to}}, \code{\link{mk_td}}
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d1 <- dbi_copy_to(my_db, 'd1',
+#'   d1 <- rq_copy_to(my_db, 'd1',
 #'                     data.frame(AUC = 0.6, R2 = 0.2))
-#'   d2 <- dbi_copy_to(my_db, 'd2',
+#'   d2 <- rq_copy_to(my_db, 'd2',
 #'                     data.frame(AUC = 0.6, D = 0.3))
-#'   optree <- natural_join(d1, d2)
+#'   optree <- natural_join(d1, d2, by = "AUC")
 #'   cat(format(optree))
 #'   print(to_sql(optree, my_db))
 #'   DBI::dbDisconnect(my_db)

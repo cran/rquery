@@ -76,10 +76,10 @@ r_optree_diagram <- function(optree, nextid, use_table_names) {
 #'
 #' @examples
 #'
-#' d <- table_source('d',
+#' d <- mk_td('d',
 #'              columns = qc(AUC, R2))
 #' optree <- d %.>%
-#'   extend_nse(., v := ifelse(AUC>0.5, R2, 1.0)) %.>%
+#'   extend_nse(., v %:=% ifelse(AUC>0.5, R2, 1.0)) %.>%
 #'   quantile_node(.) %.>%
 #'   natural_join(., d, jointype = "LEFT", by = "AUC") %.>%
 #'   orderby(., "AUC")
@@ -93,6 +93,13 @@ r_optree_diagram <- function(optree, nextid, use_table_names) {
 #'     op_diagram(., merge_tables = TRUE) %.>%
 #'     DiagrammeR::grViz(.) %.>%
 #'     print(.)
+#'  # # or to render to png
+#'  # optree %.>%
+#'  #   op_diagram(., merge_tables = TRUE) %.>%
+#'  #   DiagrammeR::DiagrammeR(diagram = ., type = "grViz") %.>%
+#'  #     DiagrammeRsvg::export_svg(.) %.>%
+#'  #     charToRaw(.) %.>%
+#'  #     rsvg::rsvg_png(., file = "diagram1.png")
 #' }
 #'
 #' @export

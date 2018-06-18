@@ -3,45 +3,35 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-run_vignette <- requireNamespace("RSQLite", quietly = TRUE)
+run_vignette <- requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)
 
 ## ----ex, warning=FALSE, message=FALSE, include=FALSE, eval=run_vignette----
 library("rquery")
+library("wrapr")
 
 # this db does not have window fns
 my_db <- DBI::dbConnect(RSQLite::SQLite(), 
                         ":memory:")
 
-dbopts <- dbi_connection_preferences(my_db)
+dbopts <- rq_connection_tests(my_db)
 print(dbopts)
 options(dbopts)
 
 # copy in example data
-dbi_copy_to(my_db, 'd',
-            data.frame(
-              subjectID = c(1,                   
-                            1,
-                            2,                   
-                            2),
-              surveyCategory = c(
-                'withdrawal behavior',
-                'positive re-framing',
-                'withdrawal behavior',
-                'positive re-framing'
-              ),
-              assessmentTotal = c(5,                 
-                                  2,
-                                  3,                  
-                                  4),
-              irrelevantCol1 = "irrel1",
-              irrelevantCol2 = "irrel2",
-              stringsAsFactors = FALSE),
+d_local <- build_frame(
+   "subjectID", "surveyCategory"     , "assessmentTotal", "irrelevantCol1", "irrelevantCol2" |
+   1          , "withdrawal behavior", 5                , "irrel1"        , "irrel2"         |
+   1          , "positive re-framing", 2                , "irrel1"        , "irrel2"         |
+   2          , "withdrawal behavior", 3                , "irrel1"        , "irrel2"         |
+   2          , "positive re-framing", 4                , "irrel1"        , "irrel2"         )
+rq_copy_to(my_db, 'd',
+            d_local,
             temporary = TRUE, 
             overwrite = TRUE)
 
 ## ----calc, eval=run_vignette---------------------------------------------
 # produce a hande to existing table
-d <- dbi_table(my_db, "d")
+d <- db_td(my_db, "d")
 
 scale <- 0.237
 

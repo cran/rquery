@@ -6,7 +6,7 @@ context("namedetection")
 test_that("test_names: Works As Expected", {
   db <- DBI::dbConnect(RSQLite::SQLite(),
                        ":memory:")
-  hdl <- dbi_copy_to(db, "mtcars", mtcars,
+  hdl <- rq_copy_to(db, "mtcars", mtcars,
                      overwrite = TRUE,
                      temporary = TRUE)
 
@@ -58,4 +58,5 @@ test_that("test_names: Works As Expected", {
                d2 = mpg)
   expect_equal(qc(am, carb, cyl, d2, disp, drat, gear, hp, mpg, qsec, vs, wt),
                column_names(p))
+  DBI::dbDisconnect(db)
 })

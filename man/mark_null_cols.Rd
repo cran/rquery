@@ -19,17 +19,16 @@ Build a query that creates NULL indicators for nulls in slected columns.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+# WARNING: example tries to change rquery.rquery_db_executor option to RSQLite and back.
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  winvector_temp_db_handle <- list(
-    db = my_db
-  )
-  RSQLite::initExtension(winvector_temp_db_handle$db)
+  RSQLite::initExtension(my_db)
+  old_o <- options(list("rquery.rquery_db_executor" = list(db = my_db)))
 
-  d <- dbi_copy_to(my_db, 'd',
+  d <- rq_copy_to(my_db, 'd',
                    data.frame(AUC = c(0.6, 0.5, NA),
                               R2 = c(1.0, 0.9, NA)))
-  op_tree <- d \%.>\% mark_null_cols(., qc(AUC_NULL, R2_NULL) :=
+  op_tree <- d \%.>\% mark_null_cols(., qc(AUC_NULL, R2_NULL) \%:=\%
                                      qc(AUC, R2))
   cat(format(op_tree))
   sql <- to_sql(op_tree, my_db)
@@ -42,7 +41,7 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
      print(.)
 
   # cleanup
-  rm(list = "winvector_temp_db_handle")
+  options(old_o)
   DBI::dbDisconnect(my_db)
 }
 

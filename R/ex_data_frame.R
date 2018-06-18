@@ -11,29 +11,46 @@ re_write_table_names <- function(op_tree, new_name) {
   op_tree
 }
 
+is_named_list_of_data_frames <- function(o) {
+  if(!is.list(o)) {
+    return(FALSE)
+  }
+  nms <- names(o)
+  if(length(nms)!=length(o)) {
+    return(FALSE)
+  }
+  for(ni in nms) {
+    if(!is.data.frame(o[[ni]])) {
+      return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+
 #' Execture optree in an enviroment where d is the only data.
 #'
 #' Default DB uses RSQLite (so some functions are not supported).
 #'
-#' @param d data.frame
+#' @param d data.frame or named list of data.frames.
 #' @param optree rquery rel_op operation tree.
 #' @param ... force later arguments to bind by name.
 #' @param limit integer, if not NULL limit result to no more than this many rows.
-#' @param env environment to look for "winvector_temp_db_handle" in.
+#' @param source_limit numeric if not NULL limit sources to this many rows.
+#' @param allow_executor logical if TRUE allow any executor set as rquery.rquery_executor to be used.
+#' @param env environment to work in.
 #' @return data.frame result
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' # WARNING: example tries to change rquery.rquery_db_executor option to RSQLite and back.
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   winvector_temp_db_handle <- list(
-#'     db = db
-#'   )
-#'   RSQLite::initExtension(winvector_temp_db_handle$db)
+#'   RSQLite::initExtension(db)
+#'   old_o <- options(list("rquery.rquery_db_executor" = list(db = db)))
 #'
-#'   optree <- table_source("d", c("AUC", "R2", "D")) %.>%
-#'   	extend_nse(., c := sqrt(R2)) %.>%
-#'     orderby(., rev_cols = "R2")
+#'   optree <- mk_td("d", c("AUC", "R2", "D")) %.>%
+#'   	extend_nse(., c %:=% sqrt(R2)) %.>%
+#'     orderby(., cols = "R2", reverse = "R2")
 #'
 #'   d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
 #'   v <- rquery_apply_to_data_frame(d, optree)
@@ -48,7 +65,7 @@ re_write_table_names <- function(op_tree, new_name) {
 #'     ) %.>%
 #'     print(.)
 #'
-#'   winvector_temp_db_handle <- NULL
+#'   options(old_o)
 #'   DBI::dbDisconnect(db)
 #' }
 #'
@@ -58,17 +75,60 @@ rquery_apply_to_data_frame <- function(d,
                                        optree,
                                        ...,
                                        limit = NULL,
+                                       source_limit = NULL,
+                                       allow_executor = TRUE,
                                        env = parent.frame()) {
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::rquery_apply_to_data_frame")
-  if(!is.data.frame(d)) {
-    stop("rquery::rquery_apply_to_data_frame d must be a data.frame")
-  }
   if(!("relop" %in% class(optree))) {
     stop("rquery::rquery_apply_to_data_frame expect optree to be of class relop")
   }
+  if((!is.data.frame(d)) && (!is_named_list_of_data_frames(d)) && (!is.environment(d))) {
+    stop("rquery::rquery_apply_to_data_frame d must be a data.frame, a named list of data.frames, or an environment")
+  }
   tabNames <- tables_used(optree)
+  executor <- NULL
+  if(allow_executor) {
+    executor <- getOption("rquery.rquery_executor", default = NULL)
+  }
+  if(!is.null(executor)) {
+    tables <- NULL
+    env <- env
+    if(is.data.frame(d)) {
+      if(length(tabNames)!=1) {
+        stop("rquery::rquery_apply_to_data_frame optree must reference exactly one table a non-list is passed to rquery_executor")
+      }
+      tables <- list(x = d)
+      names(tables) <- tabNames
+    } else if(is_named_list_of_data_frames(d)) {
+      tables <- d
+    } else if(is.environment(d)) {
+      env <- d
+    }
+    res <- executor$f(optree = optree,
+                      tables = tables,
+                      source_limit = source_limit,
+                      env = env)
+    if((!is.null(limit)) && (limit<nrow(res))) {
+      res <- res[seq_len(limit), , drop = FALSE]
+    }
+    return(res)
+  }
+  my_db <- NULL
+  rquery.rquery_db_executor <- getOption("rquery.rquery_db_executor", default = NULL)
+  if(!is.null(rquery.rquery_db_executor)) {
+    my_db <- rquery.rquery_db_executor$db
+  }
+  if(is.null(my_db)) {
+    stop("rquery::rquery_apply_to_data_frame no database")
+  }
   if(length(tabNames)!=1) {
-    stop("rquery::rquery_apply_to_data_frame optree must reference exactly one table")
+    stop("rquery::rquery_apply_to_data_frame optree must reference exactly one table when rquery.rquery_executor option is not set")
+  }
+  if(is_named_list_of_data_frames(d) && (length(d)==1)) {
+    d <- d[[1]]
+  }
+  if(!is.data.frame(d)) {
+    stop("rquery::rquery_apply_to_data_frame d must be a data.frame or list with one data.frame when rquery.rquery_executor option is not set")
   }
   cols_used <- columns_used(optree)[[tabNames]]
   missing <- setdiff(cols_used, colnames(d))
@@ -76,227 +136,120 @@ rquery_apply_to_data_frame <- function(d,
     stop(paste("rquery::rquery_apply_to_data_frame d missing required columns:",
          paste(missing, collapse = ", ")))
   }
+  d <- d[ , cols_used, drop = FALSE]
+  if((!is.null(source_limit)) && (source_limit<nrow(d))) {
+    d <- d[seq_len(source_limit), , drop = FALSE]
+  }
   tmp_name_source <- mk_tmp_name_source('rqatmp')
   inp_name <- tmp_name_source()
-  res_name <- tmp_name_source()
   optree <- re_write_table_names(optree, inp_name)
-  need_close <- FALSE
-  db_handle <- base::mget("winvector_temp_db_handle",
-                          envir = env,
-                          ifnotfound = list(NULL),
-                          inherits = TRUE)[[1]]
-  my_db <- NULL
-  if(is.null(db_handle)) {
-    if (requireNamespace("RSQLite", quietly = TRUE)) {
-      my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-      RSQLite::initExtension(my_db)
-      need_close = TRUE
-    }
-  } else {
-    my_db <- db_handle$db
-  }
-  if(is.null(my_db)) {
-    stop("rquery::rquery_apply_to_data_frame no database")
-  }
-  dR <- dbi_copy_to(my_db,
+  dR <- rq_copy_to(my_db,
                     inp_name,
                     d,
                     temporary = TRUE,
                     overwrite = FALSE)
-  ref <- materialize(my_db,
-                     optree,
-                     limit = limit,
-                     table_name = res_name,
-                     overwrite = TRUE,
-                     temporary = TRUE,
-                     precheck = FALSE)
-  # if last step is order we have to re-do that
-  # as order is not well define in materialized tables
-  if("relop_orderby" %in% class(optree)) {
-    ref <- ref  %.>%
-      orderby(.,
-              cols = optree$orderby,
-              rev_cols = optree$rev_orderby)
-  }
-  sql <- sql <- to_sql(ref, my_db, limit = limit)
-  res <- DBI::dbGetQuery(my_db, sql)
-  dbi_remove_table(my_db, inp_name)
-  dbi_remove_table(my_db, res_name)
-  if(need_close) {
-    DBI::dbDisconnect(my_db)
-  }
+  res <- execute(my_db, optree,
+                 limit = limit,
+                 overwrite = TRUE,
+                 temporary = TRUE,
+                 precheck = FALSE,
+                 allow_executor = allow_executor,
+                 env = env)
+  rq_remove_table(my_db, inp_name)
   res
 }
 
-grab_first_dat <- function(op_tree) {
-  for(i in seq_len(length(op_tree$source))) {
-    di <- grab_first_dat(op_tree$source[[i]])
-    if(!is.null(di)) {
-      return(di)
-    }
-  }
-  op_tree$data
-}
-
-#' Attempt to execute a pipeline (assuming it has local data, or is passed local data).
-#'
-#' @param optree rquery relop pipeline.
-#' @param ... force later arguments to bind by name.
-#' @param env environment to work in.
-#' @param data data.frame to evaluate.
-#' @param limit numeric if not null limit result to this many rows.
-#' @return executed pipleline or NULL if not executable.
-#'
-#'
-#' @noRd
-#'
-execute_embeded_data_frame <- function(optree,
-               ...,
-               env = parent.frame(),
-               data = NULL,
-               limit = NULL) {
-  wrapr::stop_if_dot_args(substitute(list(...)),
-                          "rquery:::execute_embeded_data_frame")
-  tabs <- tables_used(optree)
-  if(length(tabs)!=1) {
-    return(NULL)
-  }
-  data <- grab_first_dat(optree)
-  if(is.null(data)) {
-    return(NULL)
-  }
-  res <- rquery_apply_to_data_frame(data, optree,
-                                    env = env,
-                                    limit = limit)
-  return(res)
-}
-
-#' @export
-as.data.frame.relop <- function (x,
-                                 row.names = NULL,
-                                 optional = FALSE,
-                                 ...) {
-  dotargs <- list(...)
-  n <- NULL
-  if(!is.null(dotargs$n)) {
-    n <- dotargs$n
-  }
-  execute_embeded_data_frame(x,
-          env = parent.frame(), limit = n)
-}
-
-
 #' @export
 print.relop <- function(x, ...) {
-  dotargs <- list(...)
-  n <- NULL
-  if(!is.null(dotargs$n)) {
-    n <- dotargs$n
-  }
-  res <- execute_embeded_data_frame(x,
-                 env = parent.frame(), limit = n)
-  if(!is.null(res)) {
-    print(res)
-  } else {
-    txt <- format(x)
-    txt <- trimws(gsub("[ \t\r\n]+", " ", txt), which = "both")
-    print(txt, ...)
-  }
+  txt <- format(x)
+  txt <- trimws(gsub("[ \t\r\n]+", " ", txt), which = "both")
+  print(txt, ...)
 }
 
-#' @importFrom utils head
-NULL
-
-#' @export
-head.relop <- function(x, ...) {
-  dotargs <- list(...)
-  n <- 6
-  if(!is.null(dotargs$n)) {
-    n <- dotargs$n
-  }
-  res <- execute_embeded_data_frame(x,
-                 env = parent.frame(), limit = n)
-  if(!is.null(res)) {
-    res
-  } else {
-    x
-  }
-}
 
 #' @export
 summary.relop <- function(object, ...) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::summary.relop")
-  res <- execute_embeded_data_frame(object,
-                                    env = parent.frame())
-  if(!is.null(res)) {
-    summary(res)
-  } else {
-    format(object)
-  }
+  format(object)
+}
+
+#' @export
+as.character.relop <- function (x, ...) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::as.character.relop")
+  format(object)
 }
 
 
 #' Execute pipeline treating pipe_left_arg as local data to
 #' be copied into database.
 #'
-#' @param pipe_left_arg data.frame or DBI database connection
-#' @param pipe_right_arg rquery relop operation tree
-#' @param pipe_environment environment to execute in
-#' @param pipe_name name of pipling symbol
+#' @param pipe_left_arg left argument.
+#' @param pipe_right_arg substitute(pipe_right_arg) argument.
+#' @param pipe_environment environment to evaluate in.
+#' @param left_arg_name name, if not NULL name of left argument.
+#' @param pipe_string character, name of pipe operator.
+#' @param right_arg_name name, if not NULL name of right argument.
 #' @return data.frame
 #'
 #' @seealso \code{\link{rquery_apply_to_data_frame}}
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' # WARNING: example tries to change rquery.rquery_db_executor option to RSQLite and back.
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   # set up example database and
 #'   # db execution helper
 #'   db <- DBI::dbConnect(RSQLite::SQLite(),
 #'                        ":memory:")
 #'   RSQLite::initExtension(db)
-#'   winvector_temp_db_handle <- list(db = db)
+#'   old_o <- options(list("rquery.rquery_db_executor" = list(db = db)))
 #'
 #'   # operations pipeline/tree
-#'   optree <- table_source("d", "x") %.>%
+#'   optree <- mk_td("d", "x") %.>%
 #'     extend_nse(., y = x*x)
 #'
-#'   # wrapr dot pipe wrapr_function dispatch
+#'   # wrapr dot pipe apply_right dispatch
 #'   # causes this statment to apply optree
 #'   # to d.
 #'   data.frame(x = 1:3) %.>% optree %.>% print(.)
 #'
 #'   # remote example
-#'   dbi_copy_to(db, "d",
+#'   rq_copy_to(db, "d",
 #'               data.frame(x = 7:8),
 #'               overwrite = TRUE,
 #'               temporary = TRUE)
 #'
-#'   # wrapr dot pipe wrapr_function dispatch
+#'   # wrapr dot pipe apply_right dispatch
 #'   # causes this statment to apply optree
 #'   # to db.
 #'   db %.>% optree %.>% print(.)
 #'
 #'   # clean up
-#'   rm(list = "winvector_temp_db_handle")
+#'   options(old_o)
 #'   DBI::dbDisconnect(db)
 #' }
 #'
 #' @export
 #'
-wrapr_function.relop <- function(pipe_left_arg,
-                                 pipe_right_arg,
-                                 pipe_environment,
-                                 pipe_name = NULL) {
+apply_right.relop <- function(pipe_left_arg,
+                              pipe_right_arg,
+                              pipe_environment,
+                              left_arg_name,
+                              pipe_string,
+                              right_arg_name) {
   if(!("relop" %in% class(pipe_right_arg))) {
-    stop("rquery::wrapr_function.relop expect pipe_right_arg to be of class relop")
+    stop("rquery::apply_right.relop expect pipe_right_arg to be of class relop")
   }
-  if(is.data.frame(pipe_left_arg)) {
+  if(is.data.frame(pipe_left_arg) || is_named_list_of_data_frames(pipe_left_arg)) {
     return(rquery_apply_to_data_frame(pipe_left_arg,
                                       pipe_right_arg,
                                       env = pipe_environment))
   }
+  if("relop" %in% class(pipe_left_arg)) {
+    stop("rquery::apply_right.relop left argument can not be an already defined relop pipeline")
+  }
   # assume pipe_left_arg is a DB connection, execute and bring back result
-  execute(pipe_left_arg, pipe_right_arg)
+  execute(pipe_left_arg, pipe_right_arg, env = pipe_environment)
 }

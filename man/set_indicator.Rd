@@ -2,12 +2,12 @@
 % Please edit documentation in R/set_indicator.R
 \name{set_indicator}
 \alias{set_indicator}
-\title{Build an in set indicator.}
+\title{Make an set indicator node.}
 \usage{
 set_indicator(source, rescol, testcol, testvalues)
 }
 \arguments{
-\item{source}{optree relnode or data.frame.}
+\item{source}{source to select from.}
 
 \item{rescol}{name of column to land indicator in.}
 
@@ -16,31 +16,42 @@ set_indicator(source, rescol, testcol, testvalues)
 \item{testvalues}{values to check for.}
 }
 \value{
-implementing optree or altered data.frame
+set_indicator node.
 }
 \description{
-Build an in set indicator.
+Create a new column indicating the membership of another column in a given set.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(),
                           ":memory:")
 
-  d <- dbi_copy_to(my_db, 'd',
+  d <- rq_copy_to(my_db, 'd',
                    data.frame(a = c("1", "2", "1", "3"),
                               b = c("1", "1", "3", "2"),
+                              q = 1,
                               stringsAsFactors = FALSE),
                    temporary = TRUE,
                    overwrite = TRUE)
   # example
   set <- c("1", "2")
   op_tree <- d \%.>\%
-    set_indicator(., "one_two", "a", set)
+    set_indicator(., "one_two", "a", set) \%.>\%
+    set_indicator(., "z", "a", c())
+  print(column_names(op_tree))
+  print(columns_used(op_tree))
   cat(format(op_tree))
   sql <- to_sql(op_tree, my_db)
   cat(sql)
   print(DBI::dbGetQuery(my_db, sql))
+
+  op_tree2 <- d \%.>\%
+    set_indicator(., "one_two", "a", set) \%.>\%
+    set_indicator(., "z", "b", c()) \%.>\%
+    select_columns(., c("z", "one_two"))
+  print(column_names(op_tree2))
+  print(columns_used(op_tree2))
 
   # cleanup
   DBI::dbDisconnect(my_db)

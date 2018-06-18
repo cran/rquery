@@ -2,16 +2,12 @@
 % Please edit documentation in R/materialize.R
 \name{execute}
 \alias{execute}
-\alias{commencify}
-\title{Execute a operator tree, either bringing back the result or landing it as a table.}
+\title{Execute a operator tree, bringing back the result to memory.}
 \usage{
-execute(source, optree, ..., table_name = NULL, limit = NULL,
-  source_limit = NULL, overwrite = TRUE, temporary = FALSE,
-  precheck = FALSE)
-
-commencify(source, optree, ..., table_name = NULL, limit = NULL,
-  source_limit = NULL, overwrite = TRUE, temporary = FALSE,
-  precheck = FALSE)
+execute(source, optree, ..., limit = NULL, source_limit = NULL,
+  overwrite = TRUE, temporary = TRUE, precheck = FALSE,
+  allow_executor = TRUE, temp_source = mk_tmp_name_source("rquery_ex"),
+  env = parent.frame())
 }
 \arguments{
 \item{source}{data.frame or DBI connection.}
@@ -19,8 +15,6 @@ commencify(source, optree, ..., table_name = NULL, limit = NULL,
 \item{optree}{relop operation tree.}
 
 \item{...}{force later arguments to bind by name.}
-
-\item{table_name}{character, name of table to create.}
 
 \item{limit}{numeric, if set limit to this many rows during data bring back (not used when landing a table).}
 
@@ -31,23 +25,28 @@ commencify(source, optree, ..., table_name = NULL, limit = NULL,
 \item{temporary}{logical if TRUE try to create a temporary table.}
 
 \item{precheck}{logical if TRUE precheck existance of table and columns.}
+
+\item{allow_executor}{logical if TRUE allow any executor set as rquery.rquery_executor to be used.}
+
+\item{temp_source}{temporary name generator.}
+
+\item{env}{environment to work in.}
 }
 \value{
-data.frame or table handle.
+data.frame
 }
 \description{
-Run the data query.  If table_name is not set results
-(up to limit rows) are brought back to R. If
-table_name is set full results are materailized as a remote
-table.
+Run the data query.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+# WARNING: example tries to change rquery.rquery_db_executor option to RSQLite and back.
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  d <- dbi_copy_to(my_db, 'd',
+  old_o <- options(list("rquery.rquery_db_executor" = list(db = my_db)))
+  d <- rq_copy_to(my_db, 'd',
                    data.frame(AUC = 0.6, R2 = 0.2))
-  optree <- extend_se(d, c("v" := "AUC + R2", "x" := "pmax(AUC,v)"))
+  optree <- extend_se(d, c("v" \%:=\% "AUC + R2", "x" \%:=\% "pmax(AUC,v)"))
 
   print(optree)
 
@@ -59,17 +58,11 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
   v2 <- execute(data.frame(AUC = 1, R2 = 2), optree)
   print(v2)
 
-  # land result in database
-  res_hdl <- execute(my_db, optree, table_name = "res")
-  print(res_hdl)
-  print(DBI::dbGetQuery(my_db, to_sql(res_hdl, my_db)))
-  print(DBI::dbReadTable(my_db, res_hdl$table_name))
-  DBI::dbRemoveTable(my_db, res_hdl$table_name)
-
+  options(old_o)
   DBI::dbDisconnect(my_db)
 }
 
 }
 \seealso{
-\code{\link{materialize}}, \code{\link{dbi_table}}, \code{\link{to_sql}}, \code{\link{dbi_copy_to}}, \code{\link{table_source}}
+\code{\link{materialize}}, \code{\link{db_td}}, \code{\link{to_sql}}, \code{\link{rq_copy_to}}, \code{\link{mk_td}}
 }

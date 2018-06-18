@@ -22,7 +22,7 @@ Please see \code{vignette('DependencySorting', package = 'rquery')} and \code{vi
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE) &&
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE) &&
     requireNamespace('igraph', quietly = TRUE)) {
   # note: employeeanddate is likely built as a cross-product
   #       join of an employee table and set of dates of interest
@@ -30,7 +30,7 @@ if (requireNamespace("RSQLite", quietly = TRUE) &&
   #       such a table "row control" or "experimental design."
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   RSQLite::initExtension(my_db)
-  tDesc <- rquery:::example_employee_date(my_db)
+  tDesc <- example_employee_date(my_db)
   columnJoinPlan <- build_join_plan(tDesc, check= FALSE)
   # unify keys
   columnJoinPlan$resultColumn[columnJoinPlan$resultColumn=='id'] <- 'eid'

@@ -1,5 +1,5 @@
 ## ----chpkg---------------------------------------------------------------
-run_vignette <- requireNamespace("RSQLite", quietly = TRUE)
+run_vignette <- requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)
 
 ## ----ex1, comment="", eval=run_vignette----------------------------------
 library("rquery")
@@ -12,7 +12,7 @@ for(group in c('a', 'b', 'c', 'd', 'e')) {
 }
 my_db <- DBI::dbConnect(RSQLite::SQLite(), 
                         ":memory:")
-d1 <- dbi_copy_to(my_db, "example_table", d)
+d1 <- rq_copy_to(my_db, "example_table", d)
 d1 %.>%
   to_sql(., my_db) %.>%
   DBI::dbGetQuery(my_db, .) %.>%

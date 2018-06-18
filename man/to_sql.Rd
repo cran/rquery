@@ -34,13 +34,13 @@ Add to last argument and pass all others through.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  d1 <- dbi_copy_to(my_db, 'd1',
+  d1 <- rq_copy_to(my_db, 'd1',
                     data.frame(AUC = 0.6, R2 = 0.2))
-  d2 <- dbi_copy_to(my_db, 'd2',
+  d2 <- rq_copy_to(my_db, 'd2',
                     data.frame(AUC = 0.6, D = 0.3))
-  optree <- natural_join(d1, d2)
+  optree <- natural_join(d1, d2, by = "AUC")
   cat(format(optree))
   print(to_sql(optree, my_db))
   DBI::dbDisconnect(my_db)
@@ -48,5 +48,5 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 
 }
 \seealso{
-\code{\link{dbi_table}}, \code{\link{materialize}}, \code{\link{execute}}, \code{\link{dbi_copy_to}}, \code{\link{table_source}}
+\code{\link{db_td}}, \code{\link{materialize}}, \code{\link{execute}}, \code{\link{rq_copy_to}}, \code{\link{mk_td}}
 }

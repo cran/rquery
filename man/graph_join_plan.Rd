@@ -24,14 +24,14 @@ Please see \code{vignette('DependencySorting', package = 'rquery')} and \code{vi
 \examples{
 
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   # note: employeeanddate is likely built as a cross-product
   #       join of an employee table and set of dates of interest
   #       before getting to the join controller step.  We call
   #       such a table "row control" or "experimental design."
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   RSQLite::initExtension(my_db)
-  tDesc <- rquery:::example_employee_date(my_db)
+  tDesc <- example_employee_date(my_db)
   # fix order by hand, please see rquery::topo_sort_tables for
   # how to automate this.
   ord <- match(c('employeeanddate', 'orgtable', 'activity', 'revenue'),

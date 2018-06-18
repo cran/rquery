@@ -24,12 +24,12 @@ order_names <- function(old_names, new_names) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   # example database connection
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(),
 #'                           ":memory:")
 #'   # load up example data
-#'   d <- dbi_copy_to(
+#'   d <- rq_copy_to(
 #'     my_db, 'd',
 #'     data.frame(v1 = c(1, 2, NA, 3),
 #'                v2 = c(NA, "b", NA, "c"),
@@ -58,7 +58,7 @@ order_names <- function(old_names, new_names) {
 #'
 #'   # instantiate the operator node
 #'   op_tree <- d %.>%
-#'     sql_node(., "num_missing" := list(expr))
+#'     sql_node(., "num_missing" %:=% list(expr))
 #'   cat(format(op_tree))
 #'
 #'   # examine produced SQL
@@ -130,8 +130,7 @@ sql_node.data.frame <- function(source, exprs,
                                 orig_columns = TRUE) {
   wrapr::stop_if_dot_args(substitute(list(...)), "sql_node.data.frame")
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
-  dnode <- table_source(tmp_name, colnames(source))
-  dnode$data <- source
+  dnode <- mk_td(tmp_name, colnames(source))
   enode <- sql_node(dnode, exprs = exprs,
                     mods = mods,
                     orig_columns = orig_columns)
@@ -161,7 +160,7 @@ format_node.relop_sql <- function(node) {
                     function(ei) {
                       paste(as.character(ei), collapse = " ")
                     }, character(1))
-  assignments <- paste(names(node$exprs), ":=", exprtxt)
+  assignments <- paste(names(node$exprs), "%:=%", exprtxt)
   modsstr <- ""
   indent_sep <- "\n             "
   if(!is.null(node$mods)) {
@@ -178,13 +177,11 @@ format_node.relop_sql <- function(node) {
 
 #' @export
 columns_used.relop_sql <- function (x, ...,
-                                    using = NULL,
-                                    contract = FALSE) {
+                                    using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)), "columns_used.relop_sql")
   # assume using all columns
   return(columns_used(x$source[[1]],
-                      using = NULL,
-                      contract = contract))
+                      using = NULL))
 }
 
 

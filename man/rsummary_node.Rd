@@ -22,11 +22,12 @@ rsummary_node(source, ..., quartiles = FALSE,
 rsummary node
 }
 \description{
-Create an rsumary relop operator node.
+This is a non_sql_node, so forces the materialization of
+the calculation prior to it losing narrowing optimizations.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   d <- data.frame(p= c(TRUE, FALSE, NA),
                   s= NA,
                   w= 1:3,
@@ -36,12 +37,12 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
                   stringsAsFactors=FALSE)
   db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   RSQLite::initExtension(db)
-  dbi_copy_to(db, "dRemote", d,
+  rq_copy_to(db, "dRemote", d,
               overwrite = TRUE,
               temporary = TRUE)
 
-  ops <- dbi_table(db, "dRemote") \%.>\%
-    extend_nse(., v := ifelse(x>2, "x", "y")) \%.>\%
+  ops <- db_td(db, "dRemote") \%.>\%
+    extend_nse(., v \%:=\% ifelse(x>2, "x", "y")) \%.>\%
     rsummary_node(.)
   cat(format(ops))
 

@@ -25,19 +25,20 @@ This is an example of building up a desired pre-prepared pipleline fragment from
 
 # by hand logistic regression example
 scale <- 0.237
-d <- table_source("survey_table",
+d <- mk_td("survey_table",
                   c("subjectID", "surveyCategory", "assessmentTotal"))
 optree <- d \%.>\%
   extend_nse(.,
-             probability :=
+             probability \%:=\%
                exp(assessmentTotal * scale))  \%.>\%
   normalize_cols(.,
                  "probability",
                  partitionby = 'subjectID') \%.>\%
   pick_top_k(.,
              partitionby = 'subjectID',
-             rev_orderby = c('probability', 'surveyCategory')) \%.>\%
-  rename_columns(., 'diagnosis' := 'surveyCategory') \%.>\%
+             orderby = c('probability', 'surveyCategory'),
+             reverse = c('probability')) \%.>\%
+  rename_columns(., 'diagnosis' \%:=\% 'surveyCategory') \%.>\%
   select_columns(., c('subjectID',
                       'diagnosis',
                       'probability')) \%.>\%

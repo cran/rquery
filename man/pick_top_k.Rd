@@ -5,8 +5,9 @@
 \title{Build a optree pipeline that selects up to the top k rows from each group in the given order.}
 \usage{
 pick_top_k(source, ..., partitionby = NULL, orderby = NULL,
-  rev_orderby = NULL, k = 1L, order_column = "row_number",
-  keep_order_column = TRUE, env = parent.frame())
+  reverse = NULL, k = 1L, order_expression = "row_number()",
+  order_column = "row_number", keep_order_column = TRUE,
+  env = parent.frame())
 }
 \arguments{
 \item{source}{relop tree or data.frame source.}
@@ -17,9 +18,11 @@ pick_top_k(source, ..., partitionby = NULL, orderby = NULL,
 
 \item{orderby}{character, ordering (in window function) column names.}
 
-\item{rev_orderby}{character, reverse ordering (in window function) column names.}
+\item{reverse}{character, reverse ordering (in window function) of these column names.}
 
 \item{k}{integer, number of rows to limit to in each group.}
+
+\item{order_expression}{character, command to compute row-order/rank.}
 
 \item{order_column}{character, column name to write per-group rank in (no ties).}
 
@@ -34,19 +37,20 @@ This is an example of building up a desired pre-prepared pipleline fragment from
 
 # by hand logistic regression example
 scale <- 0.237
-d <- table_source("survey_table",
-                  c("subjectID", "surveyCategory", "assessmentTotal"))
+d <- mk_td("survey_table",
+           c("subjectID", "surveyCategory", "assessmentTotal"))
 optree <- d \%.>\%
   extend_nse(.,
-             probability :=
+             probability \%:=\%
                exp(assessmentTotal * scale))  \%.>\%
   normalize_cols(.,
                  "probability",
                  partitionby = 'subjectID') \%.>\%
   pick_top_k(.,
              partitionby = 'subjectID',
-             rev_orderby = c('probability', 'surveyCategory')) \%.>\%
-  rename_columns(., 'diagnosis' := 'surveyCategory') \%.>\%
+             orderby = c('probability', 'surveyCategory'),
+             reverse = c('probability', 'surveyCategory')) \%.>\%
+  rename_columns(., 'diagnosis' \%:=\% 'surveyCategory') \%.>\%
   select_columns(., c('subjectID',
                       'diagnosis',
                       'probability')) \%.>\%

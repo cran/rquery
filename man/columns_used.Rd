@@ -4,7 +4,7 @@
 \alias{columns_used}
 \title{Return columns used}
 \usage{
-columns_used(x, ..., using = NULL, contract = FALSE)
+columns_used(x, ..., using = NULL)
 }
 \arguments{
 \item{x}{rquery operation tree.}
@@ -12,8 +12,6 @@ columns_used(x, ..., using = NULL, contract = FALSE)
 \item{...}{generic additional arguments (not used)}
 
 \item{using}{character, if not NULL set of columns used from above.}
-
-\item{contract}{logical, if TRUE perform unused value elimination.}
 }
 \value{
 vector of table qualified column names.
@@ -23,13 +21,13 @@ Return columns used
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  d1 <- dbi_copy_to(my_db, 'd1',
+  d1 <- rq_copy_to(my_db, 'd1',
                     data.frame(AUC = 0.6, R2 = 0.2))
-  d2 <- dbi_copy_to(my_db, 'd2',
+  d2 <- rq_copy_to(my_db, 'd2',
                     data.frame(AUC = 0.6, D = 0.3))
-  optree <- natural_join(d1, d2)
+  optree <- natural_join(d1, d2, by = "AUC")
   cat(format(optree))
   print(columns_used(optree))
   DBI::dbDisconnect(my_db)

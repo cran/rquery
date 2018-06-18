@@ -2,7 +2,7 @@
 % Please edit documentation in R/if_else_block.R
 \name{if_else_op}
 \alias{if_else_op}
-\title{Simulate a per-row block-\code{if(){}else{}}.}
+\title{Build a \code{relop} node simulating a per-row block-\code{if(){}else{}}.}
 \usage{
 if_else_op(source, testexpr, ..., thenexprs = NULL, elseexprs = NULL)
 }
@@ -40,10 +40,10 @@ is a reserved column name for this procedure.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   # Example: clear one of a or b in any row where both are set.
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  d <- dbi_copy_to(
+  d <- rq_copy_to(
     my_db,
     'd',
     data.frame(i = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
@@ -55,10 +55,10 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
   optree <- d \%.>\%
     if_else_op(.,
                testexpr = qe((a+b)>1),
-               thenexprs = qae(a := 0,
-                               b := 0,
-                               edited := 1),
-               elseexprs = qae(edited := 0))
+               thenexprs = qae(a \%:=\% 0,
+                               b \%:=\% 0,
+                               edited \%:=\% 1),
+               elseexprs = qae(edited \%:=\% 0))
   cat(format(optree))
 
   sql <- to_sql(optree, my_db)

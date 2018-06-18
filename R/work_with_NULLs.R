@@ -28,14 +28,13 @@ flatten_with_sep <- function(list_of_lists, sep_list) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' # WARNING: example tries to change rquery.rquery_db_executor option to RSQLite and back.
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   winvector_temp_db_handle <- list(
-#'     db = my_db
-#'   )
-#'   RSQLite::initExtension(winvector_temp_db_handle$db)
+#'   RSQLite::initExtension(my_db)
+#'   old_o <- options(list("rquery.rquery_db_executor" = list(db = my_db)))
 #'
-#'   d <- dbi_copy_to(my_db, 'd',
+#'   d <- rq_copy_to(my_db, 'd',
 #'                    data.frame(AUC = c(0.6, 0.5, NA),
 #'                               R2 = c(1.0, 0.9, NA)))
 #'   op_tree <- d %.>% count_null_cols(., c("AUC", "R2"), "nnull")
@@ -50,7 +49,7 @@ flatten_with_sep <- function(list_of_lists, sep_list) {
 #'      print(.)
 #'
 #'   # cleanup
-#'   rm(list = "winvector_temp_db_handle")
+#'   options(old_o)
 #'   DBI::dbDisconnect(my_db)
 #' }
 #'
@@ -59,12 +58,16 @@ flatten_with_sep <- function(list_of_lists, sep_list) {
 count_null_cols <- function(source, cols, count) {
   nc <- length(cols)
   if(nc<1) {
-    stop("rquery::count_null_cols need at least one column name")
+    cols <- column_names(source)
+  } else {
+    bad_cols <- setdiff(cols, column_names(source))
+    if(length(bad_cols)>0) {
+      stop(paste("rquery::count_null_cols unknown columns:",
+                 paste(bad_cols, collapse = ", ")))
+    }
   }
-  bad_cols <- setdiff(cols, column_names(source))
-  if(length(bad_cols)>0) {
-    stop(paste("rquery::count_null_cols unknown columns:",
-               paste(bad_cols, collapse = ", ")))
+  if(count %in% column_names(source)) {
+    stop("rquery::count_null_cols count column can not be an existing column")
   }
   terms <- lapply(cols,
                   function(ci) {
@@ -73,7 +76,7 @@ count_null_cols <- function(source, cols, count) {
                          "IS NULL ) THEN 1 ELSE 0 END )")
                   })
   expr <- flatten_with_sep(terms, list("+"))
-  nd <- sql_node(source, count := list(expr),
+  nd <- sql_node(source, count %:=% list(expr),
                  orig_columns = TRUE)
   if("relop" %in% class(nd)) {
     nd$display_form <- paste0("count_null_cols(",
@@ -96,17 +99,16 @@ count_null_cols <- function(source, cols, count) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' # WARNING: example tries to change rquery.rquery_db_executor option to RSQLite and back.
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   winvector_temp_db_handle <- list(
-#'     db = my_db
-#'   )
-#'   RSQLite::initExtension(winvector_temp_db_handle$db)
+#'   RSQLite::initExtension(my_db)
+#'   old_o <- options(list("rquery.rquery_db_executor" = list(db = my_db)))
 #'
-#'   d <- dbi_copy_to(my_db, 'd',
+#'   d <- rq_copy_to(my_db, 'd',
 #'                    data.frame(AUC = c(0.6, 0.5, NA),
 #'                               R2 = c(1.0, 0.9, NA)))
-#'   op_tree <- d %.>% mark_null_cols(., qc(AUC_NULL, R2_NULL) :=
+#'   op_tree <- d %.>% mark_null_cols(., qc(AUC_NULL, R2_NULL) %:=%
 #'                                      qc(AUC, R2))
 #'   cat(format(op_tree))
 #'   sql <- to_sql(op_tree, my_db)
@@ -119,24 +121,28 @@ count_null_cols <- function(source, cols, count) {
 #'      print(.)
 #'
 #'   # cleanup
-#'   rm(list = "winvector_temp_db_handle")
+#'   options(old_o)
 #'   DBI::dbDisconnect(my_db)
 #' }
 #'
 #' @export
 #'
 mark_null_cols <- function(source, cols) {
-  if(length(intersect(names(cols), as.character(cols)))>0) {
-    stop("mark_null_cols: names can not intersect values")
+  if((length(cols)<=0) || (length(names(cols))<=0)) {
+    stop("rquery::mark_null_cols cost must be a named column list")
+  }
+  if(length(intersect(names(cols), column_names(source)))>0) {
+    stop("mark_null_cols: new names can not intersect column names")
   }
   nc <- length(cols)
   if(nc<1) {
-    stop("rquery::mark_null_cols need at least one column name")
-  }
-  bad_cols <- setdiff(cols, column_names(source))
-  if(length(bad_cols)>0) {
-    stop(paste("rquery::mark_null_cols unknown columns:",
-               paste(bad_cols, collapse = ", ")))
+    cols <- column_names(source)
+  } else {
+    bad_cols <- setdiff(as.character(cols), column_names(source))
+    if(length(bad_cols)>0) {
+      stop(paste("rquery::mark_null_cols unknown columns:",
+                 paste(bad_cols, collapse = ", ")))
+    }
   }
   terms <- lapply(cols,
                   function(ci) {

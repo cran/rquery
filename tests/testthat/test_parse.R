@@ -54,7 +54,7 @@ test_that("test_parse: Works As Expected", {
   expect_equal("1 = 2", ex10$check)
 
   ex11 <- do_parse("ifelse(TRUE,1,2)")
-  expect_equal("( CASE WHEN ( TRUE ) THEN ( 1 ) ELSE ( 2 ) END )", ex11$check)
+  expect_equal("( CASE WHEN ( TRUE ) THEN ( 1 ) WHEN NOT ( TRUE ) THEN ( 2 ) ELSE NULL END )", ex11$check)
 
   ex12 <- do_parse("sin(x)")
   expect_equal("sin ( x )", ex12$check)
@@ -62,6 +62,10 @@ test_that("test_parse: Works As Expected", {
   ex13 <- do_parse("x := 1+1")
   expect_equal("1 + 1", ex13$check)
   expect_equal("x", ex13$symbols_produced)
+
+  ex13b <- do_parse("x := 1+1")
+  expect_equal("1 + 1", ex13b$check)
+  expect_equal("x", ex13b$symbols_produced)
 
   ex14 <- do_parse("rank := rank")
   expect_equal("rank", ex14$check)
@@ -71,7 +75,7 @@ test_that("test_parse: Works As Expected", {
   expect_equal("rank ( )", ex15$check)
   expect_equal("rank", ex15$symbols_produced)
 
-  ex17 <- do_parse("x" := "exp(3 * 5)")
+  ex17 <- do_parse("x" %:=% "exp(3 * 5)")
   expect_equal("exp ( 3 * 5 )", ex17$check)
 
   ex18 <- do_parse("y := y + 1")

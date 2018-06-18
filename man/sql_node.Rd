@@ -25,12 +25,12 @@ Make a general SQL node.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   # example database connection
   my_db <- DBI::dbConnect(RSQLite::SQLite(),
                           ":memory:")
   # load up example data
-  d <- dbi_copy_to(
+  d <- rq_copy_to(
     my_db, 'd',
     data.frame(v1 = c(1, 2, NA, 3),
                v2 = c(NA, "b", NA, "c"),
@@ -59,7 +59,7 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 
   # instantiate the operator node
   op_tree <- d \%.>\%
-    sql_node(., "num_missing" := list(expr))
+    sql_node(., "num_missing" \%:=\% list(expr))
   cat(format(op_tree))
 
   # examine produced SQL

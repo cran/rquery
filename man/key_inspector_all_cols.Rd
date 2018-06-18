@@ -19,7 +19,7 @@ Return all columns as guess at preferred primary keys.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   DBI::dbWriteTable(my_db,
                     "d",

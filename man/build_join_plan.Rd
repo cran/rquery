@@ -21,7 +21,7 @@ Please see \code{vignette('DependencySorting', package = 'rquery')} and \code{vi
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   d <- data.frame(id=1:3, weight= c(200, 140, 98))
   DBI::dbWriteTable(my_db,"d1", d)

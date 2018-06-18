@@ -10,7 +10,7 @@ test_that("test_translation: Works As Expected", {
     RSQLite::initExtension(db)
 
     # example data
-    d <- dbi_copy_to(
+    d <- rq_copy_to(
       db, 'd',
       data.frame(idx = 1:5,
                  x = c(1, NA, 3, 6, NA),
@@ -19,7 +19,7 @@ test_that("test_translation: Works As Expected", {
       overwrite = TRUE)
 
     op1 <- d %.>%
-      extend_nse(., na_count := ifelse(is.na(x), 1, 0) +
+      extend_nse(., na_count %:=% ifelse(is.na(x), 1, 0) +
                    ifelse(is.na(y), 1, 0))
     txt1 <- format(op1)
     # cat(txt1)
@@ -32,7 +32,7 @@ test_that("test_translation: Works As Expected", {
     expect_equal(c(0, 1, 1, 0, 2), res1$na_count)
 
     op2 <- d %.>%
-      extend_nse(., mx := pmax(x, y))
+      extend_nse(., mx %:=% pmax(x, y))
     txt2 <- format(op2)
     # cat(txt2)
 
@@ -43,7 +43,7 @@ test_that("test_translation: Works As Expected", {
     res2 <- res2[order(res2$idx), , drop = FALSE]
     expect_equal(c(2, 4, 3, 6, NA), res2$mx)
 
-    d2 <-  d <- dbi_copy_to(
+    d2 <-  d <- rq_copy_to(
       db, 'd2',
       data.frame(idx = 1:3,
                  test = c(0, 5, 10)),

@@ -5,10 +5,10 @@
 \title{Execture optree in an enviroment where d is the only data.}
 \usage{
 rquery_apply_to_data_frame(d, optree, ..., limit = NULL,
-  env = parent.frame())
+  source_limit = NULL, allow_executor = TRUE, env = parent.frame())
 }
 \arguments{
-\item{d}{data.frame}
+\item{d}{data.frame or named list of data.frames.}
 
 \item{optree}{rquery rel_op operation tree.}
 
@@ -16,7 +16,11 @@ rquery_apply_to_data_frame(d, optree, ..., limit = NULL,
 
 \item{limit}{integer, if not NULL limit result to no more than this many rows.}
 
-\item{env}{environment to look for "winvector_temp_db_handle" in.}
+\item{source_limit}{numeric if not NULL limit sources to this many rows.}
+
+\item{allow_executor}{logical if TRUE allow any executor set as rquery.rquery_executor to be used.}
+
+\item{env}{environment to work in.}
 }
 \value{
 data.frame result
@@ -26,16 +30,15 @@ Default DB uses RSQLite (so some functions are not supported).
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+# WARNING: example tries to change rquery.rquery_db_executor option to RSQLite and back.
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  winvector_temp_db_handle <- list(
-    db = db
-  )
-  RSQLite::initExtension(winvector_temp_db_handle$db)
+  RSQLite::initExtension(db)
+  old_o <- options(list("rquery.rquery_db_executor" = list(db = db)))
 
-  optree <- table_source("d", c("AUC", "R2", "D")) \%.>\%
-  	extend_nse(., c := sqrt(R2)) \%.>\%
-    orderby(., rev_cols = "R2")
+  optree <- mk_td("d", c("AUC", "R2", "D")) \%.>\%
+  	extend_nse(., c \%:=\% sqrt(R2)) \%.>\%
+    orderby(., cols = "R2", reverse = "R2")
 
   d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
   v <- rquery_apply_to_data_frame(d, optree)
@@ -50,7 +53,7 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
     ) \%.>\%
     print(.)
 
-  winvector_temp_db_handle <- NULL
+  options(old_o)
   DBI::dbDisconnect(db)
 }
 

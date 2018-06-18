@@ -19,7 +19,7 @@ Return all primary key columns as guess at preferred primary keys for a SQLite h
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   DBI::dbExecute(my_db, "
     CREATE TABLE orgtable (

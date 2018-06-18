@@ -6,7 +6,7 @@
 (without interpolation, needs a database with window functions).}
 \usage{
 quantile_cols(db, incoming_table_name, ..., probs = seq(0, 1, 0.25),
-  probs_name = "quantile_probability", cols = dbi_colnames(db,
+  probs_name = "quantile_probability", cols = rq_colnames(db,
   incoming_table_name))
 }
 \arguments{

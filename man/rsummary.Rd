@@ -32,7 +32,7 @@ For numeric columns includes \code{NaN} in \code{nna} count (as is typcial for \
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   d <- data.frame(p= c(TRUE, FALSE, NA),
                   s= NA,
                   w= 1:3,
@@ -42,7 +42,7 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
                   stringsAsFactors=FALSE)
   db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   RSQLite::initExtension(db)
-  dbi_copy_to(db, "dRemote", d,
+  rq_copy_to(db, "dRemote", d,
               overwrite = TRUE, temporary = TRUE)
   print(rsummary(db, "dRemote"))
   DBI::dbDisconnect(db)

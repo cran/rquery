@@ -9,7 +9,7 @@ materialize(db, optree, table_name = mk_tmp_name_source("rquery_mat")(), ...,
   temporary = FALSE, precheck = FALSE)
 }
 \arguments{
-\item{db}{DBI connecton.}
+\item{db}{database connecton.}
 
 \item{optree}{relop operation tree.}
 
@@ -37,13 +37,13 @@ in pipelines.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 
-  d <- dbi_copy_to(my_db, 'd',
+  d <- rq_copy_to(my_db, 'd',
                    data.frame(AUC = 0.6, R2 = 0.2),
                    temporary = TRUE, overwrite = TRUE)
-  optree <- extend_se(d, c("v" := "AUC + R2", "x" := "pmax(AUC,v)"))
+  optree <- extend_se(d, c("v" \%:=\% "AUC + R2", "x" \%:=\% "pmax(AUC,v)"))
   cat(format(optree))
   res <- materialize(my_db, optree, "example", precheck = TRUE)
   cat(format(res))
@@ -52,7 +52,7 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
   print(DBI::dbGetQuery(my_db, sql))
 
   # extra example, table that doesn't match declared structure
-  dbi_copy_to(my_db, 'd',
+  rq_copy_to(my_db, 'd',
               data.frame(z = 1:5),
               temporary = TRUE, overwrite = TRUE)
   tryCatch(
@@ -65,5 +65,5 @@ if (requireNamespace("RSQLite", quietly = TRUE)) {
 
 }
 \seealso{
-\code{\link{dbi_table}}, \code{\link{execute}}, \code{\link{to_sql}}, \code{\link{dbi_copy_to}}, \code{\link{table_source}}
+\code{\link{db_td}}, \code{\link{execute}}, \code{\link{to_sql}}, \code{\link{rq_copy_to}}, \code{\link{mk_td}}
 }

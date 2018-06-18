@@ -4,26 +4,28 @@
 \alias{non_sql_node}
 \title{Wrap a non-SQL node.}
 \usage{
-non_sql_node(source, f, ..., incoming_table_name, columns_used,
-  outgoing_table_name, columns_produced, display_form, orig_columns = TRUE,
-  temporary = TRUE)
+non_sql_node(source, ..., f_db, f_df = NULL, incoming_table_name,
+  outgoing_table_name, columns_produced, display_form, pass_using = FALSE,
+  orig_columns = TRUE, temporary = TRUE)
 }
 \arguments{
 \item{source}{source to work from (data.frame or relop node)}
 
-\item{f}{implementation signature: f(db, incoming_table_name, outgoing_table_name)}
-
 \item{...}{force later arguments to bind by name}
+
+\item{f_db}{database implementation signature: f_db(db, incoming_table_name, outgoing_table_name) (db being a database handle)}
+
+\item{f_df}{data.frame implementation signature: f_df(data.frame) (NULL defaults to taking from database).}
 
 \item{incoming_table_name}{character, name of incoming table}
 
-\item{columns_used}{character, incoming columns used}
-
 \item{outgoing_table_name}{character, name of produced table}
 
-\item{columns_produced}{character, names of columns produced}
+\item{columns_produced}{character, names of additional columns produced}
 
 \item{display_form}{chacter, how to print node}
+
+\item{pass_using}{logical, if TRUE (or if f_db is NULL) pass using column calculations through (else assume using all columns).}
 
 \item{orig_columns}{logical if TRUE select all original columns.}
 
@@ -35,8 +37,10 @@ sql node.
 \description{
 Note: non-SQL nodes are allowed to delete/overwrite both
 both the incoming and outgoing tables, so do not point them
-to non-temporary structures.
+to non-temporary structures.  Also they tend to land all columns
+(losing narrowing optimization),
+so can be expensive and should be used sparingly.
 }
 \seealso{
-\code{\link{rsummary_node}}
+\code{\link{rsummary_node}}, \code{\link{quantile_node}}, \code{\link{materialize_node}}
 }

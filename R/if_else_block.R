@@ -1,6 +1,6 @@
 
 
-#' Simulate a per-row block-\code{if(){}else{}}.
+#' Build a sequence of statements simulating an if/else block-\code{if(){}else{}}.
 #'
 #' This device uses expression-\code{ifelse(,,)} to simulate the
 #' more powerful per-row block-\code{if(){}else{}}.  The difference is
@@ -28,11 +28,11 @@
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   # Example: clear one of a or b in any row where both are set.
 #'   # Land random selections early to avoid SQLite bug.
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d <- dbi_copy_to(
+#'   d <- rq_copy_to(
 #'     my_db,
 #'     'd',
 #'     data.frame(i = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
@@ -47,9 +47,9 @@
 #'     thenexprs = c(
 #'       if_else_block(
 #'         testexpr = qe(r >= 0.5),
-#'         thenexprs = qae(a := 0),
-#'         elseexprs = qae(b := 0)),
-#'       qae(edited := 1)))
+#'         thenexprs = qae(a %:=% 0),
+#'         elseexprs = qae(b %:=% 0)),
+#'       qae(edited %:=% 1)))
 #'   print(program)
 #'
 #'   optree <- extend_se(d, program)
@@ -88,7 +88,7 @@ if_else_block <- function(testexpr,
   testsym <- setdiff(
     paste0('ifebtest_', seq_len(length(knownsyms)+1)),
     knownsyms)[[1]]
-  program <- c(testsym := testexpr) # this statement is special, perculates out
+  program <- c(testsym %:=% testexpr) # this statement is special, perculates out
   # the idea is we don't have to nest testsym generation as it is a unique
   # name, so can not be confused with other values.
   prepStmts <- function(stmts, condition) {
@@ -126,7 +126,7 @@ if_else_block <- function(testexpr,
 }
 
 
-#' Simulate a per-row block-\code{if(){}else{}}.
+#' Build a \code{relop} node simulating a per-row block-\code{if(){}else{}}.
 #'
 #' This device uses expression-\code{ifelse(,,)} to simulate the
 #' more powerful per-row block-\code{if(){}else{}}.  The difference is
@@ -155,10 +155,10 @@ if_else_block <- function(testexpr,
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   # Example: clear one of a or b in any row where both are set.
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d <- dbi_copy_to(
+#'   d <- rq_copy_to(
 #'     my_db,
 #'     'd',
 #'     data.frame(i = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
@@ -170,10 +170,10 @@ if_else_block <- function(testexpr,
 #'   optree <- d %.>%
 #'     if_else_op(.,
 #'                testexpr = qe((a+b)>1),
-#'                thenexprs = qae(a := 0,
-#'                                b := 0,
-#'                                edited := 1),
-#'                elseexprs = qae(edited := 0))
+#'                thenexprs = qae(a %:=% 0,
+#'                                b %:=% 0,
+#'                                edited %:=% 1),
+#'                elseexprs = qae(edited %:=% 0))
 #'   cat(format(optree))
 #'
 #'   sql <- to_sql(optree, my_db)

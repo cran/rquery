@@ -21,6 +21,8 @@ Cross-parse from an R parse tree into SQL.
 }
 \examples{
 
-tokenize_for_SQL(substitute(1 + 1), colnames= NULL)
+tokenize_for_SQL(substitute(1 + 2), colnames= NULL)
+tokenize_for_SQL(substitute(a := 3), colnames= NULL)
+tokenize_for_SQL(substitute(a \%:=\% 3), colnames= NULL)
 
 }

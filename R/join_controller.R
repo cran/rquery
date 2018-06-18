@@ -1,11 +1,18 @@
 
-# build some example tables
-#
-# if (requireNamespace("RSQLite", quietly = TRUE)) {
-#   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#   rquery:::example_employee_date(my_db)
-#   DBI::dbDisconnect(my_db)
-# }
+#' build some example tables
+#'
+#' @param con db connection
+#' @return example tables
+#'
+#' @examples
+#'
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
+#'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+#'   example_employee_date(my_db)
+#'   DBI::dbDisconnect(my_db)
+#' }
+#'
+#' @export
 #
 example_employee_date <- function(con) {
   . <- NULL # Declare not an unbound varaible
@@ -14,7 +21,7 @@ example_employee_date <- function(con) {
   #       before getting to the join controller step.  We call
   #       such a table "row control" or "experimental design."
   keymap <- list()
-  DBI::dbExecute(con, "
+  rq_execute(con, "
                  CREATE TABLE employeeanddate (
                  id TEXT,
                  date INTEGER
@@ -24,7 +31,7 @@ example_employee_date <- function(con) {
   data.frame(id= c('i4', 'i4'),
              date = c(20140501, 20140601)) %.>%
     DBI::dbWriteTable(con, 'employeeanddate', value=., append=TRUE)
-  DBI::dbExecute(con, "
+  rq_execute(con, "
                  CREATE TABLE orgtable (
                  eid TEXT,
                  date INTEGER,
@@ -39,7 +46,7 @@ example_employee_date <- function(con) {
              dept = c('IT', 'SL'),
              location = c('CA', 'TX')) %.>%
     DBI::dbWriteTable(con, 'orgtable', value=., append=TRUE)
-  DBI::dbExecute(con, "
+  rq_execute(con, "
                  CREATE TABLE revenue (
                  date INTEGER,
                  dept TEXT,
@@ -52,7 +59,7 @@ example_employee_date <- function(con) {
              dept = c('SL', 'SL'),
              rev = c(1000, 2000)) %.>%
     DBI::dbWriteTable(con, 'revenue', value=., append=TRUE)
-  DBI::dbExecute(con, "
+  rq_execute(con, "
                  CREATE TABLE activity (
                  eid TEXT,
                  date INTEGER,
@@ -108,7 +115,7 @@ makeTableIndMap <- function(tableNameSeq) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   DBI::dbWriteTable(my_db,
 #'                     "d",
@@ -120,9 +127,9 @@ makeTableIndMap <- function(tableNameSeq) {
 #' @export
 #'
 key_inspector_all_cols <- function(db, tablename) {
-  sample <- DBI::dbGetQuery(db,
+  sample <- rq_get_query(db,
                             paste("SELECT * FROM",
-                                  DBI::dbQuoteIdentifier(db, tablename),
+                                  quote_identifier(db, tablename),
                                   "LIMIT 1"))
   cols <- colnames(sample)
   keys <- cols
@@ -141,7 +148,7 @@ key_inspector_all_cols <- function(db, tablename) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   DBI::dbExecute(my_db, "
 #'     CREATE TABLE orgtable (
@@ -159,9 +166,9 @@ key_inspector_all_cols <- function(db, tablename) {
 #' @export
 #'
 key_inspector_sqlite <- function(db, tablename) {
-  tabInfo <- DBI::dbGetQuery(db,
+  tabInfo <- rq_get_query(db,
                              paste0("pragma table_info(",
-                                    DBI::dbQuoteIdentifier(db, tablename),
+                                    quote_identifier(db, tablename),
                                     ")"))
   keys <- NULL
   if((!is.null(tabInfo))&&(nrow(tabInfo)>0)) {
@@ -191,11 +198,11 @@ key_inspector_postgresql <- function(db, tablename) {
     FROM   pg_index i
     JOIN   pg_attribute a ON a.attrelid = i.indrelid
     AND a.attnum = ANY(i.indkey)
-    WHERE  i.indrelid = ", DBI::dbQuoteIdentifier(db, tablename), "::regclass
+    WHERE  i.indrelid = ", quote_identifier(db, tablename), "::regclass
     AND    i.indisprimary;
     "
   )
-  tabInfo <- DBI::dbGetQuery(db, q)
+  tabInfo <- rq_get_query(db, q)
   keys <- NULL
   if((!is.null(tabInfo))&&(nrow(tabInfo)>0)) {
     keys <- tabInfo$attname
@@ -223,9 +230,9 @@ key_inspector_postgresql <- function(db, tablename) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   ex <- rquery:::example_employee_date(my_db)
+#'   ex <- example_employee_date(my_db)
 #'   print(describe_tables(my_db, ex$tableName,
 #'                          keyInspector = key_inspector_sqlite))
 #'   DBI::dbDisconnect(my_db)
@@ -243,10 +250,7 @@ describe_tables <- function(db,
   reslist <- vector(mode = "list", length = length(tablenames))
   for(ii in seq_len(length(tablenames))) {
     tablename = tablenames[[ii]]
-    sample <- DBI::dbGetQuery(db,
-                              paste("SELECT * FROM",
-                                    DBI::dbQuoteIdentifier(db, tablename),
-                                    "LIMIT 1"))
+    sample <- rq_coltypes(db, tablename)
     cols <- colnames(sample)
     # may not get classes on empty tables
     # https://github.com/tidyverse/dplyr/issues/2913
@@ -397,7 +401,7 @@ inspect_and_limit_join_plan <- function(columnJoinPlan, checkColClasses) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE) &&
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE) &&
 #'     requireNamespace('igraph', quietly = TRUE)) {
 #'   # note: employeeanddate is likely built as a cross-product
 #'   #       join of an employee table and set of dates of interest
@@ -405,7 +409,7 @@ inspect_and_limit_join_plan <- function(columnJoinPlan, checkColClasses) {
 #'   #       such a table "row control" or "experimental design."
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   RSQLite::initExtension(my_db)
-#'   tDesc <- rquery:::example_employee_date(my_db)
+#'   tDesc <- example_employee_date(my_db)
 #'   columnJoinPlan <- build_join_plan(tDesc, check= FALSE)
 #'   # unify keys
 #'   columnJoinPlan$resultColumn[columnJoinPlan$resultColumn=='id'] <- 'eid'
@@ -482,14 +486,14 @@ topo_sort_tables <- function(columnJoinPlan, leftTableName,
 #' @examples
 #'
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   # note: employeeanddate is likely built as a cross-product
 #'   #       join of an employee table and set of dates of interest
 #'   #       before getting to the join controller step.  We call
 #'   #       such a table "row control" or "experimental design."
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   RSQLite::initExtension(my_db)
-#'   tDesc <- rquery:::example_employee_date(my_db)
+#'   tDesc <- example_employee_date(my_db)
 #'   # fix order by hand, please see rquery::topo_sort_tables for
 #'   # how to automate this.
 #'   ord <- match(c('employeeanddate', 'orgtable', 'activity', 'revenue'),
@@ -623,7 +627,7 @@ graph_join_plan <- function(columnJoinPlan, ...,
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   # example data
 #'   DBI::dbWriteTable(my_db,
@@ -711,7 +715,7 @@ inspect_join_plan <- function(tDesc, columnJoinPlan,
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   d <- data.frame(id=1:3, weight= c(200, 140, 98))
 #'   DBI::dbWriteTable(my_db,"d1", d)
@@ -842,7 +846,6 @@ strMapToString <- function(m) {
 #' Please see \code{vignette('DependencySorting', package = 'rquery')} and \code{vignette('joinController', package= 'rquery')} for more details.
 #' @seealso \code{\link{describe_tables}}, \code{\link{build_join_plan}}, \code{\link{inspect_join_plan}}, \code{\link{graph_join_plan}}
 #'
-#' TODO: parameterize the implementation provider (right now hard-coded for \code{dplr}, but at least also direct \code{SQL} is a good extension).
 #'
 #' @param columnJoinPlan columns to join, from \code{\link{build_join_plan}} (and likely altered by user).  Note: no column names must intersect with names of the form \code{table_CLEANEDTABNAME_present}.
 #' @param ... force later arguments to bind by name.
@@ -853,7 +856,7 @@ strMapToString <- function(m) {
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   # example data
 #'   DBI::dbWriteTable(my_db,
@@ -918,13 +921,13 @@ actualize_join_plan <- function(columnJoinPlan,
   res <- NULL
   for(tabnam in tableNameSeq) {
     rows <- columnJoinPlan[columnJoinPlan$tableName==tabnam, , drop= FALSE]
-    si <- table_source(tabnam, rows$sourceColumn)
+    si <- mk_td(tabnam, rows$sourceColumn)
     if(!isTRUE(all.equal(rows$sourceColumn, rows$resultColumn))) {
-      si <- rename_columns(si,  rows$resultColumn := rows$sourceColumn)
+      si <- rename_columns(si,  rows$resultColumn %:=% rows$sourceColumn)
     }
     if(add_ind_cols) {
       indcol <-  paste0(tabnam, "_present")
-      si <- extend_se(si, indcol := 1)
+      si <- extend_se(si, indcol %:=% 1)
     }
     if(is.null(res)) {
       res <- si

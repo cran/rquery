@@ -30,11 +30,11 @@ Theta join is a join on an arbitrary predicate.
 }
 \examples{
 
-if (requireNamespace("RSQLite", quietly = TRUE)) {
+if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  d1 <- dbi_copy_to(my_db, 'd1',
+  d1 <- rq_copy_to(my_db, 'd1',
                     data.frame(AUC = 0.6, R2 = 0.2))
-  d2 <- dbi_copy_to(my_db, 'd2',
+  d2 <- rq_copy_to(my_db, 'd2',
                     data.frame(AUC2 = 0.4, R2 = 0.3))
   optree <- theta_join_nse(d1, d2, AUC >= AUC2)
   cat(format(optree))

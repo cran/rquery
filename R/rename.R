@@ -7,11 +7,11 @@
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-#'   d <- dbi_copy_to(my_db, 'd',
+#'   d <- rq_copy_to(my_db, 'd',
 #'                    data.frame(AUC = 0.6, R2 = 0.2, z = 3))
-#'   op_tree <- rename_columns(d, c('R2' := 'AUC', 'AUC' := 'R2'))
+#'   op_tree <- rename_columns(d, c('R2' %:=% 'AUC', 'AUC' %:=% 'R2'))
 #'   cat(format(op_tree))
 #'   sql <- to_sql(op_tree, my_db)
 #'   cat(sql)
@@ -65,8 +65,7 @@ rename_columns.data.frame <- function(source, cmap) {
     stop("rquery::rename_columns map keys must be unique")
   }
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
-  dnode <- table_source(tmp_name, colnames(source))
-  dnode$data <- source
+  dnode <- mk_td(tmp_name, colnames(source))
   enode <- rename_columns(dnode, cmap)
   return(enode)
 }
@@ -97,8 +96,7 @@ format_node.relop_rename_columns <- function(node) {
 
 calc_used_relop_rename_columns <- function (x,
                                             ...,
-                                            using = NULL,
-                                            contract = FALSE) {
+                                            using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery:::calc_used_relop_rename_columns")
   cols <- column_names(x)
@@ -121,14 +119,12 @@ calc_used_relop_rename_columns <- function (x,
 #' @export
 columns_used.relop_rename_columns <- function (x,
                                                ...,
-                                               using = NULL,
-                                               contract = FALSE) {
+                                               using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::columns_used.relop_rename_columns")
-  qmap <- calc_used_relop_rename_columns(x, using=using, contract=contract)
+  qmap <- calc_used_relop_rename_columns(x, using=using)
   return(columns_used(x$source[[1]],
-                      using = as.character(qmap),
-                      contract = contract))
+                      using = as.character(qmap)))
 }
 
 

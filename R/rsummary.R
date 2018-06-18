@@ -2,6 +2,8 @@
 # make . not look unbound
 . <- NULL
 
+#' @importFrom stats sd
+NULL
 
 #' Apply summary function to many columns.
 #'
@@ -29,17 +31,17 @@ summarize_columns <- function(db, tableName,
                   function(ci) {
                     paste0(lexpr,
                            " ",
-                           DBI::dbQuoteIdentifier(db, ci),
+                           quote_identifier(db, ci),
                            " ",
                            rexpr,
                            " AS ",
-                           DBI::dbQuoteIdentifier(db, ci))
+                           quote_identifier(db, ci))
                   }, character(1))
   q <- paste0("SELECT ",
               paste(terms, collapse = ", "),
               " FROM ",
-              DBI::dbQuoteIdentifier(db, tableName))
-  DBI::dbGetQuery(db, q)
+              quote_identifier(db, tableName))
+  rq_get_query(db, q)
 }
 
 
@@ -60,7 +62,7 @@ summarize_columns <- function(db, tableName,
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   d <- data.frame(p= c(TRUE, FALSE, NA),
 #'                   s= NA,
 #'                   w= 1:3,
@@ -70,7 +72,7 @@ summarize_columns <- function(db, tableName,
 #'                   stringsAsFactors=FALSE)
 #'   db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   RSQLite::initExtension(db)
-#'   dbi_copy_to(db, "dRemote", d,
+#'   rq_copy_to(db, "dRemote", d,
 #'               overwrite = TRUE, temporary = TRUE)
 #'   print(rsummary(db, "dRemote"))
 #'   DBI::dbDisconnect(db)
@@ -85,10 +87,7 @@ rsummary <- function(db,
                      quartiles = FALSE,
                      cols = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::rsummary")
-  localSample <- DBI::dbGetQuery(db, paste0("SELECT * FROM ",
-                                        DBI::dbQuoteIdentifier(db,
-                                                               tableName),
-                                        " LIMIT 1"))
+  localSample <- rq_coltypes(db, tableName)
   cnames <- colnames(localSample)
   if(!is.null(cols)) {
     cnames <- intersect(cnames, cols)
@@ -96,7 +95,7 @@ rsummary <- function(db,
   }
   nrows <- 0
   if(nrow(localSample)>0) {
-    nrows <- dbi_nrow(db, tableName)
+    nrows <- rq_nrow(db, tableName)
   }
   cmap <- seq_len(length(cnames))
   names(cmap) <- cnames
@@ -174,21 +173,21 @@ rsummary <- function(db,
       if(ngood>=2) {
         mv <- format(res$mean[[idx]])
         qdev <- paste0("SELECT SUM((",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " - ",
                        mv,
                        ")*(",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " - ",
                        mv,
                        ")) AS ",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " FROM ",
-                       DBI::dbQuoteIdentifier(db, tableName),
+                       quote_identifier(db, tableName),
                        " WHERE ",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " IS NOT NULL")
-        vdev <- as.numeric(DBI::dbGetQuery(db, qdev)[[1]][[1]])
+        vdev <- as.numeric(rq_get_query(db, qdev)[[1]][[1]])
         res$sd[[idx]] <- sqrt(vdev/(ngood-1.0))
       }
     }
@@ -197,15 +196,15 @@ rsummary <- function(db,
         idx <- which(ci==res$column)[[1]]
         if(res$nrows[[idx]]>res$nna[[idx]]) {
           qcount <- paste0("SELECT COUNT(1) FROM ( SELECT ",
-                           DBI::dbQuoteIdentifier(db, ci),
+                           quote_identifier(db, ci),
                            " FROM ",
-                           DBI::dbQuoteIdentifier(db, tableName),
+                           quote_identifier(db, tableName),
                            " WHERE ",
-                           DBI::dbQuoteIdentifier(db, ci),
+                           quote_identifier(db, ci),
                            " IS NOT NULL GROUP BY ",
-                           DBI::dbQuoteIdentifier(db, ci),
+                           quote_identifier(db, ci),
                            " ) TMPTAB ")
-          vcount <- as.numeric(DBI::dbGetQuery(db, qcount)[[1]][[1]])
+          vcount <- as.numeric(rq_get_query(db, qcount)[[1]][[1]])
           res$nunique[[idx]] <- vcount
         }
       }
@@ -213,19 +212,19 @@ rsummary <- function(db,
   }
   if(length(logicalCols)>=1) {
     res <- summarize_columns(db, tableName,
-                             "MIN(CASE",
+                             "MIN(CASE WHEN",
                              logicalCols,
                              "THEN 1.0 ELSE 0.0 END)",
                              skipNulls = TRUE) %.>%
       populate_column(res, "min", .)
     res <- summarize_columns(db, tableName,
-                            "MAX(CASE",
-                            logicalCols,
-                            "THEN 1.0 ELSE 0.0 END)",
-                            skipNulls = TRUE) %.>%
+                             "MAX(CASE WHEN",
+                             logicalCols,
+                             "THEN 1.0 ELSE 0.0 END)",
+                             skipNulls = TRUE) %.>%
       populate_column(res, "max", .)
     res <- summarize_columns(db, tableName,
-                             "AVG(CASE",
+                             "AVG(CASE WHEN",
                              logicalCols,
                              "THEN 1.0 ELSE 0.0 END)",
                              skipNulls = TRUE) %.>%
@@ -259,35 +258,35 @@ rsummary <- function(db,
       idx <- which(ci==res$column)[[1]]
       if(res$nrows[[idx]]>res$nna[[idx]]) {
         qmin <- paste0("SELECT ",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " FROM ",
-                       DBI::dbQuoteIdentifier(db, tableName),
+                       quote_identifier(db, tableName),
                        " WHERE ",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " IS NOT NULL ORDER BY ",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " LIMIT 1")
-        vmin <- DBI::dbGetQuery(db, qmin)[[1]][[1]]
+        vmin <- rq_get_query(db, qmin)[[1]][[1]]
         qmax <- paste0("SELECT ",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " FROM ",
-                       DBI::dbQuoteIdentifier(db, tableName),
+                       quote_identifier(db, tableName),
                        " WHERE ",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " IS NOT NULL ORDER BY ",
-                       DBI::dbQuoteIdentifier(db, ci),
+                       quote_identifier(db, ci),
                        " DESC LIMIT 1")
-        vmax <- DBI::dbGetQuery(db, qmax)[[1]][[1]]
+        vmax <- rq_get_query(db, qmax)[[1]][[1]]
         qcount <- paste0("SELECT COUNT(1) FROM ( SELECT ",
-                         DBI::dbQuoteIdentifier(db, ci),
+                         quote_identifier(db, ci),
                          " FROM ",
-                         DBI::dbQuoteIdentifier(db, tableName),
+                         quote_identifier(db, tableName),
                          " WHERE ",
-                         DBI::dbQuoteIdentifier(db, ci),
+                         quote_identifier(db, ci),
                          " IS NOT NULL GROUP BY ",
-                         DBI::dbQuoteIdentifier(db, ci),
+                         quote_identifier(db, ci),
                          " ) TMPTAB ")
-        vcount <- as.numeric(DBI::dbGetQuery(db, qcount)[[1]][[1]])
+        vcount <- as.numeric(rq_get_query(db, qcount)[[1]][[1]])
         res$lexmin[[idx]] <- vmin
         res$lexmax[[idx]] <- vmax
         res$nunique[[idx]] <- vcount
@@ -298,8 +297,146 @@ rsummary <- function(db,
   rownames(res) <- NULL
   if(quartiles) {
     qs <- quantile_cols(db, tableName,
-                        c(0.25, 0.5, 0.75), "rquery_probs_col",
-                        numericCols)
+                        probs = c(0.25, 0.5, 0.75),
+                        probs_name = "rquery_probs_col",
+                        cols = numericCols)
+    res$Q1 <- NA_real_
+    res$median <- NA_real_
+    res$Q3 <- NA_real_
+    for(ci in numericCols) {
+      idx <- which(res$column == ci)[[1]]
+      res$Q1[[idx]] <- qs[[ci]][[1]]
+      res$median[[idx]] <- qs[[ci]][[2]]
+      res$Q3[[idx]] <- qs[[ci]][[3]]
+    }
+  }
+  res
+}
+
+# d <- data.frame(p= c(TRUE, FALSE, NA),
+#                 s= NA,
+#                 w= 1:3,
+#                 x= c(NA,2,3),
+#                 y= factor(c(3,5,NA)),
+#                 z= c('a',NA,'a'),
+#                 stringsAsFactors=FALSE)
+# rquery:::rsummary_d(d)
+#
+rsummary_d <- function(d,
+                       ...,
+                       countUniqueNum = TRUE,
+                       quartiles = TRUE,
+                       cols = NULL) {
+  wrapr::stop_if_dot_args(substitute(list(...)), "rquery::rsummary_d")
+  if(!is.data.frame(d)) {
+    stop("rquery::rsummary_d d is supposed to be a data.frame")
+  }
+  cnames <- colnames(d)
+  if(!is.null(cols)) {
+    cnames <- intersect(cnames, cols)
+    d <- d[, cnames, drop=FALSE]
+  }
+  nrows <- nrow(d)
+  cmap <- seq_len(length(cnames))
+  names(cmap) <- cnames
+  numericCols <- c(cnames[vapply(d, is.numeric, logical(1))],
+                   cnames[vapply(d, is.logical, logical(1))])
+  charCols <- c(cnames[vapply(d, is.character, logical(1))],
+                cnames[vapply(d, is.factor, logical(1))])
+  workingCols <- c(numericCols, charCols)
+  exoticCols <- setdiff(cnames, workingCols)
+  cclass <- lapply(d, class)
+  names(cclass) <- colnames(d)
+  res <- data.frame(column = cnames,
+                    index = NA_real_,
+                    class = NA_character_,
+                    nrows = nrows,
+                    nna = NA_real_,
+                    nunique = NA_real_,
+                    min = NA_real_,
+                    max = NA_real_,
+                    mean = NA_real_,
+                    sd = NA_real_,
+                    lexmin = NA_real_,
+                    lexmax = NA_real_,
+                    stringsAsFactors = FALSE)
+  classtr <- vapply(cclass,function(vi) {
+    paste(vi,collapse=', ')
+  }, character(1))
+  res$class <- classtr[res$column]
+  res$index <- match(res$column, cnames)
+  if((nrows<1)||(length(workingCols)<1)) {
+    return(res)
+  }
+  populate_column <- function(res, colname, z) {
+    idxs <- match(names(z), res$column)
+    res[[colname]][idxs] <- z
+    res
+  }
+  null_stats <- vapply(workingCols,
+                       function(ci) {
+                         sum(is.na(d[[ci]]))
+                       },
+                       numeric(1))
+  res <- populate_column(res, "nna", null_stats)
+  # limit down to populated columns
+  unpop_cols <- res$column[res$nna>=res$nrows]
+  res$nunique[res$column %in% unpop_cols] <- 0.0
+  numericCols <- setdiff(numericCols, unpop_cols)
+  charCols <-  setdiff(charCols, unpop_cols)
+  if(length(numericCols)>=1) {
+    res <- vapply(numericCols,
+                  function(ci) {
+                    max(as.numeric(d[[ci]]), na.rm = TRUE)
+                  }, numeric(1)) %.>%
+      populate_column(res, "max", .)
+    res <- vapply(numericCols,
+                  function(ci) {
+                    min(as.numeric(d[[ci]]), na.rm = TRUE)
+                  }, numeric(1)) %.>%
+      populate_column(res, "min", .)
+    res <- vapply(numericCols,
+                  function(ci) {
+                    mean(as.numeric(d[[ci]]), na.rm = TRUE)
+                  }, numeric(1)) %.>%
+      populate_column(res, "mean", .)
+    res <- vapply(numericCols,
+                  function(ci) {
+                    stats::sd(as.numeric(d[[ci]]), na.rm = TRUE)
+                  }, numeric(1)) %.>%
+      populate_column(res, "sd", .)
+    if(countUniqueNum) {
+      res <- vapply(numericCols,
+                    function(ci) {
+                      length(unique(d[[ci]]))
+                    }, numeric(1)) %.>%
+        populate_column(res, "nunique", .)
+    }
+  }
+  if(length(charCols)>=1) {
+    res <- vapply(charCols,
+                  function(ci) {
+                    max(as.character(d[[ci]]), na.rm = TRUE)
+                  }, character(1)) %.>%
+      populate_column(res, "lexmax", .)
+    res <- vapply(charCols,
+                  function(ci) {
+                    min(as.character(d[[ci]]), na.rm = TRUE)
+                  }, character(1)) %.>%
+      populate_column(res, "lexmin", .)
+    res <- vapply(charCols,
+                  function(ci) {
+                    length(unique(as.character(d[[ci]])))
+                  }, numeric(1)) %.>%
+      populate_column(res, "nunique", .)
+  }
+  res <- res[order(res$index),]
+  rownames(res) <- NULL
+  if(quartiles) {
+    qs <- quantile_cols_d(d,
+                          probs = c(0.25, 0.5, 0.75),
+                          probs_name = "rquery_probs_col",
+                          cols = numericCols)
     res$Q1 <- NA_real_
     res$median <- NA_real_
     res$Q3 <- NA_real_
@@ -316,6 +453,9 @@ rsummary <- function(db,
 
 #' Create an rsumary relop operator node.
 #'
+#' This is a non_sql_node, so forces the materialization of
+#' the calculation prior to it losing narrowing optimizations.
+#'
 #' @param source incoming source (relop node or data.frame).
 #' @param ... force later arguments to be by name
 #' @param quartiles logical, if TRUE add Q1 (25\%), median (50\%), Q3 (75\%) quartiles.
@@ -327,7 +467,7 @@ rsummary <- function(db,
 #'
 #' @examples
 #'
-#' if (requireNamespace("RSQLite", quietly = TRUE)) {
+#' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
 #'   d <- data.frame(p= c(TRUE, FALSE, NA),
 #'                   s= NA,
 #'                   w= 1:3,
@@ -337,12 +477,12 @@ rsummary <- function(db,
 #'                   stringsAsFactors=FALSE)
 #'   db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   RSQLite::initExtension(db)
-#'   dbi_copy_to(db, "dRemote", d,
+#'   rq_copy_to(db, "dRemote", d,
 #'               overwrite = TRUE,
 #'               temporary = TRUE)
 #'
-#'   ops <- dbi_table(db, "dRemote") %.>%
-#'     extend_nse(., v := ifelse(x>2, "x", "y")) %.>%
+#'   ops <- db_td(db, "dRemote") %.>%
+#'     extend_nse(., v %:=% ifelse(x>2, "x", "y")) %.>%
 #'     rsummary_node(.)
 #'   cat(format(ops))
 #'
@@ -364,11 +504,9 @@ rsummary_node <- function(source,
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::rsummary_node")
   if(is.data.frame(source)) {
     tmp_name <- mk_tmp_name_source("rquery_tmp")()
-    dnode <- table_source(tmp_name, colnames(source))
-    dnode$data <- source
+    dnode <- mk_td(tmp_name, colnames(source))
     source <- dnode
   }
-  columns_used <- column_names(source)
   columns_produced <- c("column",
                         "index",
                         "class",
@@ -389,21 +527,25 @@ rsummary_node <- function(source,
   force(quartiles)
   incoming_table_name = tmp_name_source()
   outgoing_table_name = tmp_name_source()
-  f <- function(db,
-                incoming_table_name,
-                outgoing_table_name) {
+  f_db <- function(db,
+                   incoming_table_name,
+                   outgoing_table_name) {
     stable <- rsummary(db, incoming_table_name,
                        quartiles = quartiles)
-    dbi_copy_to(db,
-                table_name = outgoing_table_name,
-                d = stable,
-                overwrite = TRUE,
-                temporary = temporary)
+    rq_copy_to(db,
+               table_name = outgoing_table_name,
+               d = stable,
+               overwrite = TRUE,
+               temporary = temporary)
+  }
+  f_df <- function(d) {
+    rsummary_d(d,
+               quartiles = quartiles)
   }
   nd <- non_sql_node(source,
-                     f,
+                     f_db = f_db,
+                     f_df = f_df,
                      incoming_table_name = incoming_table_name,
-                     columns_used = columns_used,
                      outgoing_table_name = outgoing_table_name,
                      columns_produced = columns_produced,
                      display_form = paste0("rsummary_node(.)"),
