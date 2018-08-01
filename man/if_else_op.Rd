@@ -4,7 +4,8 @@
 \alias{if_else_op}
 \title{Build a \code{relop} node simulating a per-row block-\code{if(){}else{}}.}
 \usage{
-if_else_op(source, testexpr, ..., thenexprs = NULL, elseexprs = NULL)
+if_else_op(source, testexpr, ..., thenexprs = NULL, elseexprs = NULL,
+  env = parent.frame())
 }
 \arguments{
 \item{source}{optree relop node or data.frame.}
@@ -16,6 +17,8 @@ if_else_op(source, testexpr, ..., thenexprs = NULL, elseexprs = NULL)
 \item{thenexprs}{named character then assignments (altering columns, not creating).}
 
 \item{elseexprs}{named character else assignments (altering columns, not creating).}
+
+\item{env}{environment to look to.}
 }
 \value{
 operator tree or data.frame.

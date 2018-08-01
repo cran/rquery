@@ -11,7 +11,7 @@ select_rows_nse(source, expr, env = parent.frame())
 
 \item{expr}{expression to select rows.}
 
-\item{env}{environment to look for values in.}
+\item{env}{environment to look to.}
 }
 \value{
 select columns node.

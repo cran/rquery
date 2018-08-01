@@ -53,10 +53,10 @@ The primary non-relational (traditional `SQL`) operators are:
 And `rquery` supports higher-order (written in terms of other operators, both package supplied and user supplied):
 
 -   [`pick_top_k()`](https://winvector.github.io/rquery/reference/pick_top_k.html). Pick top `k` rows per group given a row ordering.
--   [`assign_slice()`](https://winvector.github.io/rquery/reference/assign_slice.html). Conditionaly assign sets of rows and columns a scalar value.
--   [`if_else_op()`](https://winvector.github.io/rquery/reference/if_else_op.html). Simulate simultaneous if/else assigments.
+-   [`assign_slice()`](https://winvector.github.io/rquery/reference/assign_slice.html). Conditionally assign sets of rows and columns a scalar value.
+-   [`if_else_op()`](https://winvector.github.io/rquery/reference/if_else_op.html). Simulate simultaneous if/else assignments.
 
-`rquery` also has impelementation helpers for building both `SQL`-nodes (nodes that are just `SQL` expressions) and non-`SQL`-nodes (nodes that are general functions of their input data values).
+`rquery` also has implementation helpers for building both `SQL`-nodes (nodes that are just `SQL` expressions) and non-`SQL`-nodes (nodes that are general functions of their input data values).
 
 -   [`sql_node()`](https://winvector.github.io/rquery/reference/sql_node.html)
 -   [`sql_expr_set()`](https://winvector.github.io/rquery/reference/sql_expr_set.html)
@@ -70,7 +70,7 @@ The primary missing relational operators are:
 -   Direct set difference, anti-join.
 -   Division.
 
-One of the prinples of `rquery` is to prefer expressive nodes, and not depend on complicated in-node expressions.
+One of the principles of `rquery` is to prefer expressive nodes, and not depend on complicated in-node expressions.
 
 A great benefit of Codd's relational algebra is it gives one concepts to decompose complex data transformations into sequences of simpler transformations.
 
@@ -131,6 +131,10 @@ print(dbopts)
     ## 
     ## $rquery.PostgreSQLConnection.check_logical_column_types
     ## [1] FALSE
+    ## 
+    ## $rquery.PostgreSQLConnection.fn_name_map
+    ##  mean 
+    ## "avg"
 
 ``` r
 options(dbopts)
@@ -153,7 +157,7 @@ rq_copy_to(my_db, 'd',
             overwrite = TRUE)
 ```
 
-    ## [1] "table('d'; subjectID, surveyCategory, assessmentTotal, irrelevantCol1, irrelevantCol2)"
+    ## [1] "table(\"d\"; subjectID, surveyCategory, assessmentTotal, irrelevantCol1, irrelevantCol2)"
 
 ``` r
 # produce a hande to existing table
@@ -176,7 +180,7 @@ class(my_db)
 print(d)
 ```
 
-    ## [1] "table('d'; subjectID, surveyCategory, assessmentTotal, irrelevantCol1, irrelevantCol2)"
+    ## [1] "table(\"d\"; subjectID, surveyCategory, assessmentTotal, irrelevantCol1, irrelevantCol2)"
 
 ``` r
 d %.>%
@@ -263,27 +267,26 @@ cat(to_sql(dq, my_db, source_limit = 1000))
           SELECT
            "subjectID",
            "surveyCategory",
-           "assessmentTotal",
            exp ( "assessmentTotal" * 0.237 )  AS "probability"
           FROM (
            SELECT
-            "d"."subjectID",
-            "d"."surveyCategory",
-            "d"."assessmentTotal"
+            "subjectID",
+            "surveyCategory",
+            "assessmentTotal"
            FROM
             "d" LIMIT 1000
-           ) tsql_10147663132732343566_0000000000
-          ) tsql_10147663132732343566_0000000001
-         ) tsql_10147663132732343566_0000000002
-       ) tsql_10147663132732343566_0000000003
+           ) tsql_49468251362997738093_0000000000
+          ) tsql_49468251362997738093_0000000001
+         ) tsql_49468251362997738093_0000000002
+       ) tsql_49468251362997738093_0000000003
        WHERE "row_number" <= 1
-      ) tsql_10147663132732343566_0000000004
-     ) tsql_10147663132732343566_0000000005
-    ) tsql_10147663132732343566_0000000006 ORDER BY "subjectID"
+      ) tsql_49468251362997738093_0000000004
+     ) tsql_49468251362997738093_0000000005
+    ) tsql_49468251362997738093_0000000006 ORDER BY "subjectID"
 
 The query is large, but due to its regular structure it should be very amenable to query optimization.
 
-A feature to notice is: the query was automatically restricted to just columns actually needed from the source table to complete the calculation. This has the possibility of decreasing data volume and greatly speeding up query performance. Our [initial experiments](https://github.com/WinVector/rquery/blob/master/extras/PerfTest.md) show `rquery` narrowed queries to be twice as fast as un-narrowed `dplyr` on a synthetic problem simulating large disk-based queries. We think if we connected directly to `Spark`'s relational operators (avoiding the `SQL` layer) we may be able to achieve even faster performance.
+A feature to notice is: the query was automatically restricted to just columns actually needed from the source table to complete the calculation. This has the possibility of decreasing data volume and greatly speeding up query performance. Our [initial experiments](https://github.com/WinVector/rquery/blob/master/extras/PerfTest%2Emd) show `rquery` narrowed queries to be twice as fast as un-narrowed `dplyr` on a synthetic problem simulating large disk-based queries. We think if we connected directly to `Spark`'s relational operators (avoiding the `SQL` layer) we may be able to achieve even faster performance.
 
 The above optimization is possible because the `rquery` representation is an intelligible tree of nodes, so we can interrogate the tree for facts about the query. For example:
 
@@ -312,14 +315,14 @@ The additional record-keeping in the operator nodes allows checking and optimiza
 cat(format(dq))
 ```
 
-    table('d'; 
+    table("d"; 
       subjectID,
       surveyCategory,
       assessmentTotal,
       irrelevantCol1,
       irrelevantCol2) %.>%
      extend(.,
-      probability := exp(assessmentTotal * scale)) %.>%
+      probability := exp(assessmentTotal * 0.237)) %.>%
      extend(.,
       probability := probability / sum(probability),
       p= subjectID) %.>%
@@ -407,22 +410,22 @@ dq %.>%
     ## 2        NA         NA positive re-framing withdrawal behavior
     ## 3 0.6147982 0.07894697                <NA>                <NA>
 
-We have found most big-data projects either require joining very many tables (something `rquery` join planners help with, please see [here](https://github.com/WinVector/rquery/blob/master/extras/JoinController.md) and [here](https://github.com/WinVector/rquery/blob/master/extras/JoinController.md)) or they require working with wide data-marts (where `rquery` query narrowing helps, please see [here](https://github.com/WinVector/rquery/blob/master/extras/PerfTest.md)).
+We have found most big-data projects either require joining very many tables (something `rquery` join planners help with, please see [here](https://github.com/WinVector/rquery/blob/master/extras/JoinController%2Emd) and [here](https://github.com/WinVector/rquery/blob/master/extras/JoinController%2Emd)) or they require working with wide data-marts (where `rquery` query narrowing helps, please see [here](https://github.com/WinVector/rquery/blob/master/extras/PerfTest%2Emd)).
 
-We can also stand `rquery` up on non-`DBI` sources such as [`SparkR`](https://github.com/WinVector/rquery/blob/master/extras/SparkR.md) and also [`data.table`](https://CRAN.R-project.org/package=data.table). The `data.table` adapter is being developed in the [`rqdatatable`](https://github.com/WinVector/rqdatatable) package, and can be [quite fast](http://www.win-vector.com/blog/2018/06/rqdatatable-rquery-powered-by-data-table/). Notice the examples in this mode all essentially use the same query pipeline, the user can choose where to apply it: in memory (`data.table`), in a `DBI` database (`PostgreSQL`, `Sparklyr`), and with even non-DBI systems (`SparkR`).
+We can also stand `rquery` up on non-`DBI` sources such as [`SparkR`](https://github.com/WinVector/rquery/blob/master/extras/SparkR%2Emd) and also [`data.table`](https://CRAN.R-project.org/package=data.table). The `data.table` adapter is being developed in the [`rqdatatable`](https://github.com/WinVector/rqdatatable) package, and can be [quite fast](http://www.win-vector.com/blog/2018/06/rqdatatable-rquery-powered-by-data-table/). Notice the examples in this mode all essentially use the same query pipeline, the user can choose where to apply it: in memory (`data.table`), in a `DBI` database (`PostgreSQL`, `Sparklyr`), and with even non-DBI systems (`SparkR`).
 
 See also
 ========
 
 For deeper dives into specific topics, please see also:
 
--   [Join Controller](https://github.com/WinVector/rquery/blob/master/extras/JoinController.md)
--   [Join Dependency Sorting](https://github.com/WinVector/rquery/blob/master/extras/DependencySorting.md)
--   [Assignment Partitioner](https://github.com/WinVector/rquery/blob/master/extras/AssigmentPartitioner.md)
--   [DifferentDBs](https://github.com/WinVector/rquery/blob/master/extras/ExtraDBs.md)
--   [rqdatatable](https://github.com/WinVector/rqdatatable)
+-   <a href="https://github.com/WinVector/rquery/blob/master/extras/JoinController%2Emd">Join Controller</a>
+-   <a href="https://github.com/WinVector/rquery/blob/master/extras/DependencySorting%2Emd">Join Dependency Sorting</a>
+-   <a href="https://github.com/WinVector/rquery/blob/master/extras/AssigmentPartitioner%2Emd">Assignment Partitioner</a>
+-   <a href="https://github.com/WinVector/rquery/blob/master/extras/ExtraDBs%2Emd">DifferentDBs</a>
+-   <a href="https://github.com/WinVector/rqdatatable">rqdatatable</a>
 
-To install `rquery` please use `devtools` as follows.
+To install `rquery` please try `install.packages("rquery")` or try `devtools` as follows.
 
 ``` r
 # install.packages("devtools")

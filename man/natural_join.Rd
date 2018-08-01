@@ -4,7 +4,7 @@
 \alias{natural_join}
 \title{Make a natural_join node.}
 \usage{
-natural_join(a, b, ..., jointype = "INNER", by)
+natural_join(a, b, ..., by, jointype = "INNER", env = parent.frame())
 }
 \arguments{
 \item{a}{source to select from.}
@@ -13,9 +13,11 @@ natural_join(a, b, ..., jointype = "INNER", by)
 
 \item{...}{force later arguments to bind by name}
 
+\item{by}{character, set of columns to match.}
+
 \item{jointype}{type of join ('INNER', 'LEFT', 'RIGHT', 'FULL').}
 
-\item{by}{character, set of columns to match.}
+\item{env}{environment to look to.}
 }
 \value{
 natural_join node.
@@ -24,7 +26,7 @@ natural_join node.
 Natural join is a join by identity on all common columns specified in the \code{by}
 argument.
 Any common columns not specified in the \code{by} argument
-are coalesced into a single column prefering the first or "a" table.
+are coalesced into a single column preferring the first or "a" table.
 }
 \examples{
 

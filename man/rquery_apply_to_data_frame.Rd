@@ -2,7 +2,7 @@
 % Please edit documentation in R/ex_data_frame.R
 \name{rquery_apply_to_data_frame}
 \alias{rquery_apply_to_data_frame}
-\title{Execture optree in an enviroment where d is the only data.}
+\title{Execute optree in an environment where d is the only data.}
 \usage{
 rquery_apply_to_data_frame(d, optree, ..., limit = NULL,
   source_limit = NULL, allow_executor = TRUE, env = parent.frame())
@@ -20,7 +20,7 @@ rquery_apply_to_data_frame(d, optree, ..., limit = NULL,
 
 \item{allow_executor}{logical if TRUE allow any executor set as rquery.rquery_executor to be used.}
 
-\item{env}{environment to work in.}
+\item{env}{environment to look to.}
 }
 \value{
 data.frame result

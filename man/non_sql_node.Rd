@@ -5,8 +5,9 @@
 \title{Wrap a non-SQL node.}
 \usage{
 non_sql_node(source, ..., f_db, f_df = NULL, incoming_table_name,
-  outgoing_table_name, columns_produced, display_form, pass_using = FALSE,
-  orig_columns = TRUE, temporary = TRUE)
+  outgoing_table_name, columns_produced, display_form,
+  pass_using = FALSE, orig_columns = TRUE, temporary = TRUE,
+  env = parent.frame())
 }
 \arguments{
 \item{source}{source to work from (data.frame or relop node)}
@@ -23,13 +24,15 @@ non_sql_node(source, ..., f_db, f_df = NULL, incoming_table_name,
 
 \item{columns_produced}{character, names of additional columns produced}
 
-\item{display_form}{chacter, how to print node}
+\item{display_form}{character, how to print node}
 
 \item{pass_using}{logical, if TRUE (or if f_db is NULL) pass using column calculations through (else assume using all columns).}
 
 \item{orig_columns}{logical if TRUE select all original columns.}
 
 \item{temporary}{logical, if TRUE mark tables temporary.}
+
+\item{env}{environment to look to.}
 }
 \value{
 sql node.

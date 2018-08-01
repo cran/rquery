@@ -11,14 +11,14 @@
 #'
 #' @param source optree relop node or data.frame.
 #' @param testexpr character containing the test expression.
-#' @param columns charactor vector of column names to alter.
+#' @param columns character vector of column names to alter.
 #' @param value value to set in matching rows and columns (scalar).
+#' @param env environment to look to.
 #' @return optree or data.frame.
 #'
 #' @examples
 #'
 #' if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
-#'   # Land random selections early to avoid SQLite bug.
 #'   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #'   d <- rq_copy_to(
 #'     my_db,
@@ -41,21 +41,13 @@
 #'
 #'   print(DBI::dbGetQuery(my_db, sql))
 #'
-#'   # Why we need to land the random selection early
-#'   # for SQLIte:
-#'   q <- "SELECT r AS r1, r AS r2 FROM (
-#'           SELECT random() AS r FROM (
-#'              SELECT * from ( VALUES(1),(2) )
-#'           ) a
-#'        ) b"
-#'   print(DBI::dbGetQuery(my_db, q))
-#'
 #'   DBI::dbDisconnect(my_db)
 #' }
 #'
 #' @export
 #'
-assign_slice <- function(source, testexpr, columns, value) {
+assign_slice <- function(source, testexpr, columns, value,
+                         env = parent.frame()) {
   if((!is.character(columns)) || (length(columns)<1)) {
     stop("rquery::assign_slice columns should be a non-empty character vector")
   }
@@ -64,5 +56,6 @@ assign_slice <- function(source, testexpr, columns, value) {
   }
   if_else_op(source = source,
              testexpr = testexpr,
-             thenexprs = columns %:=% rep(value, length(columns)))
+             thenexprs = columns %:=% rep(value, length(columns)),
+             env = env)
 }

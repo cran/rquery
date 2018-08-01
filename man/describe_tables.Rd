@@ -4,7 +4,8 @@
 \alias{describe_tables}
 \title{Build a nice description of a table.}
 \usage{
-describe_tables(db, tablenames, ..., keyInspector = key_inspector_all_cols)
+describe_tables(db, tablenames, ...,
+  keyInspector = key_inspector_all_cols)
 }
 \arguments{
 \item{db}{database handle}
@@ -13,7 +14,7 @@ describe_tables(db, tablenames, ..., keyInspector = key_inspector_all_cols)
 
 \item{...}{force later arguments to bind by name.}
 
-\item{keyInspector}{function that determines prefered primary key set for tables.}
+\item{keyInspector}{function that determines preferred primary key set for tables.}
 }
 \value{
 table describing the data.

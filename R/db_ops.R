@@ -3,7 +3,7 @@
 # wrap database or data system (Spark) adapters
 
 
-#' Execute a get query, typcially a non-update that is supposed to return results.
+#' Execute a get query, typically a non-update that is supposed to return results.
 #'
 #' @param db database connection handle
 #' @param q character query
@@ -30,7 +30,7 @@ rq_get_query <- function(db, q) {
 }
 
 
-#' Execute a query, typcially an update that is not supposed to return results.
+#' Execute a query, typically an update that is not supposed to return results.
 #'
 #' @param db database connection handle
 #' @param q character query
@@ -113,15 +113,22 @@ rq_table_exists <- function(db, table_name) {
   return(FALSE)
 }
 
+
 #' List table column names.
 #'
 #' @param db Connection handle
 #' @param table_name character table name
+#' @param ... not used, force later argument to bind by name
+#' @param qualifiers optional named ordered vector of strings carrying additional db hierarchy terms, such as schema.
 #' @return character list of column names
 #'
 #' @export
 #'
-rq_colnames <- function(db, table_name) {
+rq_colnames <- function(db, table_name,
+                        ...,
+                        qualifiers = NULL) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::rq_colnames")
   # first shot- see if it is a db info with function overrriden
   connection_options <- NULL
   if("rquery_db_info" %in% class(db)) {
@@ -151,11 +158,11 @@ rq_colnames <- function(db, table_name) {
 
 #' Get column types by example values as a data.frame.
 #'
-#' Example values not necissarily all from same row.  Taking values from different rows is
+#' Example values not necessarily all from same row.  Taking values from different rows is
 #' to try to work around NA not carrying type/class info in many cases.
 #'
 #' @param db Connection handle.
-#' @param table_name character table name refering to a non-empty table.
+#' @param table_name character table name referring to a non-empty table.
 #' @param ... force later arguments to bind by name.
 #' @param prefer_not_NA logical, if TRUE try to find an non-NA example for all columns (FALSE just for logical columns).
 #' @param force_check logical, if TRUE perform checks regardless of check_logical_column_types option setting.
@@ -406,7 +413,7 @@ rq_copy_to <- function(db, table_name, d,
 
 #' Count rows and return as numeric
 #'
-#' @param db database connetion
+#' @param db database connection
 #' @param table_name character, name of table
 #' @return numeric row count
 #'
@@ -438,7 +445,7 @@ rq_nrow <- function(db, table_name) {
 }
 
 
-#' Build a cannonical name for a db connection class.
+#' Build a canonical name for a db connection class.
 #'
 #' @param db Database connection handle.
 #' @return character, key version of handle for option lookups.
@@ -459,7 +466,7 @@ rq_connection_name <- function(db) {
   }
   cls <- sort(class(db))
   cls <- paste(cls, collapse = "_")
-  cls <- gsub("[^a-zA-Z]+", "_", cls)
+  cls <- gsub("[^[:alnum:]]+", "_", cls)
   cls
 }
 
@@ -467,7 +474,7 @@ rq_connection_name <- function(db) {
 
 #' Get advice for a DB connection (beyond tests).
 #'
-#' These settings are set by the package mainteners based on experience with
+#' These settings are set by the package maintainers based on experience with
 #' specific databases.
 #'
 #' @param db database connection handle
@@ -489,6 +496,8 @@ rq_connection_name <- function(db) {
 rq_connection_advice <- function(db) {
   cname <- rq_connection_name(db)
   opts <- list()
+  opts[[paste(c("rquery", cname, "fn_name_map"), collapse = ".")]] <-
+    c("mean" = "avg")
   if(connection_is_sparklyr(db)) {
     opts[[paste(c("rquery", cname, "create_temporary"), collapse = ".")]] <- FALSE
     opts[[paste(c("rquery", cname, "control_rownames"), collapse = ".")]] <- FALSE
@@ -523,7 +532,7 @@ brute_rm_table <- function(db, table_name) {
 #' @param db database connection handle.
 #' @param ... force later arguments to bind by name.
 #' @param overrides named character vector or list, options (just name, not DB qualification) to force
-#' @param use_advice logical if TRUE incorpeate hard-coded advice.
+#' @param use_advice logical if TRUE incorporate hard-coded advice.
 #' @return named list of options
 #'
 #' @seealso \code{\link{rq_connection_advice}}
@@ -707,7 +716,7 @@ rq_connection_tests <- function(db,
   opts
 }
 
-#' Set a database connection option.
+#' Get a database connection option.
 #'
 #' @param db database connection handle.
 #' @param optname character, single option name.
@@ -730,9 +739,19 @@ getDBOption <- function(db, optname, default,
   cname <- rq_connection_name(db)
   key <- paste(c("rquery", cname, optname), collapse = ".")
   val <- connection_options[[key]]
-  if(is.null(val)) {
-    val <- getOption(key, default = default)
+  if(!is.null(val)) {
+    return(val)
   }
+  if("rquery_db_info" %in% class(db)) {
+    co <- db$connection_options
+    if(!is.null(co)) {
+      val <- co[[key]]
+    }
+  }
+  if(!is.null(val)) {
+    return(val)
+  }
+  val <- getOption(key, default = default)
   val
 }
 

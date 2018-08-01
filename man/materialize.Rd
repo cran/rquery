@@ -4,8 +4,8 @@
 \alias{materialize}
 \title{Materialize an optree as a table.}
 \usage{
-materialize(db, optree, table_name = mk_tmp_name_source("rquery_mat")(), ...,
-  limit = NULL, source_limit = NULL, overwrite = TRUE,
+materialize(db, optree, table_name = mk_tmp_name_source("rquery_mat")(),
+  ..., limit = NULL, source_limit = NULL, overwrite = TRUE,
   temporary = FALSE, precheck = FALSE)
 }
 \arguments{
@@ -17,7 +17,7 @@ materialize(db, optree, table_name = mk_tmp_name_source("rquery_mat")(), ...,
 
 \item{...}{force later arguments to bind by name.}
 
-\item{limit}{numeric if not NULL result limit (to use this, last statment must not have a limit).}
+\item{limit}{numeric if not NULL result limit (to use this, last statement must not have a limit).}
 
 \item{source_limit}{numeric if not NULL limit sources to this many rows.}
 
@@ -25,10 +25,10 @@ materialize(db, optree, table_name = mk_tmp_name_source("rquery_mat")(), ...,
 
 \item{temporary}{logical if TRUE try to create a temporary table.}
 
-\item{precheck}{logical if TRUE precheck existance of table and columns.}
+\item{precheck}{logical if TRUE precheck existence of table and columns.}
 }
 \value{
-table handle
+table description
 }
 \description{
 Run the data query as a CREATE TABLE AS . Think of as a function

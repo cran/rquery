@@ -1,5 +1,5 @@
 
-#' build a map of original column names to unambigous column names.
+#' build a map of original column names to unambiguous column names.
 #'
 #' Principles: non-colliding columns keep their original names.
 #' Initially colliding columns are not to collide with anything else.
@@ -38,8 +38,8 @@ build_col_name_map <- function(colsa, colsb, suffix) {
   fixr <- ""
   try_num <- 0
   while(TRUE) {
-    mapa[[overlap]] <- paste0(overlap, suffix[[1]], fixl)
-    mapb[[overlap]] <- paste0(overlap, suffix[[2]], fixr)
+    mapa[overlap] <- paste0(overlap, suffix[[1]], fixl)
+    mapb[overlap] <- paste0(overlap, suffix[[2]], fixr)
     # altered names can collide with other names in either vector
     if(length(unique(c(as.character(mapa), as.character(mapb)))) == n_target) {
       return(list("a" = mapa, "b" = mapb))
@@ -56,7 +56,7 @@ build_col_name_map <- function(colsa, colsb, suffix) {
 #'
 #' @param a source to select from.
 #' @param b source to select from.
-#' @param expr quoated join condition
+#' @param expr quoted join conditions
 #' @param ... force later arguments to be by name
 #' @param jointype type of join ('INNER', 'LEFT', 'RIGHT', 'FULL').
 #' @param suffix character length 2, suffices to disambiguate columns.
@@ -151,7 +151,9 @@ theta_join_se.data.frame <- function(a, b,
                          jointype = jointype,
                          suffix = suffix,
                          env = env)
-  return(enode)
+  source <- list(a = a, b = b)
+  names(source) <- c(tmp_namea, tmp_nameb)
+  rquery_apply_to_data_frame(source, enode, env = env)
 }
 
 
@@ -163,7 +165,7 @@ theta_join_se.data.frame <- function(a, b,
 #'
 #' @param a source to select from.
 #' @param b source to select from.
-#' @param expr unquoated join condition
+#' @param expr unquoted join condition
 #' @param ... force later arguments to be by name
 #' @param jointype type of join ('INNER', 'LEFT', 'RIGHT', 'FULL').
 #' @param suffix character length 2, suffices to disambiguate columns.
@@ -254,7 +256,9 @@ theta_join_nse.data.frame <- function(a, b,
                           jointype = jointype,
                           suffix = suffix,
                           env = env)
-  return(enode)
+  source <- list(a = a, b = b)
+  names(source) <- c(tmp_namea, tmp_nameb)
+  rquery_apply_to_data_frame(source, enode, env = env)
 }
 
 

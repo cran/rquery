@@ -4,7 +4,7 @@
 \alias{drop_columns}
 \title{Make a drop columns node (not a relational operation).}
 \usage{
-drop_columns(source, drops, ..., strict = TRUE)
+drop_columns(source, drops, ..., strict = TRUE, env = parent.frame())
 }
 \arguments{
 \item{source}{source to drop columns from.}
@@ -14,6 +14,8 @@ drop_columns(source, drops, ..., strict = TRUE)
 \item{...}{force later arguments to bind by name}
 
 \item{strict}{logical, if TRUE do check columns to be dropped are actually present.}
+
+\item{env}{environment to look to.}
 }
 \value{
 drop columns node.

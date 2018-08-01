@@ -4,12 +4,14 @@
 \alias{rename_columns}
 \title{Make a rename columns node (copies columns not renamed).}
 \usage{
-rename_columns(source, cmap)
+rename_columns(source, cmap, env = parent.frame())
 }
 \arguments{
 \item{source}{source to rename from.}
 
 \item{cmap}{map written as new column names as keys and old column names as values.}
+
+\item{env}{environment to look to.}
 }
 \value{
 rename columns node.

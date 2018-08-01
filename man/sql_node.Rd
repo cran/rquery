@@ -4,7 +4,8 @@
 \alias{sql_node}
 \title{Make a general SQL node.}
 \usage{
-sql_node(source, exprs, ..., mods = NULL, orig_columns = TRUE)
+sql_node(source, exprs, ..., mods = NULL, orig_columns = TRUE,
+  env = parent.frame())
 }
 \arguments{
 \item{source}{source to work from.}
@@ -16,6 +17,8 @@ sql_node(source, exprs, ..., mods = NULL, orig_columns = TRUE)
 \item{mods}{SQL modifiers (GROUP BY, ORDER BY, and so on)}
 
 \item{orig_columns}{logical if TRUE select all original columns.}
+
+\item{env}{environment to look to.}
 }
 \value{
 sql node.

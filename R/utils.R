@@ -27,11 +27,11 @@ unpack_assignments <- function(source, parsed,
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery:::unpack_assignments")
   n <- length(parsed)
+  assignments <- character(n)
   if(n<=0) {
-    stop("must generate at least 1 column")
+    return(assignments)
   }
   nms <- character(n)
-  assignments <- character(n)
   uses <- vector(n, mode='list')
   for(i in seq_len(n)) {
     si <- parsed[[i]]
@@ -69,7 +69,7 @@ parse_se <- function(source, assignments, env,
   }
   nms <- names(assignments)
   # R-like db-info for presentation
-  db_inf <- rquery_db_info(indentifier_quote_char = '"',
+  db_inf <- rquery_db_info(identifier_quote_char = '"',
                            string_quote_char = '\'',
                            is_dbi = FALSE)
   parsed <- vector(n, mode = 'list')
@@ -113,7 +113,7 @@ parse_nse <- function(source, exprs, env,
   }
   nms <- names(exprs)
   # R-like db-info for presentation
-  db_inf <- rquery_db_info(indentifier_quote_char = '"',
+  db_inf <- rquery_db_info(identifier_quote_char = '"',
                            string_quote_char = '\'',
                            is_dbi = FALSE)
   parsed <- vector(n, mode = 'list')

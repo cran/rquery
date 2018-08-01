@@ -5,14 +5,21 @@
 \alias{table_source}
 \title{Make a table description directly.}
 \usage{
-mk_td(table_name, columns)
+mk_td(table_name, columns, ..., qualifiers = NULL, q_table_name = NULL)
 
-table_source(table_name, columns)
+table_source(table_name, columns, ..., qualifiers = NULL,
+  q_table_name = NULL)
 }
 \arguments{
 \item{table_name}{character, name of table}
 
 \item{columns}{character, column names of table}
+
+\item{...}{not used, force later argument to bind by name}
+
+\item{qualifiers}{optional named ordered vector of strings carrying additional db hierarchy terms, such as schema.}
+
+\item{q_table_name}{optional character, qualified table name, note: has to be re-generated for different DB connections.}
 }
 \value{
 a relop representation of the data

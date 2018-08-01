@@ -4,12 +4,16 @@
 \alias{rq_colnames}
 \title{List table column names.}
 \usage{
-rq_colnames(db, table_name)
+rq_colnames(db, table_name, ..., qualifiers = NULL)
 }
 \arguments{
 \item{db}{Connection handle}
 
 \item{table_name}{character table name}
+
+\item{...}{not used, force later argument to bind by name}
+
+\item{qualifiers}{optional named ordered vector of strings carrying additional db hierarchy terms, such as schema.}
 }
 \value{
 character list of column names

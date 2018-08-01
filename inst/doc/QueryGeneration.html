@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2018-06-18" />
+<meta name="date" content="2018-08-01" />
 
 <title>Query Generation</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Query Generation</h1>
 <h4 class="author"><em>John Mount</em></h4>
-<h4 class="date"><em>2018-06-18</em></h4>
+<h4 class="date"><em>2018-08-01</em></h4>
 
 
 
@@ -105,14 +105,14 @@ dq &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span>
 <span class="co">#&gt; attr(,&quot;package&quot;)</span>
 <span class="co">#&gt; [1] &quot;RSQLite&quot;</span></code></pre></div>
 <p>Presentation format (see also <a href="https://winvector.github.io/rquery/reference/op_diagram.html"><code>op_diagram()</code></a>):</p>
-<pre><code>  table('d'; 
+<pre><code>  table(`d`; 
     subjectID,
     surveyCategory,
     assessmentTotal,
     irrelevantCol1,
     irrelevantCol2) %.&gt;%
    extend(.,
-    probability := exp(assessmentTotal * scale)/sum(exp(assessmentTotal * scale)),
+    probability := exp(assessmentTotal * 0.237) / sum(exp(assessmentTotal * 0.237)),
     count := count(1),
     p= subjectID) %.&gt;%
    extend(.,
@@ -151,23 +151,22 @@ dq &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span>
        SELECT
         `subjectID`,
         `surveyCategory`,
-        `assessmentTotal`,
         exp ( `assessmentTotal` * 0.237 ) / sum ( exp ( `assessmentTotal` * 0.237 ) ) OVER (  PARTITION BY `subjectID` ) AS `probability`,
         count ( 1 ) OVER (  PARTITION BY `subjectID` ) AS `count`
        FROM (
         SELECT
-         `d`.`subjectID`,
-         `d`.`surveyCategory`,
-         `d`.`assessmentTotal`
+         `subjectID`,
+         `surveyCategory`,
+         `assessmentTotal`
         FROM
          `d` LIMIT 1000
-        ) tsql_79406523317262695180_0000000000
-       ) tsql_79406523317262695180_0000000001
-     ) tsql_79406523317262695180_0000000002
-    ) tsql_79406523317262695180_0000000003
+        ) tsql_72306050743290473183_0000000000
+       ) tsql_72306050743290473183_0000000001
+     ) tsql_72306050743290473183_0000000002
+    ) tsql_72306050743290473183_0000000003
     WHERE `rank` = `count`
-   ) tsql_79406523317262695180_0000000004
-  ) tsql_79406523317262695180_0000000005 ORDER BY `subjectID`</code></pre>
+   ) tsql_72306050743290473183_0000000004
+  ) tsql_72306050743290473183_0000000005 ORDER BY `subjectID`</code></pre>
 
 
 

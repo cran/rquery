@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2018-06-18" />
+<meta name="date" content="2018-08-01" />
 
 <title>Pipeable SQL</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Pipeable SQL</h1>
 <h4 class="author"><em>John Mount</em></h4>
-<h4 class="date"><em>2018-06-18</em></h4>
+<h4 class="date"><em>2018-08-01</em></h4>
 
 
 
@@ -117,7 +117,11 @@ dbopts &lt;-<span class="st"> </span><span class="kw">rq_connection_tests</span>
 ## [1] TRUE
 ## 
 ## $rquery.SQLiteConnection.check_logical_column_types
-## [1] TRUE</code></pre>
+## [1] TRUE
+## 
+## $rquery.SQLiteConnection.fn_name_map
+##  mean 
+## &quot;avg&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">options</span>(dbopts)
 
 <span class="co"># copy in example data</span>
@@ -126,7 +130,7 @@ dbopts &lt;-<span class="st"> </span><span class="kw">rq_connection_tests</span>
   <span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="op">-</span><span class="dv">5</span>, <span class="dv">3</span>)),
   <span class="dt">temporary =</span> <span class="ot">FALSE</span>,
   <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</code></pre></div>
-<pre><code>## [1] &quot;table('d'; v)&quot;</code></pre>
+<pre><code>## [1] &quot;table(`d`; v)&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># produce a hande to existing table</span>
 d &lt;-<span class="st"> </span><span class="kw">db_td</span>(db, <span class="st">&quot;d&quot;</span>)</code></pre></div>
 <p><code>d</code> is a “table description” which is just the name of a table and the names of expected columns. <code>d</code> does not store data or a database reference (making it safe to serialize/de-serialize). All <code>rquery</code> operation trees or pipelines must start either with a table description or a <code>data.frame</code>. We will discuss table descriptions later.</p>
@@ -188,7 +192,7 @@ FROM (
   ABS(v) AS `absv`
  FROM (
   SELECT
-   `d`.`v`
+   `v`
   FROM
    `d`
  ) tsql_76657282644575127952_0000000000
@@ -208,7 +212,7 @@ FROM (
   ABS( `v` ) AS `absv`
  FROM (
   SELECT
-   `d`.`v`
+   `v`
   FROM
    `d`
  ) tsql_03186459973308663628_0000000000
@@ -216,7 +220,7 @@ FROM (
 <p>The <code>list(list())</code> notation is how we say in <code>R</code> that we have a single element list (i.e. one expression) that is built up as a list of terms. The marking notation is cumbersome, but is not needed when we move on to relation nodes, which are parsed in <code>R</code> and can spot identifiers without additional help.</p>
 <p><code>op_tree</code> itself is a an object with its own presentation format:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">format</span>(op_tree))</code></pre></div>
-<pre><code>## table('d'; 
+<pre><code>## table(`d`; 
 ##   v) %.&gt;%
 ##  sql_node(.,
 ##           absv %:=% ABS( v ),
@@ -239,7 +243,7 @@ FROM (
 <span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;prod&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;absv * delta&quot;</span>)
 
 <span class="kw">cat</span>(<span class="kw">format</span>(op_tree))</code></pre></div>
-<pre><code>## table('d'; 
+<pre><code>## table(`d`; 
 ##   v) %.&gt;%
 ##  sql_node(.,
 ##           absv %:=% ABS( v ),
@@ -294,7 +298,7 @@ expr &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">li
 op_tree_count_null &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;num_missing&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">list</span>(expr))
 <span class="kw">cat</span>(<span class="kw">format</span>(op_tree_count_null))</code></pre></div>
-<pre><code>## table('d2'; 
+<pre><code>## table(`d2`; 
 ##   v1,
 ##   v2,
 ##   v3) %.&gt;%
@@ -311,9 +315,9 @@ sql &lt;-<span class="st"> </span><span class="kw">to_sql</span>(op_tree_count_n
 ##  `v2` AS `v2`
 ## FROM (
 ##  SELECT
-##   `d2`.`v1`,
-##   `d2`.`v2`,
-##   `d2`.`v3`
+##   `v1`,
+##   `v2`,
+##   `v3`
 ##  FROM
 ##   `d2`
 ## ) tsql_40861508963351138683_0000000000</code></pre>
@@ -359,9 +363,9 @@ s_tree &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span>
 ##  CASE WHEN `v3` IS NULL THEN 1 ELSE 0 END AS `v3_isNA`
 ## FROM (
 ##  SELECT
-##   `d2`.`v1`,
-##   `d2`.`v2`,
-##   `d2`.`v3`
+##   `v1`,
+##   `v2`,
+##   `v3`
 ##  FROM
 ##   `d2`
 ## ) tsql_58999521412088360682_0000000000</code></pre>
@@ -403,7 +407,8 @@ s_tree &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span>
 <p>The above calculation is managed by <a href="https://github.com/WinVector/wrapr/blob/master/extras/wrapr_pipe.pdf"><code>wrapr</code> dot pipe <code>S3</code> <code>wrapr_function</code></a> extensions.</p>
 <p><code>rquery</code> operators can be used directly (without any table description nodes) when working with in-memory <code>data.frame</code>s.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="dv">5</span>) <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">sql_node</span>(., <span class="st">&quot;z&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;sqrt(x)&quot;</span>)</code></pre></div>
-<pre><code>## [1] &quot;table('rquery_tmp_00072434981539271409_0000000000'; x) %.&gt;% sql_node(., z %:=% sqrt(x), *=TRUE)&quot;</code></pre>
+<pre><code>##   x        z
+## 1 5 2.236068</code></pre>
 <p>The above calculation is triggered by <code>S3</code> override of any of <code>print()</code>, <code>as.data.frame()</code> and <code>head()</code>. Remote tables need an <code>execute()</code> or <code>materialize()</code> step to specify the database connection.</p>
 </div>
 <div id="table-descriptions" class="section level1">

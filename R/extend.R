@@ -4,7 +4,7 @@
 #' Extend data by adding more columns.
 #'
 #' partitionby and orderby can only be used with a database that supports window-functions
-#' (such as PostgreSQL).
+#' (such as PostgreSQL, Spark, and so on).
 #'
 #' @param source source to select from.
 #' @param parsed parsed assignment expressions.
@@ -12,6 +12,7 @@
 #' @param partitionby partitioning (window function) terms.
 #' @param orderby ordering (in window function) terms.
 #' @param reverse reverse order (in window function)
+#' @param display_form chacter presentation form
 #' @return extend node.
 #'
 #'
@@ -21,7 +22,8 @@ extend_impl <- function(source, parsed,
                         ...,
                         partitionby = NULL,
                         orderby = NULL,
-                        reverse = NULL) {
+                        reverse = NULL,
+                        display_form = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery:::extend_impl")
   if(length(setdiff(reverse, orderby))>0) {
@@ -44,7 +46,8 @@ extend_impl <- function(source, parsed,
             reverse = reverse,
             assignments = assignments,
             required_cols = required_cols,
-            columns = names(assignments))
+            columns = names(assignments),
+            display_form = display_form)
   r <- relop_decorate("relop_extend", r)
   r
 }
@@ -52,7 +55,7 @@ extend_impl <- function(source, parsed,
 #' Extend data by adding more columns list mode (can create multiple nodes)
 #'
 #' partitionby and orderby can only be used with a database that supports window-functions
-#' (such as PostgreSQL).
+#' (such as PostgreSQL, Spark and so on).
 #'
 #' @param source source to select from.
 #' @param parsed parsed assignment expressions.
@@ -60,6 +63,7 @@ extend_impl <- function(source, parsed,
 #' @param partitionby partitioning (window function) terms.
 #' @param orderby ordering (in window function) terms.
 #' @param reverse reverse ordering (in window function) terms.
+#' @param display_form chacter presentation form
 #' @return extend node.
 #'
 #'
@@ -69,7 +73,8 @@ extend_impl_list <- function(source, parsed,
                              ...,
                              partitionby = NULL,
                              orderby = NULL,
-                             reverse = NULL) {
+                             reverse = NULL,
+                             display_form = NULL) {
   if(length(setdiff(reverse, orderby))>0) {
     stop("rquery::extend_impl_list all reverse columns must also be orderby columns")
   }
@@ -80,7 +85,8 @@ extend_impl_list <- function(source, parsed,
     ndchain <- extend_impl(ndchain, parsedi,
                            partitionby = partitionby,
                            orderby = orderby,
-                           reverse = reverse)
+                           reverse = reverse,
+                           display_form = display_form)
   }
   ndchain
 }
@@ -92,7 +98,7 @@ extend_impl_list <- function(source, parsed,
 #' Create a node similar to a Codd extend relational operator (add derived columns).
 #'
 #' Partitionby and orderby can only be used with a database that supports window-functions
-#' (such as PostgreSQL).
+#' (such as PostgreSQL, Spark and so on).
 #'
 #' @param source source to select from.
 #' @param assignments new column assignment expressions.
@@ -100,6 +106,7 @@ extend_impl_list <- function(source, parsed,
 #' @param partitionby partitioning (window function) terms.
 #' @param orderby ordering (in window function) terms.
 #' @param reverse reverse ordering (in window function) terms.
+#' @param display_form chacter presentation form
 #' @param env environment to look for values in.
 #' @return extend node.
 #'
@@ -131,6 +138,7 @@ extend_se <- function(source, assignments,
                       partitionby = NULL,
                       orderby = NULL,
                       reverse = NULL,
+                      display_form = NULL,
                       env = parent.frame()) {
   UseMethod("extend_se", source)
 }
@@ -141,6 +149,7 @@ extend_se.relop <- function(source, assignments,
                             partitionby = NULL,
                             orderby = NULL,
                             reverse = NULL,
+                            display_form = NULL,
                             env = parent.frame()) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::extend_se.relop")
@@ -152,7 +161,8 @@ extend_se.relop <- function(source, assignments,
                    parsed = parsed,
                    partitionby = partitionby,
                    orderby = orderby,
-                   reverse = reverse)
+                   reverse = reverse,
+                   display_form = display_form)
 }
 
 #' @export
@@ -161,6 +171,7 @@ extend_se.data.frame <- function(source, assignments,
                                  partitionby = NULL,
                                  orderby = NULL,
                                  reverse = NULL,
+                                 display_form = NULL,
                                  env = parent.frame()) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::extend_se.data.frame")
@@ -174,8 +185,9 @@ extend_se.data.frame <- function(source, assignments,
                      partitionby = partitionby,
                      orderby = orderby,
                      reverse = reverse,
+                     display_form = display_form,
                      env = env)
-  return(enode)
+  rquery_apply_to_data_frame(source, enode, env = env)
 }
 
 
@@ -185,13 +197,14 @@ extend_se.data.frame <- function(source, assignments,
 #' Create a node similar to a Codd extend relational operator (add derived columns).
 #'
 #' Partitionby and orderby can only be used with a database that supports window-functions
-#' (such as PostgreSQL).
+#' (such as PostgreSQL, Spark, and so on).
 #'
 #' @param source source to select from.
 #' @param ... new column assignment expressions.
 #' @param partitionby partitioning (window function) terms.
 #' @param orderby ordering (in window function) terms.
 #' @param reverse reverse ordering (in window function) terms.
+#' @param display_form chacter presentation form
 #' @param env environment to look for values in.
 #' @return extend node.
 #'
@@ -216,6 +229,7 @@ extend_nse <- function(source,
                        partitionby = NULL,
                        orderby = NULL,
                        reverse = NULL,
+                       display_form = NULL,
                        env = parent.frame()) {
   UseMethod("extend_nse", source)
 }
@@ -227,6 +241,7 @@ extend_nse.relop <- function(source,
                              partitionby = NULL,
                              orderby = NULL,
                              reverse = NULL,
+                             display_form = NULL,
                              env = parent.frame()) {
   # Recommend way to caputre ... unevalauted from
   # http://adv-r.had.co.nz/Computing-on-the-language.html#substitute "Capturing unevaluated ..."
@@ -239,7 +254,8 @@ extend_nse.relop <- function(source,
                    parsed = parsed,
                    partitionby = partitionby,
                    orderby = orderby,
-                   reverse = reverse)
+                   reverse = reverse,
+                   display_form = display_form)
 }
 
 #' @export
@@ -249,6 +265,7 @@ extend_nse.data.frame <- function(source,
                                   partitionby = NULL,
                                   orderby = NULL,
                                   reverse = NULL,
+                                  display_form = NULL,
                                   env = parent.frame()) {
   if(length(setdiff(reverse, orderby))>0) {
     stop("rquery::extend_nse.data.frame all reverse columns must also be orderby columns")
@@ -260,8 +277,9 @@ extend_nse.data.frame <- function(source,
                       partitionby = partitionby,
                       orderby = orderby,
                       reverse = reverse,
+                      display_form = display_form,
                       env = env)
-  return(enode)
+  rquery_apply_to_data_frame(source, enode, env = env)
 }
 
 
@@ -275,6 +293,9 @@ column_names.relop_extend <- function (x, ...) {
 
 #' @export
 format_node.relop_extend <- function(node) {
+  if(!is.null(node$display_form)) {
+    return(node$display_form)
+  }
   pterms <- ""
   if(length(node$partitionby)>0) {
     pterms <- paste0(",\n  p= ",
@@ -307,19 +328,21 @@ format_node.relop_extend <- function(node) {
 
 
 
-calc_used_relop_extend <- function (x,
-                                    using = NULL) {
-  cols <- column_names(x)
-  if(length(using)>0) {
-    cols <- using
+calc_used_relop_extend <- function(x,
+                                   using = NULL) {
+  source_cols <- column_names(x$source[[1]])
+  if(length(using)<=0) {
+    return(source_cols)
   }
-  producing <- merge_fld(x$parsed, "symbols_produced")
-  expressions <- x$parsed
-  # TODO: test and instantiante this
-  #   expressions <- x$parsed[producing %in% cols]
-  cols <- setdiff(cols, producing)
+  want_expr <- vapply(x$parsed,
+                      function(pi) {
+                        length(intersect(pi$symbols_produced, using))>0
+                      }, logical(1))
+  expressions <- x$parsed[want_expr]
+  producing <- merge_fld(expressions, "symbols_produced")
   consuming <- merge_fld(expressions, "symbols_used")
-  subusing <- unique(c(cols, consuming, x$partitionby, x$orderby))
+  direct_from_source <- setdiff(intersect(using, source_cols), producing)
+  subusing <- unique(c(direct_from_source, consuming, x$partitionby, x$orderby))
   subusing
 }
 
@@ -348,10 +371,18 @@ to_sql.relop_extend <- function (x,
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::to_sql.relop_extend")
   # re-quote expr
-  re_quoted <- redo_parse_quoting(x$parsed, db)
+  parsed <- x$parsed
+  if(length(using)>0) {
+    want_expr <- vapply(x$parsed,
+                        function(pi) {
+                          length(intersect(pi$symbols_produced, using))>0
+                        }, logical(1))
+    parsed <- x$parsed[want_expr]
+  }
+  re_quoted <- redo_parse_quoting(parsed, db)
   re_assignments <- unpack_assignments(x$source[[1]], re_quoted)
   # work on query
-  using <- calc_used_relop_extend(x,
+  using_incoming <- calc_used_relop_extend(x,
                                   using = using)
   qlimit = limit
   if(!getDBOption(db, "use_pass_limit", TRUE)) {
@@ -364,9 +395,12 @@ to_sql.relop_extend <- function (x,
                         indent_level = indent_level + 1,
                         tnum = tnum,
                         append_cr = FALSE,
-                        using = using)
+                        using = using_incoming)
   subsql <- subsql_list[[length(subsql_list)]]
-  cols1 <- intersect(column_names(x$source[[1]]), using)
+  cols1 <- column_names(x$source[[1]])
+  if(length(using)>0) {
+    cols1 <- intersect(cols1, using)
+  }
   cols1 <- setdiff(cols1, names(re_assignments)) # allow simple name re-use
   cols <- NULL
   if(length(cols1)>0) {

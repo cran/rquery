@@ -4,12 +4,14 @@
 \alias{select_columns}
 \title{Make a select columns node (not a relational operation).}
 \usage{
-select_columns(source, columns)
+select_columns(source, columns, env = parent.frame())
 }
 \arguments{
 \item{source}{source to select from.}
 
 \item{columns}{list of distinct column names.}
+
+\item{env}{environment to look to.}
 }
 \value{
 select columns node.

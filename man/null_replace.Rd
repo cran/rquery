@@ -4,7 +4,8 @@
 \alias{null_replace}
 \title{Create a null_replace node.}
 \usage{
-null_replace(src, cols, value, ..., note_col = NULL)
+null_replace(src, cols, value, ..., note_col = NULL,
+  env = parent.frame())
 }
 \arguments{
 \item{src}{relop or data.frame data source.}
@@ -16,6 +17,8 @@ null_replace(src, cols, value, ..., note_col = NULL)
 \item{...}{force later arguments to bind by name.}
 
 \item{note_col}{character, if not NULL record number of columns altered per-row in this column.}
+
+\item{env}{environment to look to.}
 }
 \value{
 null_replace node or data.frame.

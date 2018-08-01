@@ -4,16 +4,18 @@
 \alias{assign_slice}
 \title{Assign a value to a slice of data (set of rows meeting a condition, and specified set of columns).}
 \usage{
-assign_slice(source, testexpr, columns, value)
+assign_slice(source, testexpr, columns, value, env = parent.frame())
 }
 \arguments{
 \item{source}{optree relop node or data.frame.}
 
 \item{testexpr}{character containing the test expression.}
 
-\item{columns}{charactor vector of column names to alter.}
+\item{columns}{character vector of column names to alter.}
 
 \item{value}{value to set in matching rows and columns (scalar).}
+
+\item{env}{environment to look to.}
 }
 \value{
 optree or data.frame.
@@ -28,7 +30,6 @@ is a reserved column name for this procedure.
 \examples{
 
 if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
-  # Land random selections early to avoid SQLite bug.
   my_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   d <- rq_copy_to(
     my_db,
@@ -50,15 +51,6 @@ if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quiet
   cat(sql)
 
   print(DBI::dbGetQuery(my_db, sql))
-
-  # Why we need to land the random selection early
-  # for SQLIte:
-  q <- "SELECT r AS r1, r AS r2 FROM (
-          SELECT random() AS r FROM (
-             SELECT * from ( VALUES(1),(2) )
-          ) a
-       ) b"
-  print(DBI::dbGetQuery(my_db, q))
 
   DBI::dbDisconnect(my_db)
 }

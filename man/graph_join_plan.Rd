@@ -2,9 +2,10 @@
 % Please edit documentation in R/join_controller.R
 \name{graph_join_plan}
 \alias{graph_join_plan}
-\title{Build a drawable specification of the join diagram}
+\title{Build a draw-able specification of the join diagram}
 \usage{
-graph_join_plan(columnJoinPlan, ..., groupByKeys = TRUE, graphOpts = NULL)
+graph_join_plan(columnJoinPlan, ..., groupByKeys = TRUE,
+  graphOpts = NULL)
 }
 \arguments{
 \item{columnJoinPlan}{join plan}

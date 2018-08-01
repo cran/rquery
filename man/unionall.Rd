@@ -4,10 +4,12 @@
 \alias{unionall}
 \title{Make an unionall node (not a relational operation).}
 \usage{
-unionall(sources)
+unionall(sources, env = parent.frame())
 }
 \arguments{
 \item{sources}{list of relop trees or list of data.frames}
+
+\item{env}{environment to look to.}
 }
 \value{
 order_by node or altered data.frame.

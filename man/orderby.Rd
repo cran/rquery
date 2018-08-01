@@ -4,7 +4,8 @@
 \alias{orderby}
 \title{Make an orderby node (not a relational operation).}
 \usage{
-orderby(source, cols = NULL, ..., reverse = NULL, limit = NULL)
+orderby(source, cols = NULL, ..., reverse = NULL, limit = NULL,
+  env = parent.frame())
 }
 \arguments{
 \item{source}{source to select from.}
@@ -16,6 +17,8 @@ orderby(source, cols = NULL, ..., reverse = NULL, limit = NULL)
 \item{reverse}{character, which columns to reverse ordering of.}
 
 \item{limit}{number limit row count.}
+
+\item{env}{environment to look to.}
 }
 \value{
 order_by node.
@@ -29,7 +32,7 @@ Note: this is a relational operator in that it takes a table that
 is a relation (has unique rows) to a table that is still a relation.
 However, most relational systems do not preserve row order in storage or between
 operations.  So without the limit set this is not a useful operator except
-as a last step prior ot pulling data to an in-memory \code{data.frame} (
+as a last step prior to pulling data to an in-memory \code{data.frame} (
 which does preserve row order).
 }
 \examples{
