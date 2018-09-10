@@ -103,7 +103,9 @@ print.rquery_db_info <- function(x, ...) {
   print(format(x))
 }
 
-
+#' An example \code{rquery_db_info} object useful for formatting \code{SQL} without a database connection.
+#'
+#' @export
 rquery_default_db_info <- rquery_db_info(identifier_quote_char = '"',
                                          string_quote_char = "'",
                                          is_dbi = FALSE)
@@ -142,7 +144,7 @@ quote_identifier <- function(x, id) {
 #'
 quote_table_name <- function(x, id,
                              ...,
-                             qualifiers) {
+                             qualifiers = character(0)) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::quote_table_name")
   if("rquery_db_info" %in% class(x)) {

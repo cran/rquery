@@ -1,4 +1,11 @@
 
+# rquery 1.0.0 2018/09/10
+
+ * Fix key_inspector_postgresql quoting issue. 
+ * More tests.
+ * Export a default database description.
+ * Check more on project and extend interfaces.
+
 # rquery 0.6.2 2018/08/14
 
  * fix in-memory order_by!
