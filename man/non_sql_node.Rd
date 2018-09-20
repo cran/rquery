@@ -4,10 +4,9 @@
 \alias{non_sql_node}
 \title{Wrap a non-SQL node.}
 \usage{
-non_sql_node(source, ..., f_db, f_df = NULL, incoming_table_name,
-  outgoing_table_name, columns_produced, display_form,
-  pass_using = FALSE, orig_columns = TRUE, temporary = TRUE,
-  env = parent.frame())
+non_sql_node(source, ..., f_db, f_df = NULL, f_dt = NULL,
+  incoming_table_name, outgoing_table_name, columns_produced, display_form,
+  orig_columns = TRUE, temporary = TRUE, env = parent.frame())
 }
 \arguments{
 \item{source}{source to work from (data.frame or relop node)}
@@ -18,6 +17,8 @@ non_sql_node(source, ..., f_db, f_df = NULL, incoming_table_name,
 
 \item{f_df}{data.frame implementation signature: f_df(data.frame) (NULL defaults to taking from database).}
 
+\item{f_dt}{data.table implementation signature: f_dt(data.table) (NULL defaults f_df).}
+
 \item{incoming_table_name}{character, name of incoming table}
 
 \item{outgoing_table_name}{character, name of produced table}
@@ -26,8 +27,6 @@ non_sql_node(source, ..., f_db, f_df = NULL, incoming_table_name,
 
 \item{display_form}{character, how to print node}
 
-\item{pass_using}{logical, if TRUE (or if f_db is NULL) pass using column calculations through (else assume using all columns).}
-
 \item{orig_columns}{logical if TRUE select all original columns.}
 
 \item{temporary}{logical, if TRUE mark tables temporary.}
@@ -35,7 +34,7 @@ non_sql_node(source, ..., f_db, f_df = NULL, incoming_table_name,
 \item{env}{environment to look to.}
 }
 \value{
-sql node.
+non-sql node.
 }
 \description{
 Note: non-SQL nodes are allowed to delete/overwrite both

@@ -56,6 +56,7 @@ set_indicator <- function(source,
                           testcol,
                           testvalues,
                           env = parent.frame()) {
+  force(env)
   UseMethod("set_indicator", source)
 }
 
@@ -65,6 +66,7 @@ set_indicator.relop <- function(source,
                                 testcol,
                                 testvalues,
                                 env = parent.frame()) {
+  force(env)
   testvname <- rquery_deparse(substitute(testvalues))
   cols <- column_names(source)
   if(rescol %in% cols) {
@@ -112,12 +114,14 @@ set_indicator.data.frame <- function(source,
                                      testcol,
                                      testvalues,
                                      env = parent.frame()) {
+  force(env)
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- mk_td(tmp_name, colnames(source))
   enode <- set_indicator(source = dnode,
                          rescol = rescol,
                          testcol = testcol,
-                         testvalues = testvalues)
+                         testvalues = testvalues,
+                         env = env)
   rquery_apply_to_data_frame(source, enode, env = env)
 }
 
