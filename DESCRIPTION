@@ -1,8 +1,8 @@
 Package: rquery
 Type: Package
 Title: Relational Query Generator for Data Manipulation at Scale
-Version: 1.1.0
-Date: 2018-09-20
+Version: 1.1.1
+Date: 2018-10-26
 Authors@R: c(
     person("John", "Mount", email = "jmount@win-vector.com", role = c("aut", "cre")),
     person(family = "Win-Vector LLC", role = c("cph"))
@@ -23,7 +23,7 @@ Description: A piped query generator based on Edgar F. Codd's relational
 License: GPL-3
 Encoding: UTF-8
 Depends: R (>= 3.4.0)
-Imports: wrapr (>= 1.6.2), utils, stats
+Imports: wrapr (>= 1.6.3), utils, stats
 Suggests: DBI, RSQLite, igraph, DiagrammeR, DiagrammeRsvg, rsvg, knitr,
         rmarkdown, testthat
 LazyData: true
@@ -31,8 +31,8 @@ RoxygenNote: 6.1.0
 ByteCompile: true
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2018-09-20 18:11:59 UTC; johnmount
+Packaged: 2018-10-26 17:31:26 UTC; johnmount
 Author: John Mount [aut, cre],
   Win-Vector LLC [cph]
 Repository: CRAN
-Date/Publication: 2018-09-20 19:50:03 UTC
+Date/Publication: 2018-10-26 18:00:03 UTC

@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2018-09-20" />
+<meta name="date" content="2018-10-26" />
 
 <title>Query Generation</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Query Generation</h1>
 <h4 class="author"><em>John Mount</em></h4>
-<h4 class="date"><em>2018-09-20</em></h4>
+<h4 class="date"><em>2018-10-26</em></h4>
 
 
 
@@ -135,17 +135,17 @@ dq &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span>
    FROM (
     SELECT * FROM (
      SELECT
-      `count` AS `count`,
-      `probability` AS `probability`,
-      `rank` AS `rank`,
       `subjectID` AS `subjectID`,
-      `surveyCategory` AS `diagnosis`
+      `surveyCategory` AS `diagnosis`,
+      `probability` AS `probability`,
+      `count` AS `count`,
+      `rank` AS `rank`
      FROM (
       SELECT
-       `count`,
-       `probability`,
        `subjectID`,
        `surveyCategory`,
+       `probability`,
+       `count`,
        rank ( ) OVER (  PARTITION BY `subjectID` ORDER BY `probability`, `surveyCategory` ) AS `rank`
       FROM (
        SELECT

@@ -1,7 +1,12 @@
 
+# rquery 1.1.1 2018/10/26
+
+ * Allow a bit more flexibility on ordering in extend.
+ * Start breaking up some recursive calls.
+
 # rquery 1.1.0 2018/09/20
 
- * Altrenate data.table implementation path.
+ * Alternate data.table implementation path.
  * lookup_by_column().
  * Force parent.frame().
 
