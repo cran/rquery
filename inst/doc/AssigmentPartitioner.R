@@ -20,7 +20,7 @@ d1 %.>%
 
 # design the experiment 
 plan <- d1 %.>%
-  extend_nse(.,
+  extend(.,
    choice_a = rand_a>=0.5, 
     a_1 = ifelse(choice_a, 
                   'T', 
@@ -75,7 +75,7 @@ DBI::dbGetQuery(my_db, sql) %.>%
 
 ## ----reuse, comment="", eval=run_vignette--------------------------------
 plan2 <- d1 %.>%
-  extend_nse(.,
+  extend(.,
    choice = rand_a>=0.5, 
     a_1 = ifelse(choice, 
                   'T', 

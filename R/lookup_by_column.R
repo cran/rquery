@@ -9,7 +9,7 @@
 #' @param ... force later arguments to be bound by name
 #' @param tmp_name_source wrapr::mk_tmp_name_source(), temporary name generator.
 #' @param temporary logical, if TRUE use temporary tables.
-#' @param f_dt_factory optional signature f_dt_factory(pick, result) returns function with signature f_dt(d) where d is a data.table.  The point is the function must come from a data.table enabled package. Please see \code{rqdatatable::make_dt_lookup_by_column} for an example.
+#' @param f_dt_factory optional signature f_dt_factory(pick, result) returns function with signature f_dt(d, nd) where d is a data.table.  The point is the function must come from a data.table enabled package. Please see \code{rqdatatable::make_dt_lookup_by_column} for an example.
 #'
 #' @examples
 #'
@@ -74,7 +74,8 @@ lookup_by_column <- function(source,
   outgoing_table_name = tmp_name_source()
   f_db <- function(db,
                    incoming_table_name,
-                   outgoing_table_name) {
+                   outgoing_table_name,
+                   nd = NULL) {
     # get list of possible values
     q <- paste0("
      SELECT
@@ -116,7 +117,7 @@ lookup_by_column <- function(source,
     rq_execute(db, qm)
     db_td(db, outgoing_table_name)
   }
-  f_df <- function(d) {
+  f_df <- function(d, nd = NULL) {
     d <- as.data.frame(d)
     dtmp <- d[,
               intersect(colnames(d), unique(d[[pick]])),

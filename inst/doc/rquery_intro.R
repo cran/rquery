@@ -32,7 +32,7 @@ d <- db_td(db, "d")
 
 ## ----isna, eval=run_vignette---------------------------------------------
 d %.>% 
-  extend_nse(., was_na := ifelse(is.na(v), 1, 0)) %.>%
+  extend(., was_na := ifelse(is.na(v), 1, 0)) %.>%
   to_sql(., db) %.>%
   cat(.)
 
@@ -43,7 +43,7 @@ dq <- mk_td("d3",
                    columns = qc(subjectID, 
                                 surveyCategory, 
                                 assessmentTotal)) %.>%
-  extend_nse(.,
+  extend(.,
              probability :=
                exp(assessmentTotal * scale))  %.>% 
   normalize_cols(.,
@@ -80,7 +80,7 @@ d %.>%
 ## ----assignmentpart, eval=run_vignette-----------------------------------
 ot <- mk_td('d4',
                    columns = qc('a', 'b', 'c', 'd')) %.>%
-  extend_nse(., 
+  extend(., 
              x = a + 1,
              y = x + 1,
              u = b + 1,
@@ -107,7 +107,7 @@ cat(format(ifet))
 ## ---- eval=run_vignette--------------------------------------------------
 wp <- mk_td(table = 'd6',
                    columns = letters[1:5]) %.>%
-  extend_nse(., res := a + b)
+  extend(., res := a + b)
 
 # full query
 cat(to_sql(wp, db))

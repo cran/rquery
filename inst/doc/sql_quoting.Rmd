@@ -1,0 +1,86 @@
+---
+title: "SQL quoting"
+author: "John Mount"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SQL quoting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+`rquery` does not parse expression of the `SQL` node.  Thus it does not know which tokens are string-literals, and which are column names.  To assist with this user can annotate column names with `.[]`.
+
+```{r}
+library("rquery")
+
+date_cutoff <- '2017-04-02'
+
+td <- mk_td("df", 
+            c("cust",
+              "trans_date",
+              "sales"))
+
+ops <- td %.>%
+  select_rows_se(
+    ., 
+    qe(trans_date <=  str_to_date(.(date_cutoff), '%Y-%m-%d'))) %.>%
+  sql_node(
+    .,
+    qae(max_date = max(.[trans_date]),
+        const_col1 = "a'",
+        const_col2 = 'a"'),
+    mods = "GROUP BY .[cust]",
+    orig_columns = FALSE)
+
+cat(format(ops))
+```
+
+Notice how this renders into different `SQL` for each of our two database descriptions.
+
+```{r}
+db1 <- rquery_db_info(
+  identifier_quote_char = "'",
+  string_quote_char = '"')
+
+cat(to_sql(ops, db1))
+```
+
+```{r}
+db2 <- rquery_db_info(
+  identifier_quote_char = '"',
+  string_quote_char = "'")
+  
+cat(to_sql(ops, db2))
+```
+
+Notice our included quote characters were translated.  This is an unwanted side-effect of using the
+`qae()` shortcut which does not tokenize, so it does not know which quotes are in which roles in the expression.
+
+To override quote translation in the `sql_node()` (which is simple string substitution without quote context or escaping) you must use the clunkier "build up a string as a list of tokens" (where sub-listed items are string literals and names are column names).
+
+```{r strex}
+ops <- td %.>%
+  select_rows_se(
+    ., 
+    qe(trans_date <=  str_to_date(.(date_cutoff), '%Y-%m-%d'))) %.>%
+  sql_node(
+    .,
+    list(
+      "max_date" %:=% "max(.[trans_date])",
+      "const_col1" = list(list("a'")),
+      "const_col2" = list(list('b"'))),
+    mods = "GROUP BY .[cust]",
+    orig_columns = FALSE)
+
+cat(format(ops))
+
+cat(to_sql(ops, db1))
+
+cat(to_sql(ops, db2))
+
+```
+
+Quotes within string literals are going to be a nightmare moving from db to db, so our advice is to try to avoid them.
+
+

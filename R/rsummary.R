@@ -483,7 +483,7 @@ rsummary_d <- function(d,
 #'               temporary = TRUE)
 #'
 #'   ops <- db_td(db, "dRemote") %.>%
-#'     extend_nse(., v %:=% ifelse(x>2, "x", "y")) %.>%
+#'     extend(., v %:=% ifelse(x>2, "x", "y")) %.>%
 #'     rsummary_node(.)
 #'   cat(format(ops))
 #'
@@ -530,7 +530,8 @@ rsummary_node <- function(source,
   outgoing_table_name = tmp_name_source()
   f_db <- function(db,
                    incoming_table_name,
-                   outgoing_table_name) {
+                   outgoing_table_name,
+                   nd = NULL) {
     stable <- rsummary(db, incoming_table_name,
                        quartiles = quartiles)
     rq_copy_to(db,
@@ -539,13 +540,14 @@ rsummary_node <- function(source,
                overwrite = TRUE,
                temporary = temporary)
   }
-  f_df <- function(d) {
+  f_df <- function(d, nd = NULL) {
     rsummary_d(d,
                quartiles = quartiles)
   }
   nd <- non_sql_node(source,
                      f_db = f_db,
                      f_df = f_df,
+                     f_dt = NULL,
                      incoming_table_name = incoming_table_name,
                      outgoing_table_name = outgoing_table_name,
                      columns_produced = columns_produced,

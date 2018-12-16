@@ -75,14 +75,24 @@ tables_used(op_tree)
 columns_used(op_tree)
 
 ## ----addop, eval=run_vignette--------------------------------------------
-op_tree <- op_tree %.>%
+op_tree2 <- op_tree %.>%
   sql_node(., "prod" := "absv * delta")
 
-cat(format(op_tree))
+cat(format(op_tree2))
+
+## ----addopq, eval=run_vignette-------------------------------------------
+op_tree3 <- op_tree %.>%
+  sql_node(., qae(prod = absv * delta))
+
+cat(format(op_tree3))
 
 ## ----addoperror, error=TRUE, eval=run_vignette---------------------------
-op_tree <- op_tree %.>%
+op_tree4 <- op_tree %.>%
   sql_node(., "z" := list(list("1 + ", quote(z))))
+
+## ----addoperror2, error=TRUE, eval=run_vignette--------------------------
+op_tree4 <- op_tree %.>%
+  sql_node(., qae(z = 1 + z))
 
 ## ----countna, eval=run_vignette------------------------------------------
 # load up example data
@@ -156,6 +166,83 @@ data.frame(v = -2:2) %.>% op_tree
 
 ## ----adhocops, eval=run_vignette-----------------------------------------
 data.frame(x = 5) %.>% sql_node(., "z" := "sqrt(x)")
+
+## ----qex-----------------------------------------------------------------
+library("rquery")
+
+date_cutoff <- '2017-04-02'
+
+td <- mk_td("df", 
+            c("cust",
+              "trans_date",
+              "sales"))
+
+# misspelling not caught (argh!)
+tryCatch({
+  ops <- td %.>%
+  select_rows_se(
+    ., 
+    qe(trans_date <=  str_to_date(.(date_cutoff), '%Y-%m-%d'))) %.>%
+  sql_node(
+    .,
+    qae(max_date = max(trans_datez)),  # trans_date misspelled
+    mods = "GROUP BY cust",
+    orig_columns = F)
+  },
+  error = function(e) { print(e) })
+
+
+# misspelling caught
+tryCatch({
+  ops <- td %.>%
+  select_rows_se(
+    ., 
+    qe(trans_date <=  str_to_date(.(date_cutoff), '%Y-%m-%d'))) %.>%
+  sql_node(
+    .,
+    qae(max_date = max(.[trans_datez])),  # trans_date misspelled
+    mods = "GROUP BY cust",
+    orig_columns = F)
+  },
+  error = function(e) { print(e) })
+
+ops <- td %.>%
+  select_rows_se(
+    ., 
+    qe(trans_date <=  str_to_date(.(date_cutoff), '%Y-%m-%d'))) %.>%
+  sql_node(
+    .,
+    qae(max_date = max(.[trans_date])),
+    mods = "GROUP BY cust",
+    orig_columns = F)
+
+cat(to_sql(ops, rquery::rquery_default_db_info))
+
+## ----q2ex----------------------------------------------------------------
+library("rquery")
+
+date_cutoff <- '2017-04-02'
+
+td <- mk_td("df", 
+            c("cust",
+              "trans_date",
+              "sales"))
+
+COL_TO_MAX = as.name("trans_date")
+NEW_COL = paste0("max_", COL_TO_MAX)
+GROUP_COL = "cust"
+
+ops <- td %.>%
+  select_rows_se(
+    ., 
+    qe(trans_date <=  str_to_date(.(date_cutoff), '%Y-%m-%d'))) %.>%
+  sql_node(
+    .,
+    qae(.(NEW_COL) := max(.[.(COL_TO_MAX)])),
+    mods = paste("GROUP BY", GROUP_COL),
+    orig_columns = F)
+
+cat(to_sql(ops, rquery::rquery_default_db_info))
 
 ## ----cleanup, eval=run_vignette------------------------------------------
 options(old_o)

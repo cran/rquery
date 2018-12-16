@@ -11,15 +11,16 @@
 #'
 #' @param source source to work from (data.frame or relop node)
 #' @param ... force later arguments to bind by name
-#' @param f_db database implementation signature: f_db(db, incoming_table_name, outgoing_table_name) (db being a database handle)
-#' @param f_df data.frame implementation signature: f_df(data.frame) (NULL defaults to taking from database).
-#' @param f_dt data.table implementation signature: f_dt(data.table) (NULL defaults f_df).
+#' @param f_db database implementation signature: f_db(db, incoming_table_name, outgoing_table_name, nd) (db being a database handle)
+#' @param f_df data.frame implementation signature: f_df(data.frame, nd) (NULL defaults to taking from database).
+#' @param f_dt data.table implementation signature: f_dt(data.table, nd) (NULL defaults f_df).
 #' @param incoming_table_name character, name of incoming table
 #' @param outgoing_table_name character, name of produced table
 #' @param columns_produced character, names of additional columns produced
 #' @param display_form character, how to print node
 #' @param orig_columns logical if TRUE select all original columns.
 #' @param temporary logical, if TRUE mark tables temporary.
+#' @param check_result_details logical, if TRUE enforce result type and columns.
 #' @param env environment to look to.
 #' @return non-sql node.
 #'
@@ -29,15 +30,16 @@
 #'
 non_sql_node <- function(source,
                          ...,
-                         f_db,
+                         f_db = NULL,
                          f_df = NULL,
                          f_dt = NULL,
                          incoming_table_name,
                          outgoing_table_name,
                          columns_produced,
-                         display_form,
+                         display_form = 'non_sql_node',
                          orig_columns = TRUE,
                          temporary = TRUE,
+                         check_result_details = TRUE,
                          env = parent.frame()) {
   wrapr::stop_if_dot_args(substitute(list(...)), "non_sql_node")
   force(env)
@@ -47,15 +49,16 @@ non_sql_node <- function(source,
 #' @export
 non_sql_node.relop <- function(source,
                                ...,
-                               f_db,
+                               f_db = NULL,
                                f_df = NULL,
                                f_dt = NULL,
                                incoming_table_name,
                                outgoing_table_name,
                                columns_produced,
-                               display_form,
+                               display_form = 'non_sql_node',
                                orig_columns = TRUE,
                                temporary = TRUE,
+                               check_result_details = TRUE,
                                env = parent.frame()) {
   wrapr::stop_if_dot_args(substitute(list(...)), "non_sql_node.relop")
   force(env)
@@ -81,7 +84,8 @@ non_sql_node.relop <- function(source,
             orig_columns = orig_columns,
             overwrite = TRUE,
             src_cols = src_cols,
-            temporary = temporary)
+            temporary = temporary,
+            check_result_details = check_result_details)
   r <- relop_decorate("relop_non_sql", r)
   r
 }
@@ -89,15 +93,16 @@ non_sql_node.relop <- function(source,
 #' @export
 non_sql_node.data.frame <- function(source,
                                     ...,
-                                    f_db,
+                                    f_db = NULL,
                                     f_df = NULL,
                                     f_dt = NULL,
                                     incoming_table_name,
                                     outgoing_table_name,
                                     columns_produced,
-                                    display_form,
+                                    display_form = 'non_sql_node',
                                     orig_columns = TRUE,
                                     temporary = TRUE,
+                                    check_result_details = TRUE,
                                     env = parent.frame()) {
   wrapr::stop_if_dot_args(substitute(list(...)), "non_sql_node.data.frame")
   force(env)
@@ -113,6 +118,7 @@ non_sql_node.data.frame <- function(source,
                         display_form = display_form,
                         orig_columns = orig_columns,
                         temporary = temporary,
+                        check_result_details = check_result_details,
                         env = env)
   rquery_apply_to_data_frame(source, enode, env = env)
 }
@@ -174,6 +180,7 @@ to_sql.relop_non_sql <- function (x,
                     incoming_table_name = x$incoming_table_name,
                     outgoing_table_name = x$outgoing_table_name,
                     temporary = x$temporary,
+                    node = x,
                     f = x$f_db)
   class(nsql_step) <- "rquery_non_sql_step"
   step2 <- list(nsql_step)
@@ -228,8 +235,8 @@ materialize_node <- function(source,
   }
   non_sql_node(source = source,
                f_db = NULL,
-               f_df = function(x) { x },
-               f_dt = function(x) { x },
+               f_df = function(x, nd = NULL) { x },
+               f_dt = NULL,
                incoming_table_name = table_name,
                outgoing_table_name = table_name,
                columns_produced = NULL,

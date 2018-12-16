@@ -223,9 +223,17 @@ materialize_impl <- function(db,
           notes$node[[ii]] <- sqli$display_form
           notes$incoming_table_name[[ii]] <- sqli$incoming_table_name
           notes$outgoing_table_name[[ii]] <- sqli$outgoing_table_name
-          sqli$f(db,
-                 sqli$incoming_table_name,
-                 sqli$outgoing_table_name)
+          if(length(formals(sqli$f))>=4) {
+            sqli$f(db,
+                   sqli$incoming_table_name,
+                   sqli$outgoing_table_name,
+                   sqli)
+          } else {
+            # legacy signature
+            sqli$f(db,
+                   sqli$incoming_table_name,
+                   sqli$outgoing_table_name)
+          }
           rq_remove_table(db, sqli$incoming_table_name)
           if((!is.null(to_clear)) &&
              (to_clear!=sqli$outgoing_table_name)) {
@@ -401,6 +409,10 @@ materialize_sql <- function(db,
 
 
 
+#' @importFrom methods new setClass setMethod signature show is
+NULL
+
+
 
 #' Execute an operator tree, bringing back the result to memory.
 #'
@@ -463,12 +475,6 @@ execute <- function(source,
   if(!("relop" %in% class(optree))) {
     stop("rquery::execute expect optree to be of class relop")
   }
-  if("relop" %in% class(source)) {
-    stop("rquery::execute source can not be a relop tree (should be a database handle, data.frame, or named list of data.frames)")
-  }
-  if(is.environment(source)) {
-    stop("rquery::execute source can not be an environment (should be a database handle, data.frame, or named list of data.frames)")
-  }
   if(is.data.frame(source) || is_named_list_of_data_frames(source)) {
     res <- rquery_apply_to_data_frame(source,
                                       optree,
@@ -477,6 +483,15 @@ execute <- function(source,
                                       source_limit = source_limit,
                                       env = env)
     return(res)
+  }
+  if("relop" %in% class(source)) {
+    stop("rquery::execute source can not be a relop tree (should be a database handle, data.frame, or named list of data.frames)")
+  }
+  if(is.environment(source)) {
+    stop("rquery::execute source can not be an environment (should be a database handle, data.frame, or named list of data.frames)")
+  }
+  if(isS4(source) && methods::is(source, "UnaryFn")) {
+    stop("rquery::execute attempt to use a wrapr::UnaryFn as a data source, please use rqdatatable::rq_fn_wrapper() to wrap the relop or rqdatatable::rq_ufn() to wrap the UnaryFn")
   }
   db <- source # assume it is a DBI connection (as data.frame and DBI connections should not share a base class, and do not as of 5-11-2018)
   # fast SQL only path
@@ -502,7 +517,8 @@ execute <- function(source,
   res <- ref
   # if last step is order we have to re-do that
   # as order is not well define in materialized tables
-  if("relop_orderby" %in% class(optree)) {
+  if(length(intersect(c("relop_orderby", "relop_order_expr"),
+                       class(optree)))>0) {
     ref <- ref  %.>%
       orderby(.,
               cols = optree$orderby,

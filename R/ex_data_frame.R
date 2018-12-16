@@ -1,5 +1,33 @@
 
 
+find_all_tables <- function(op_tree) {
+  if("relop_table_source" %in% class(op_tree)) {
+    return(list(op_tree))
+  }
+  found <- list()
+  for(si in op_tree$source) {
+    found <- c(found, find_all_tables(si))
+  }
+  found
+}
+
+replace_all_table_sources <- function(op_tree, repl) {
+  if("relop_table_source" %in% class(op_tree)) {
+    missing <- setdiff(column_names(op_tree), column_names(repl))
+    if(length(missing)>0) {
+      stop(paste("rquery node replacement must include columns:",
+                 paste(missing, collapse = ", ")))
+    }
+    return(repl)
+  }
+  for(i in seq_len(length(op_tree$source))) {
+    op_tree$source[[i]] <- replace_all_table_sources(op_tree$source[[i]],
+                                                     repl)
+  }
+  op_tree
+}
+
+
 re_write_table_names <- function(op_tree, new_name) {
   if(!is.null(op_tree$table_name)) {
     op_tree$table_name <- new_name
@@ -49,7 +77,7 @@ is_named_list_of_data_frames <- function(o) {
 #'   old_o <- options(list("rquery.rquery_db_executor" = list(db = db)))
 #'
 #'   optree <- mk_td("d", c("AUC", "R2", "D")) %.>%
-#'   	extend_nse(., c %:=% sqrt(R2)) %.>%
+#'   	extend(., c %:=% sqrt(R2)) %.>%
 #'     orderby(., cols = "R2", reverse = "R2")
 #'
 #'   d <- data.frame(AUC = 0.6, R2 = c(0.1, 0.2), D = NA, z = 2)
@@ -186,7 +214,7 @@ as.character.relop <- function (x, ...) {
 #' be copied into database.
 #'
 #' @param pipe_left_arg left argument.
-#' @param pipe_right_arg substitute(pipe_right_arg) argument.
+#' @param pipe_right_arg pipe_right_arg argument.
 #' @param pipe_environment environment to evaluate in.
 #' @param left_arg_name name, if not NULL name of left argument.
 #' @param pipe_string character, name of pipe operator.
@@ -208,7 +236,7 @@ as.character.relop <- function (x, ...) {
 #'
 #'   # operations pipeline/tree
 #'   optree <- mk_td("d", "x") %.>%
-#'     extend_nse(., y = x*x)
+#'     extend(., y = x*x)
 #'
 #'   # wrapr dot pipe apply_right dispatch
 #'   # causes this statment to apply optree
@@ -239,6 +267,7 @@ apply_right.relop <- function(pipe_left_arg,
                               left_arg_name,
                               pipe_string,
                               right_arg_name) {
+  force(pipe_environment)
   if(!("relop" %in% class(pipe_right_arg))) {
     stop("rquery::apply_right.relop expect pipe_right_arg to be of class relop")
   }
@@ -248,8 +277,54 @@ apply_right.relop <- function(pipe_left_arg,
                                       env = pipe_environment))
   }
   if("relop" %in% class(pipe_left_arg)) {
-    stop("rquery::apply_right.relop left argument can not be an already defined relop pipeline")
+    # compose pipelines
+    if(length(tables_used(pipe_right_arg))!=1) {
+      stop("to compose rquery pipelines the right pipeline must be a function of exactly one table")
+    }
+    res <- replace_all_table_sources(pipe_right_arg, pipe_left_arg)
+    return(res)
   }
-  # assume pipe_left_arg is a DB connection, execute and bring back result
+  # dispatch to executor
   execute(pipe_left_arg, pipe_right_arg, env = pipe_environment)
 }
+
+
+
+setOldClass("rquery_db_info")
+
+
+
+#' Apply pipeline to a database.
+#'
+#' Apply pipeline to a database with relop %.>% db notation.
+#'
+#' @param pipe_left_arg relop operation tree
+#' @param pipe_right_arg rquery_db_info
+#' @param pipe_environment environment to evaluate in.
+#' @param left_arg_name name, if not NULL name of left argument.
+#' @param pipe_string character, name of pipe operator.
+#' @param right_arg_name name, if not NULL name of right argument.
+#' @return result
+#'
+#' @importMethodsFrom wrapr ApplyTo apply_right_S4
+#' @export
+setMethod(
+  "apply_right_S4",
+  signature(pipe_left_arg = "ANY", pipe_right_arg = "rquery_db_info"),
+  function(pipe_left_arg,
+           pipe_right_arg,
+           pipe_environment,
+           left_arg_name,
+           pipe_string,
+           right_arg_name) {
+    force(pipe_environment)
+    if(!("relop" %in% class(pipe_left_arg))) {
+      stop("rquery::apply_right_S4('ANY', 'rquery_db_info') pipe_left_arg must be of call relop")
+    }
+    if(!("rquery_db_info" %in% class(pipe_right_arg))) {
+      stop("rquery::apply_right_S4('ANY', 'rquery_db_info') pipe_right_arg must be of call rquery_db_info")
+    }
+    rquery::execute(pipe_right_arg, pipe_left_arg, env = pipe_environment)
+  })
+
+

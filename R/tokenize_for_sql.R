@@ -12,9 +12,11 @@ is_inline_expr <- function(lexpr) {
     return(FALSE)
   }
   callName <- trimws(as.character(lexpr[[1]]), which = "both")
-  inlineops <- c(":=", "==", "!=", ">=", "<=", "=",
+  inlineops <- c("%:=%", ":=", "==", "!=", ">=", "<=", "=",
                  "<", ">",
                  "+", "-", "*", "/",
+                 "^",
+                 ":",
                  "&&", "||",
                  "&", "|")
   if(callName %in% inlineops) {
@@ -26,16 +28,35 @@ is_inline_expr <- function(lexpr) {
   return(FALSE)
 }
 
-#' Cross-parse a call from an R parse tree into SQL.
+check_for_forbidden_forms <- function(lexpr) {
+  if(is.call(lexpr) && is_inline_expr(lexpr)) {
+    call_text = as.character(lexpr[[1]])
+    if(call_text %in% c("%in%", "in")) {
+      stop(paste("rquery forbidden construction: ",
+                 call_text,
+                 "(please gry a test_set_indicator() node instead)"))
+    }
+  }
+}
+
+
+#' Cross-parse a call from an R parse tree strings
 #'
 #' @param lexpr item from  \code{substitute} with length(lexpr)>0 and is.call(lexpr)
 #' @param colnames column names of table
 #' @param env environment to look for values
-#' @return sql info: list(parsed_toks(list of tokens), symbols_used, symbols_produced, free_symbols)
+#' @return character
 #'
 #' @noRd
 #'
 tokenize_call_for_R <- function(lexpr, colnames, env) {
+  if(is.null(lexpr)) {
+    return("NULL")
+  }
+  if((!is.language(lexpr)) && (length(lexpr)==1) && is.na(lexpr)) {
+    return("NA")
+  }
+  check_for_forbidden_forms(lexpr)
   if(is_inline_expr(lexpr)) {
     callName <- as.character(lexpr[[1]])
     lhs <- lexpr[[2]]
@@ -97,6 +118,7 @@ tokenize_call_for_R <- function(lexpr, colnames, env) {
                collapse = " "))
 }
 
+
 #' Cross-parse a call from an R parse tree into SQL.
 #'
 #' @param lexpr item from  \code{substitute} with length(lexpr)>0 and is.call(lexpr)
@@ -113,6 +135,7 @@ tokenize_call_for_SQL <- function(lexpr,
   if((n<=0) || (!is.call(lexpr))) {
     stop("rquery::tokenize_call_for_SQL called on non-call")
   }
+  check_for_forbidden_forms(lexpr)
   res <- list(parsed_toks = list(),
               symbols_used = character(0),
               symbols_produced = character(0),
@@ -200,6 +223,15 @@ tokenize_call_for_SQL <- function(lexpr,
   }
   # ifelse back in place.
   if(is_inline_expr(lexpr)) {
+    if(callName=="^") {
+      res$parsed_toks <- c(ltok("POWER"),
+                           ltok("("),
+                           args[[1]]$parsed_toks,
+                           ltok(","),
+                           args[[2]]$parsed_toks,
+                           ltok(")"))
+      return(res)
+    }
     lhs <- args[[1]]
     rhs <- args[[2]]
     if(callName %in% c("=", ":=", "%:=%")) { # assignment special case
@@ -291,6 +323,7 @@ tokenize_call_for_SQL <- function(lexpr,
 tokenize_for_SQL_r <- function(lexpr,
                           colnames,
                           env) {
+  check_for_forbidden_forms(lexpr)
   n <- length(lexpr)
   res <- list(parsed_toks = list(),
               symbols_used = character(0),
@@ -298,6 +331,17 @@ tokenize_for_SQL_r <- function(lexpr,
               free_symbols = character(0))
   # just in case (establishes an invarient of n>=1)
   if(n<=0) {
+    res <- list(parsed_toks = list(pre_sql_token("NULL")),
+                symbols_used = character(0),
+                symbols_produced = character(0),
+                free_symbols = character(0))
+    return(res)
+  }
+  if((!is.language(lexpr)) && (length(lexpr)==1) && is.na(lexpr)) {
+    res <- list(parsed_toks = list(pre_sql_token("NA")),
+                symbols_used = character(0),
+                symbols_produced = character(0),
+                free_symbols = character(0))
     return(res)
   }
   # left-hand sides of lists/calls are represented as keys
@@ -370,7 +414,7 @@ tokenize_for_SQL_r <- function(lexpr,
     res$parsed_toks <- list(pre_sql_string(paste(as.character(lexpr), collapse = " ")))
     return(res)
   }
-  # fall-back
+  # fall-back (NA comes to here if not caught earlier)
   res$parsed_toks <- list(pre_sql_token(paste(as.character(lexpr), collapse = " ")))
   return(res)
 }

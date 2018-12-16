@@ -90,7 +90,7 @@ rq_table_exists <- function(db, table_name) {
     stop("rquery this function currently requires the DBI package")
   }
   # Would like to just return DBI::dbExistsTable(db, table_name)
-  if(getDBOption(db, "use_DBI_dbExistsTable", TRUE, connection_options)) {
+  if(getDBOption(db, "use_DBI_dbExistsTable", FALSE, connection_options)) {
     return(DBI::dbExistsTable(db, table_name))
   }
   q <- paste0("SELECT * FROM ",
@@ -187,7 +187,7 @@ rq_colnames <- function(db, table_name,
 #'                    overwrite = TRUE,
 #'                    temporary = TRUE)
 #'   res <- d %.>%
-#'     extend_nse(.,
+#'     extend(.,
 #'                wc %:=% ifelse(w>1, "x", "y"),
 #'                wn %:=% ifelse(w>1, 1, 2),
 #'                xc %:=% ifelse(x>1, "x", "y"),
@@ -683,14 +683,14 @@ rq_connection_tests <- function(db,
   yc  <- NULL # don't appear unbound
   yn <- NULL # don't appear unbound
   local_sample <- d %.>%
-    extend_nse(.,
+    extend(.,
                wc %:=% ifelse(w>1, "x", "y"),
                wn %:=% ifelse(w>1, 1, 2),
                xc %:=% ifelse(x>1, "x", "y"),
                xn %:=% ifelse(x>1, 1, 2),
                yc %:=% ifelse(y=="a", "x", "y"),
                yn %:=% ifelse(y=="a", "x", "y")) %.>%
-    select_rows_nse(.,
+    select_rows(.,
                     want == 1) %.>%
     execute(db, .)
   logical_col <- vapply(colnames(local_sample),

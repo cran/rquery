@@ -14,7 +14,7 @@ select_rows_se(source, expr, env = parent.frame())
 \item{env}{environment to look for values in.}
 }
 \value{
-select columns node.
+select rows node.
 }
 \description{
 Make a select rows node.

@@ -5,6 +5,7 @@
 \title{Make a general SQL node.}
 \usage{
 sql_node(source, exprs, ..., mods = NULL, orig_columns = TRUE,
+  expand_braces = TRUE, translate_quotes = TRUE,
   env = parent.frame())
 }
 \arguments{
@@ -17,6 +18,10 @@ sql_node(source, exprs, ..., mods = NULL, orig_columns = TRUE,
 \item{mods}{SQL modifiers (GROUP BY, ORDER BY, and so on)}
 
 \item{orig_columns}{logical if TRUE select all original columns.}
+
+\item{expand_braces}{logical if TRUE use {col} notation to ensure {col} is a column name.}
+
+\item{translate_quotes}{logical if TRUE translate quotes to SQL choice (simple replacement, no escaping).}
 
 \item{env}{environment to look to.}
 }
@@ -78,6 +83,18 @@ if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quiet
     count_null_cols(., vars, "nnull")
   execute(my_db, op_tree2) \%.>\%
     print(.)
+
+  # sql_node also allows marking variable in quoted expressions
+  ops <- d \%.>\%
+     sql_node(., qae(sqrt_v1 = sqrt(.[v1])))
+  execute(my_db, ops) \%.>\%
+     print(.)
+  # marking variables allows for error-checking of column names
+  tryCatch({
+    ops <- d \%.>\%
+      sql_node(., qae(sqrt_v1 = sqrt(.[v1_misspellled])))
+    },
+    error = function(e) {print(e)})
 
   DBI::dbDisconnect(my_db)
 }

@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2018-11-06" />
+<meta name="date" content="2018-12-16" />
 
 <title>Query Generation</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Query Generation</h1>
 <h4 class="author"><em>John Mount</em></h4>
-<h4 class="date"><em>2018-11-06</em></h4>
+<h4 class="date"><em>2018-12-16</em></h4>
 
 
 
@@ -83,18 +83,18 @@ d &lt;-<span class="st"> </span><span class="kw">db_td</span>(my_db, <span class
 scale &lt;-<span class="st"> </span><span class="fl">0.237</span>
 
 dq &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span>
-<span class="st">  </span><span class="kw">extend_nse</span>(.,
-             probability <span class="op">:</span><span class="er">=</span>
-<span class="st">               </span><span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)<span class="op">/</span>
-<span class="st">               </span><span class="kw">sum</span>(<span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)),
-             count <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">count</span>(<span class="dv">1</span>),
-             <span class="dt">partitionby =</span> <span class="st">'subjectID'</span>) <span class="op">%.&gt;%</span>
-<span class="st">  </span><span class="kw">extend_nse</span>(.,
-             rank <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">rank</span>(),
-             <span class="dt">partitionby =</span> <span class="st">'subjectID'</span>,
-             <span class="dt">orderby =</span> <span class="kw">c</span>(<span class="st">'probability'</span>, <span class="st">'surveyCategory'</span>))  <span class="op">%.&gt;%</span>
+<span class="st">  </span><span class="kw">extend</span>(.,
+         probability <span class="op">:</span><span class="er">=</span>
+<span class="st">           </span><span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)<span class="op">/</span>
+<span class="st">           </span><span class="kw">sum</span>(<span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)),
+         count <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">count</span>(<span class="dv">1</span>),
+         <span class="dt">partitionby =</span> <span class="st">'subjectID'</span>) <span class="op">%.&gt;%</span>
+<span class="st">  </span><span class="kw">extend</span>(.,
+         rank <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">rank</span>(),
+         <span class="dt">partitionby =</span> <span class="st">'subjectID'</span>,
+         <span class="dt">orderby =</span> <span class="kw">c</span>(<span class="st">'probability'</span>, <span class="st">'surveyCategory'</span>))  <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">rename_columns</span>(., <span class="st">'diagnosis'</span> <span class="op">:</span><span class="er">=</span><span class="st"> 'surveyCategory'</span>) <span class="op">%.&gt;%</span>
-<span class="st">  </span><span class="kw">select_rows_nse</span>(., rank <span class="op">==</span><span class="st"> </span>count) <span class="op">%.&gt;%</span>
+<span class="st">  </span><span class="kw">select_rows</span>(., rank <span class="op">==</span><span class="st"> </span>count) <span class="op">%.&gt;%</span>
 <span class="st">  </span><span class="kw">select_columns</span>(., <span class="kw">c</span>(<span class="st">'subjectID'</span>, 
                       <span class="st">'diagnosis'</span>, 
                       <span class="st">'probability'</span>)) <span class="op">%.&gt;%</span>
@@ -160,13 +160,13 @@ dq &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span>
          `assessmentTotal`
         FROM
          `d` LIMIT 1000
-        ) tsql_72306050743290473183_0000000000
-       ) tsql_72306050743290473183_0000000001
-     ) tsql_72306050743290473183_0000000002
-    ) tsql_72306050743290473183_0000000003
+        ) tsql_18594148029532158415_0000000000
+       ) tsql_18594148029532158415_0000000001
+     ) tsql_18594148029532158415_0000000002
+    ) tsql_18594148029532158415_0000000003
     WHERE `rank` = `count`
-   ) tsql_72306050743290473183_0000000004
-  ) tsql_72306050743290473183_0000000005 ORDER BY `subjectID`</code></pre>
+   ) tsql_18594148029532158415_0000000004
+  ) tsql_18594148029532158415_0000000005 ORDER BY `subjectID`</code></pre>
 
 
 
