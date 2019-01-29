@@ -46,6 +46,9 @@ mk_td <- function(table_name, columns,
                   q_table_name = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::mk_td")
+  if(is.null(table_name)) {
+    stop("rquery::mk_td called with NULL table_name")
+  }
   if(is.null(q_table_name)) {
     q_table_name <- table_name
   }
@@ -271,6 +274,32 @@ to_sql.relop_table_source <- function (x,
                                        tnum = mk_tmp_name_source('tsql'),
                                        append_cr = TRUE,
                                        using = NULL) {
+  if(length(list(...))>0) {
+    stop("rquery::to_sql.relop_table_source unexpected arguments")
+  }
+  dispatch_to_sql_method(
+    method_name = "to_sql.relop_table_source",
+    x = x,
+    db = db,
+    limit = limit,
+    source_limit = source_limit,
+    indent_level = indent_level,
+    tnum = tnum,
+    append_cr = append_cr,
+    using = using)
+}
+
+
+to_sql_relop_table_source <- function(
+  x,
+  db,
+  ...,
+  limit = NULL,
+  source_limit = NULL,
+  indent_level = 0,
+  tnum = mk_tmp_name_source('tsql'),
+  append_cr = TRUE,
+  using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::to_sql.relop_table_source")
   prefix <- paste(rep(' ', indent_level), collapse = '')

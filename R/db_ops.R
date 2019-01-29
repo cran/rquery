@@ -1,8 +1,5 @@
 
 
-# wrap database or data system (Spark) adapters
-
-
 #' Execute a get query, typically a non-update that is supposed to return results.
 #'
 #' @param db database connection handle
@@ -15,18 +12,25 @@
 #'
 rq_get_query <- function(db, q) {
   # first shot- see if it is a db info with function overrriden
+  if(is.null(db)) {
+    stop("rquery::rq_get_query db was null")
+  }
+  connection <- db
   if("rquery_db_info" %in% class(db)) {
     f <- db$rq_get_query
     if(!is.null(f)) {
       return(f(db, q))
     }
-    db <- db$connection
+    connection <- db$connection
   }
-  # fall back to DBI
-  if(!requireNamespace("DBI", quietly = TRUE)) {
-    stop("rquery this function currently requires the DBI package")
+  if(is.null(connection)) {
+    stop("rquery::rq_get_query db$connection was null")
   }
-  DBI::dbGetQuery(db, q)
+  if(requireNamespace("DBI", quietly = TRUE)) {
+    # fall back to DBI
+    return(DBI::dbGetQuery(connection, q))
+  }
+  stop("rquery::rq_get_query no underlying implementation found (may need DBI)")
 }
 
 
@@ -41,7 +45,11 @@ rq_get_query <- function(db, q) {
 #' @export
 #'
 rq_execute <- function(db, q) {
+  if(is.null(db)) {
+    stop("rquery::rq_execute db was null")
+  }
   # first shot- see if it is a db info with function overrriden
+  connection <- db
   connection_options <- NULL
   if("rquery_db_info" %in% class(db)) {
     f <- db$rq_execute
@@ -49,16 +57,16 @@ rq_execute <- function(db, q) {
       return(f(db, q))
     }
     connection_options <- db$connection_options
-    db <- db$connection
+    connection <- db$connection
   }
-  if(!requireNamespace("DBI", quietly = TRUE)) {
-    stop("rquery this function currently requires the DBI package")
+  if(is.null(connection)) {
+    stop("rquery::rq_execute db$connection was null")
   }
   res <- NULL
-  if(getDBOption(db, "use_DBI_dbExecute", TRUE, connection_options)) {
-    res <- DBI::dbExecute(db, q)
+  if(getDBOption(db, "use_DBI_dbExecute", TRUE, connection_options) && requireNamespace("DBI", quietly = TRUE)) {
+    res <- DBI::dbExecute(connection, q)
   } else {
-    rq_get_query(db, q)
+    res <- rq_get_query(db, q)
   }
   res
 }
@@ -76,7 +84,11 @@ rq_execute <- function(db, q) {
 #' @export
 #'
 rq_table_exists <- function(db, table_name) {
-  # first shot- see if it is a db info with function overrriden\
+  if(is.null(db)) {
+    stop("rquery::rq_table_exists db was null")
+  }
+  # first shot- see if it is a db info with function overrriden
+  connection <- db
   connection_options <- NULL
   if("rquery_db_info" %in% class(db)) {
     f <- db$rq_table_exists
@@ -84,14 +96,14 @@ rq_table_exists <- function(db, table_name) {
       return(f(db, table_name))
     }
     connection_options <- db$connection_options
-    db <- db$connection
+    connection <- db$connection
   }
-  if(!requireNamespace("DBI", quietly = TRUE)) {
-    stop("rquery this function currently requires the DBI package")
+  if(is.null(connection)) {
+    stop("rquery::rq_table_exists db$connection was null")
   }
   # Would like to just return DBI::dbExistsTable(db, table_name)
-  if(getDBOption(db, "use_DBI_dbExistsTable", FALSE, connection_options)) {
-    return(DBI::dbExistsTable(db, table_name))
+  if(getDBOption(db, "use_DBI_dbExistsTable", FALSE, connection_options) && requireNamespace("DBI", quietly = TRUE)) {
+    return(DBI::dbExistsTable(connection, table_name))
   }
   q <- paste0("SELECT * FROM ",
               quote_identifier(db, table_name),
@@ -127,9 +139,13 @@ rq_table_exists <- function(db, table_name) {
 rq_colnames <- function(db, table_name,
                         ...,
                         qualifiers = NULL) {
+  if(is.null(db)) {
+    stop("rquery::rq_colnames db was null")
+  }
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::rq_colnames")
   # first shot- see if it is a db info with function overrriden
+  connection <- db
   connection_options <- NULL
   if("rquery_db_info" %in% class(db)) {
     f <- db$rq_colnames
@@ -137,15 +153,15 @@ rq_colnames <- function(db, table_name,
       return(f(db, table_name))
     }
     connection_options <- db$connection_options
-    db <- db$connection
+    connection <- db$connection
   }
-  if(!requireNamespace("DBI", quietly = TRUE)) {
-    stop("rquery this function currently requires the DBI package")
+  if(is.null(connection)) {
+    stop("rquery::rq_colnames db$connection was null")
   }
   # DBI::dbListFields fails intermitnently, and sometimes gives wrong results
   # filed as: https://github.com/tidyverse/dplyr/issues/3204
-  if(getDBOption(db, "use_DBI_dbListFields", FALSE, connection_options)) {
-    return(DBI::dbListFields(db, table_name))
+  if(getDBOption(db, "use_DBI_dbListFields", FALSE, connection_options) && requireNamespace("DBI", quietly = TRUE)) {
+    return(DBI::dbListFields(connection, table_name))
   }
   # below is going to have issues to to R-column name conversion!
   q <- paste0("SELECT * FROM ",
@@ -211,9 +227,13 @@ rq_coltypes <- function(db, table_name,
                          ...,
                          prefer_not_NA = FALSE,
                          force_check = FALSE) {
+  if(is.null(db)) {
+    stop("rquery::rq_coltypes db was null")
+  }
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::rq_coltypes")
   # first shot- see if it is a db info with function overrriden
+  connection <- db
   connection_options <- NULL
   if("rquery_db_info" %in% class(db)) {
     f <- db$rq_coltypes
@@ -223,10 +243,10 @@ rq_coltypes <- function(db, table_name,
                force_check = force_check))
     }
     connection_options <- db$connection_options
-    db <- db$connection
+    connection <- db$connection
   }
-  if(!requireNamespace("DBI", quietly = TRUE)) {
-    stop("rquery this function currently requires the DBI package")
+  if(is.null(connection)) {
+    stop("rquery::rq_coltypes db$connection was null")
   }
   # RSQLite returns logical type for any returned column
   # that is entirely NA, regardless of storage type.
@@ -265,23 +285,27 @@ rq_coltypes <- function(db, table_name,
 #' @export
 #'
 rq_remove_table <- function(db, table_name) {
+  if(is.null(db)) {
+    stop("rquery::rq_remove_table db was null")
+  }
   # first shot- see if it is a db info with function overrriden
   connection_options <- NULL
+  connection <- db
   if("rquery_db_info" %in% class(db)) {
     f <- db$rq_remove_table
     if(!is.null(f)) {
       return(f(db, table_name))
     }
     connection_options <- db$connection_options
-    db <- db$connection
+    connection <- db$connection
   }
-  if(!requireNamespace("DBI", quietly = TRUE)) {
-    stop("rquery this function currently requires the DBI package")
+  if(is.null(connection)) {
+    stop("rquery::rq_remove_table db$connection was null")
   }
   if(!is.null(table_name)) {
     if(rq_table_exists(db, table_name)) {
-      if(getDBOption(db, "use_DBI_dbRemoveTable", FALSE, connection_options)) {
-        DBI::dbRemoveTable(db, table_name)
+      if(getDBOption(db, "use_DBI_dbRemoveTable", FALSE, connection_options) && requireNamespace("DBI", quietly = TRUE)) {
+        DBI::dbRemoveTable(connection, table_name)
       } else {
         rq_execute(db,
                     paste("DROP TABLE",
@@ -339,34 +363,35 @@ rq_copy_to <- function(db, table_name, d,
                         overwrite = FALSE,
                         temporary = TRUE,
                         rowidcolumn = NULL) {
+  if(is.null(db)) {
+    stop("rquery::rq_copy_to db was null")
+  }
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::rq_copy_to")
   # first shot- see if it is a db info with function overrriden
   connection_options <- NULL
+  connection <- db
   if("rquery_db_info" %in% class(db)) {
     f <- db$rq_copy_to
     if(!is.null(f)) {
       return(f(db, table_name, d,
                overwrite = overwrite,
-               temporary = overwrite,
+               temporary = temporary,
                rowidcolumn = rowidcolumn))
     }
     connection_options <- db$connection_options
-    db <- db$connection
+    connection <- db$connection
   }
-  if(!requireNamespace("DBI", quietly = TRUE)) {
-    stop("rquery this function currently requires the DBI package")
+  if(is.null(connection)) {
+    stop("rquery::rq_copy_to db$connection was null")
   }
   if(!is.null(rowidcolumn)) {
     d[[rowidcolumn]] <- seq_len(nrow(d))
   }
-  # sparklyr 0.7.0 does not take overwrite or row.names arguments
-  if(overwrite) {
-    rq_remove_table(db, table_name)
-  }
   can_set_temp <- getDBOption(db, "control_temporary", NULL, connection_options)
   can_set_rownames <- getDBOption(db, "control_rownames", NULL, connection_options)
   if(connection_is_sparklyr(db)) {
+    # TODO: remove all of the Sparklyr special cases
     if(is.null(can_set_temp)) {
       can_set_temp <- FALSE
     }
@@ -380,15 +405,29 @@ rq_copy_to <- function(db, table_name, d,
   if(is.null(can_set_rownames)) {
     can_set_rownames <- TRUE
   }
+  if("rquery_db_info" %in% class(db) && (!db$is_dbi)) {
+    stop("rquery::rq_copy_to fell back to DBI methods for connection declared not DBI")
+  }
+  if(!requireNamespace("DBI", quietly = TRUE)) {
+    stop("rquery::rq_copy_to without per-connection implemention need DBI package")
+  }
+  if(rq_table_exists(db, table_name)) {
+    if(overwrite) {
+      # sparklyr 0.7.0 can't take overwrite argument
+      rq_remove_table(db, table_name)
+    } else {
+      stop(paste("rquery::rq_copy_to table", table_name, "exists and overwrite==FALSE"))
+    }
+  }
   if(can_set_temp) {
      if(can_set_rownames) {
-      DBI::dbWriteTable(db,
+      DBI::dbWriteTable(connection,
                         table_name,
                         d,
                         temporary = temporary,
                         row.names = FALSE)
     } else {
-      DBI::dbWriteTable(db,
+      DBI::dbWriteTable(connection,
                         table_name,
                         d,
                         temporary = temporary)
@@ -398,12 +437,12 @@ rq_copy_to <- function(db, table_name, d,
       warning("setting rquery::rq_copy_to setting temporary=FALSE")
     }
     if(can_set_rownames) {
-      DBI::dbWriteTable(db,
+      DBI::dbWriteTable(connection,
                         table_name,
                         d,
                         row.names = FALSE)
     } else {
-      DBI::dbWriteTable(db,
+      DBI::dbWriteTable(connection,
                         table_name,
                         d)
     }
@@ -422,16 +461,15 @@ rq_copy_to <- function(db, table_name, d,
 #' @export
 #'
 rq_nrow <- function(db, table_name) {
+  if(is.null(db)) {
+    stop("rquery::rq_nrow db was null")
+  }
   # first shot- see if it is a db info with function overrriden
   if("rquery_db_info" %in% class(db)) {
     f <- db$rq_nrow
     if(!is.null(f)) {
       return(f(db, table_name))
     }
-    db <- db$connection
-  }
-  if(!requireNamespace("DBI", quietly = TRUE)) {
-    stop("rquery this function currently requires the DBI package")
   }
   nrowst <- rq_get_query(
     db,
@@ -461,8 +499,14 @@ rq_nrow <- function(db, table_name) {
 #' @export
 #'
 rq_connection_name <- function(db) {
+  if(is.null(db)) {
+    return("NULL")
+  }
   if("rquery_db_info" %in% class(db)) {
     db <- db$connection
+  }
+  if(is.null(db)) {
+    return("NULL")
   }
   cls <- sort(class(db))
   cls <- paste(cls, collapse = "_")
@@ -494,6 +538,9 @@ rq_connection_name <- function(db) {
 #' @export
 #'
 rq_connection_advice <- function(db) {
+  if(is.null(db)) {
+    stop("rquery::rq_connection_advice db was null")
+  }
   cname <- rq_connection_name(db)
   opts <- list()
   opts[[paste(c("rquery", cname, "fn_name_map"), collapse = ".")]] <-
@@ -516,9 +563,12 @@ rq_connection_advice <- function(db) {
 
 
 brute_rm_table <- function(db, table_name) {
+  if(is.null(db)) {
+    stop("rquery::brute_rm_table db was null")
+  }
   tryCatch(
-    rq_get_query(db, paste("DROP TABLE",
-                              quote_identifier(db, table_name))),
+    rq_execute(db, paste("DROP TABLE",
+                         quote_identifier(db, table_name))),
     error = function(e) {e},
     warning = function(w) {w})
   NULL
@@ -555,16 +605,20 @@ rq_connection_tests <- function(db,
                                  ...,
                                  overrides = NULL,
                                  use_advice = TRUE) {
+  if(is.null(db)) {
+    stop("rquery::rq_connection_tests db was null")
+  }
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::rq_connection_tests")
+  connection <- db
   if("rquery_db_info" %in% class(db)) {
     if(!db$is_dbi) {
       stop("rquery::rq_connection_tests only applies to dbi handles")
     }
-    db <- db$connection
-  }
-  if(!requireNamespace("DBI", quietly = TRUE)) {
-    stop("rquery::rq_connection_tests this function currently requires the DBI package")
+    if(!requireNamespace("DBI", quietly = TRUE)) {
+      stop("rquery::rq_connection_tests requires the DBI package")
+    }
+    connection <- db$connection
   }
   cname <- rq_connection_name(db)
   opts <- list()
@@ -573,6 +627,7 @@ rq_connection_tests <- function(db,
   opts[[paste(c("rquery", cname, "use_DBI_dbExecute"), collapse = ".")]] <- FALSE
   opts[[paste(c("rquery", cname, "create_temporary"), collapse = ".")]] <- FALSE
   opts[[paste(c("rquery", cname, "control_temporary"), collapse = ".")]] <- FALSE
+  opts[[paste(c("rquery", cname, "control_temporary_view"), collapse = ".")]] <- FALSE
   opts[[paste(c("rquery", cname, "control_rownames"), collapse = ".")]] <- FALSE
   # Run config tests in addition to dealing with known cases
   obscure_name <- wrapr::mk_tmp_name_source("rq_test")()
@@ -581,7 +636,7 @@ rq_connection_tests <- function(db,
   # see if we can turn off rownames
   tryCatch(
     {
-      DBI::dbWriteTable(db,
+      DBI::dbWriteTable(connection,
                         obscure_name,
                         data.frame(x = 1),
                         row.names = FALSE)
@@ -593,7 +648,7 @@ rq_connection_tests <- function(db,
   # see if we can set temporary
   tryCatch(
     {
-      DBI::dbWriteTable(db,
+      DBI::dbWriteTable(connection,
                         obscure_name,
                         data.frame(x = 1),
                         temporary = TRUE)
@@ -603,23 +658,23 @@ rq_connection_tests <- function(db,
     warning = function(w) { w })
   brute_rm_table(db, obscure_name)
   # see if dbExists works
-  exists_prior <- DBI::dbExistsTable(db, obscure_name)
-  DBI::dbWriteTable(db,
+  exists_prior <- DBI::dbExistsTable(connection, obscure_name)
+  DBI::dbWriteTable(connection,
                     obscure_name,
                     data.frame(x = 1))
-  exists_after <- DBI::dbExistsTable(db, obscure_name)
+  exists_after <- DBI::dbExistsTable(connection, obscure_name)
   brute_rm_table(db, obscure_name)
-  exists_after2 <- DBI::dbExistsTable(db, obscure_name)
+  exists_after2 <- DBI::dbExistsTable(connection, obscure_name)
   opts[[paste(c("rquery", cname, "use_DBI_dbExistsTable"), collapse = ".")]] <-
     (!exists_prior) && exists_after && (!exists_after2)
   # see if DBI::dbRemoveTable works
-  DBI::dbWriteTable(db,
+  DBI::dbWriteTable(connection,
                     obscure_name,
                     data.frame(x = 1))
   tryCatch(
     {
-      DBI::dbRemoveTable(db, obscure_name)
-      DBI::dbWriteTable(db,
+      DBI::dbRemoveTable(connection, obscure_name)
+      DBI::dbWriteTable(connection,
                         obscure_name,
                         data.frame(x = 1))
       opts[[paste(c("rquery", cname, "use_DBI_dbRemoveTable"), collapse = ".")]] <- TRUE
@@ -628,12 +683,12 @@ rq_connection_tests <- function(db,
     warning = function(w) { w })
   # see if DBI::dbListFields works
   brute_rm_table(db, obscure_name)
-  DBI::dbWriteTable(db,
+  DBI::dbWriteTable(connection,
                     obscure_name,
                     data.frame(x = 1))
   tryCatch(
     {
-      flds <- DBI::dbListFields(db, obscure_name)
+      flds <- DBI::dbListFields(connection, obscure_name)
       opts[[paste(c("rquery", cname, "use_DBI_dbListFields"), collapse = ".")]] <-
         paste(flds, collapse = " ") == "x"
     },
@@ -642,20 +697,30 @@ rq_connection_tests <- function(db,
   # see if DBI::dbExecute works
   tryCatch(
     {
-      DBI::dbExecute(db, paste("DROP TABLE",
+      DBI::dbExecute(connection, paste("DROP TABLE",
                                obscure_name_q))
       opts[[paste(c("rquery", cname, "use_DBI_dbExecute"), collapse = ".")]] <- TRUE
     },
     error = function(e) { e },
     warning = function(w) { w })
   brute_rm_table(db, obscure_name)
-  # check on temporary
+  # check on temporary table
   tryCatch(
     {
-      DBI::dbGetQuery(db, paste("CREATE TEMPORARY TABLE",
+      DBI::dbGetQuery(connection, paste("CREATE TEMPORARY TABLE",
                                obscure_name_q,
                                "( x INT )"))
       opts[[paste(c("rquery", cname, "create_temporary"), collapse = ".")]] <- TRUE
+    },
+    error = function(e) { e },
+    warning = function(w) { w })
+  # check on temporary view
+  tryCatch(
+    {
+      DBI::dbGetQuery(connection, paste("CREATE TEMPORARY VIEW",
+                                        obscure_name_q,
+                                        "( x INT )"))
+      opts[[paste(c("rquery", cname, "control_temporary_view"), collapse = ".")]] <- TRUE
     },
     error = function(e) { e },
     warning = function(w) { w })
@@ -718,6 +783,8 @@ rq_connection_tests <- function(db,
 
 #' Get a database connection option.
 #'
+#' Note: we are moving away from global options to options in the DB handle.
+#'
 #' @param db database connection handle.
 #' @param optname character, single option name.
 #' @param default what to return if not set.
@@ -757,10 +824,35 @@ getDBOption <- function(db, optname, default,
 
 #' Set a database connection option.
 #'
+#' If db is of class rquery_db_info it sets the appropriate connection option, not the global state.
+#'
+#' @param db rquery_db_info instance
+#' @param optname character, single option name.
+#' @param val value to set
+#' @return db
+#'
+#' @export
+#'
+setDBOpt <- function(db, optname, val) {
+  if(!("rquery_db_info" %in% class(db))) {
+    stop("rquery::setDBOpt db must be of class rquery_db_info")
+  }
+  cname <- rq_connection_name(db)
+  key <- paste(c("rquery", cname, optname), collapse = ".")
+  db$connection_options[[key]] <- val
+  db
+}
+
+#' Set a database connection option.
+#'
+#'
+#' Note: we are moving away from global options to options in the DB handle.
+#' Prefer \code{\link{setDBOpt}}.
+#'
 #' @param db database connection handle.
 #' @param optname character, single option name.
 #' @param val value to set
-#' @return named list containing old value if any (invisible).
+#' @return original options value
 #'
 #' @export
 #'

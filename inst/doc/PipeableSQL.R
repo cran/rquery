@@ -216,7 +216,7 @@ ops <- td %.>%
     mods = "GROUP BY cust",
     orig_columns = F)
 
-cat(to_sql(ops, rquery::rquery_default_db_info))
+cat(to_sql(ops, rquery::rquery_default_db_info()))
 
 ## ----q2ex----------------------------------------------------------------
 library("rquery")
@@ -242,7 +242,7 @@ ops <- td %.>%
     mods = paste("GROUP BY", GROUP_COL),
     orig_columns = F)
 
-cat(to_sql(ops, rquery::rquery_default_db_info))
+cat(to_sql(ops, rquery::rquery_default_db_info()))
 
 ## ----cleanup, eval=run_vignette------------------------------------------
 options(old_o)

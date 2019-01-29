@@ -230,10 +230,36 @@ to_sql.relop_natural_join <- function (x,
                                        append_cr = TRUE,
                                        using = NULL) {
   if(length(list(...))>0) {
+    stop("rquery::to_sql.relop_natural_join unexpected arguments")
+  }
+  dispatch_to_sql_method(
+    method_name = "to_sql.relop_natural_join",
+    x = x,
+    db = db,
+    limit = limit,
+    source_limit = source_limit,
+    indent_level = indent_level,
+    tnum = tnum,
+    append_cr = append_cr,
+    using = using)
+}
+
+
+to_sql_relop_natural_join <- function(
+  x,
+  db,
+  ...,
+  limit = NULL,
+  source_limit = NULL,
+  indent_level = 0,
+  tnum = mk_tmp_name_source('tsql'),
+  append_cr = TRUE,
+  using = NULL) {
+  if(length(list(...))>0) {
     stop("unexpected arguments")
   }
   using <- unique(c(calc_used_relop_natural_join(x,
-                                        using=using),
+                                                 using=using),
                     x$by))
   cs1 <- column_names(x$source[[1]])
   cs2 <- column_names(x$source[[2]])
@@ -269,14 +295,14 @@ to_sql.relop_natural_join <- function (x,
   overlap <- c(x$by, intersect(aterms, bterms))
   prefix <- paste(rep(' ', indent_level), collapse = '')
   osql <- vapply(overlap,
-                   function(ci) {
-                     ciq <- quote_identifier(db, ci)
-                     paste0("COALESCE(",
-                            tabaq, ".", ciq,
-                            ", ",
-                            tabbq, ".", ciq,
-                            ") AS ", ciq)
-                   }, character(1))
+                 function(ci) {
+                   ciq <- quote_identifier(db, ci)
+                   paste0("COALESCE(",
+                          tabaq, ".", ciq,
+                          ", ",
+                          tabbq, ".", ciq,
+                          ") AS ", ciq)
+                 }, character(1))
   asql <- vapply(setdiff(aterms, overlap),
                  function(ci) {
                    ciq <- quote_identifier(db, ci)
@@ -324,3 +350,4 @@ to_sql.relop_natural_join <- function (x,
     subsqlb_list[-length(subsqlb_list)],
     q)
 }
+

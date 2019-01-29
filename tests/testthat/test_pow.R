@@ -2,8 +2,8 @@ library("rquery")
 
 context("pow")
 
-test_that("test_pw: Works As Expected", {
-  my_db <- rquery_default_db_info
+test_that("test_pow: Works As Expected", {
+  my_db <- rquery_default_db_info()
 
   td <- mk_td("data", "x")
   ops <- extend(td, xsq = x^2)

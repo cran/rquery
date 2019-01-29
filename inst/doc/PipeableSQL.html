@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2018-12-16" />
+<meta name="date" content="2019-01-29" />
 
 <title>Pipeable SQL</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Pipeable SQL</h1>
 <h4 class="author"><em>John Mount</em></h4>
-<h4 class="date"><em>2018-12-16</em></h4>
+<h4 class="date"><em>2019-01-29</em></h4>
 
 
 
@@ -109,6 +109,9 @@ dbopts &lt;-<span class="st"> </span><span class="kw">rq_connection_tests</span>
 ## 
 ## $rquery.SQLiteConnection.control_temporary
 ## [1] TRUE
+## 
+## $rquery.SQLiteConnection.control_temporary_view
+## [1] FALSE
 ## 
 ## $rquery.SQLiteConnection.control_rownames
 ## [1] TRUE
@@ -494,7 +497,7 @@ td &lt;-<span class="st"> </span><span class="kw">mk_td</span>(<span class="st">
     <span class="dt">mods =</span> <span class="st">&quot;GROUP BY cust&quot;</span>,
     <span class="dt">orig_columns =</span> F)
 
-<span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, rquery<span class="op">::</span>rquery_default_db_info))</code></pre></div>
+<span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, rquery<span class="op">::</span><span class="kw">rquery_default_db_info</span>()))</code></pre></div>
 <pre><code>## SELECT
 ##  max( &quot;trans_date&quot; ) AS &quot;max_date&quot;
 ## FROM (
@@ -533,7 +536,7 @@ ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span>
     <span class="dt">mods =</span> <span class="kw">paste</span>(<span class="st">&quot;GROUP BY&quot;</span>, GROUP_COL),
     <span class="dt">orig_columns =</span> F)
 
-<span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, rquery<span class="op">::</span>rquery_default_db_info))</code></pre></div>
+<span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, rquery<span class="op">::</span><span class="kw">rquery_default_db_info</span>()))</code></pre></div>
 <pre><code>## SELECT
 ##  max( &quot;trans_date&quot; ) AS &quot;max_trans_date&quot;
 ## FROM (

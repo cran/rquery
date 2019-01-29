@@ -390,6 +390,32 @@ to_sql.relop_theta_join <- function (x,
                                      append_cr = TRUE,
                                      using = NULL) {
   if(length(list(...))>0) {
+    stop("rquery::to_sql.relop_theta_join unexpected arguments")
+  }
+  dispatch_to_sql_method(
+    method_name = "to_sql.relop_theta_join",
+    x = x,
+    db = db,
+    limit = limit,
+    source_limit = source_limit,
+    indent_level = indent_level,
+    tnum = tnum,
+    append_cr = append_cr,
+    using = using)
+}
+
+
+to_sql_relop_theta_join <- function(
+  x,
+  db,
+  ...,
+  limit = NULL,
+  source_limit = NULL,
+  indent_level = 0,
+  tnum = mk_tmp_name_source('tsql'),
+  append_cr = TRUE,
+  using = NULL) {
+  if(length(list(...))>0) {
     stop("unexpected arguments")
   }
   # re-quote expr
@@ -427,10 +453,10 @@ to_sql.relop_theta_join <- function (x,
   }
   prefix <- paste(rep(' ', indent_level), collapse = '')
   cseta <- prepColumnNames(db, taba, c1,
-                          x$cmap[['a']])
+                           x$cmap[['a']])
   ctermsa <- paste(cseta, collapse = paste0(",\n", prefix, " "))
   csetb <- prepColumnNames(db, tabb, c2,
-                          x$cmap[['b']])
+                           x$cmap[['b']])
   ctermsb <- paste(csetb, collapse = paste0(",\n", prefix, " "))
   q <- paste0(prefix, "SELECT\n",
               prefix, " ", ctermsa, ",\n",
@@ -457,3 +483,69 @@ to_sql.relop_theta_join <- function (x,
     subsqlb_list[-length(subsqlb_list)],
     q)
 }
+
+
+to_sql_relop_unionall <- function(
+  x,
+  db,
+  ...,
+  limit = NULL,
+  source_limit = NULL,
+  indent_level = 0,
+  tnum = mk_tmp_name_source('tsql'),
+  append_cr = TRUE,
+  using = NULL) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::to_sql.relop_unionall")
+  qlimit = limit
+  if(!getDBOption(db, "use_pass_limit", TRUE)) {
+    qlimit = NULL
+  }
+  subsql_list <- lapply(
+    x$source,
+    function(si) {
+      to_sql(si,
+             db = db,
+             limit = qlimit,
+             source_limit = source_limit,
+             indent_level = indent_level + 1,
+             tnum = tnum,
+             append_cr = FALSE,
+             using = using)
+    })
+  sql_list <- NULL
+  inputs <- character(0)
+  for(sil in subsql_list) {
+    sql_list <- c(sql_list, sil[-length(sil)])
+    inputs <- c(inputs, sil[length(sil)])
+  }
+  tmps <- vapply(seq_len(length(inputs)),
+                 function(i) {
+                   tnum()
+                 }, character(1))
+  # allows us to ensure column order
+  cols <- x$cols
+  if(length(using)>0) {
+    cols <- intersect(cols, using)
+  }
+  cols <- vapply(cols,
+                 function(ci) {
+                   quote_identifier(db, ci)
+                 }, character(1))
+  cols <- paste(cols, collapse = ", ")
+  inputs <- paste("SELECT ", cols, " FROM ( ", inputs, ")", tmps)
+  q <- paste(inputs, collapse = " UNION ALL ")
+  if(!is.null(x$limit)) {
+    limit <- min(limit, x$limit)
+  }
+  if(!is.null(limit)) {
+    q <- paste(q, "LIMIT",
+               format(ceiling(limit), scientific = FALSE))
+  }
+  if(append_cr) {
+    q <- paste0(q, "\n")
+  }
+  c(sql_list, q)
+}
+
+

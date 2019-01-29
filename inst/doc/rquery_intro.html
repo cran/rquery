@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2018-12-16" />
+<meta name="date" content="2019-01-29" />
 
 <title>rquery Introduction</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">rquery Introduction</h1>
 <h4 class="author"><em>John Mount, Win-Vector LLC</em></h4>
-<h4 class="date"><em>2018-12-16</em></h4>
+<h4 class="date"><em>2019-01-29</em></h4>
 
 
 
@@ -105,6 +105,9 @@ dbopts &lt;-<span class="st"> </span><span class="kw">rq_connection_tests</span>
 ## 
 ## $rquery.SQLiteConnection.control_temporary
 ## [1] TRUE
+## 
+## $rquery.SQLiteConnection.control_temporary_view
+## [1] FALSE
 ## 
 ## $rquery.SQLiteConnection.control_rownames
 ## [1] TRUE
@@ -163,7 +166,7 @@ d &lt;-<span class="st"> </span><span class="kw">db_td</span>(db, <span class="s
 <span class="st">  </span><span class="kw">cat</span>(.)</code></pre></div>
 <pre><code>## SELECT
 ##  `v`,
-##  ( CASE WHEN ( ( `v` ) IS NULL ) THEN ( 1 ) WHEN NOT ( ( `v` ) IS NULL ) THEN ( 0 ) ELSE NULL END )  AS `was_na`
+##  ( CASE WHEN ( ( ( `v` ) IS NULL ) ) THEN ( 1 ) WHEN NOT ( ( ( `v` ) IS NULL ) ) THEN ( 0 ) ELSE NULL END )  AS `was_na`
 ## FROM (
 ##  SELECT
 ##   `v`

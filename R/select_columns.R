@@ -109,6 +109,33 @@ to_sql.relop_select_columns <- function (x,
                                          append_cr = TRUE,
                                          using = NULL) {
   if(length(list(...))>0) {
+    stop("rquery::to_sql.relop_select_columns unexpected arguments")
+  }
+  dispatch_to_sql_method(
+    method_name = "to_sql.relop_select_columns",
+    x = x,
+    db = db,
+    limit = limit,
+    source_limit = source_limit,
+    indent_level = indent_level,
+    tnum = tnum,
+    append_cr = append_cr,
+    using = using)
+}
+
+
+
+to_sql_relop_select_columns <- function(
+  x,
+  db,
+  ...,
+  limit = NULL,
+  source_limit = NULL,
+  indent_level = 0,
+  tnum = mk_tmp_name_source('tsql'),
+  append_cr = TRUE,
+  using = NULL) {
+  if(length(list(...))>0) {
     stop("unexpected arguments")
   }
   using <- calc_using_relop_select_columns(x,
@@ -133,11 +160,11 @@ to_sql.relop_select_columns <- function (x,
   tab <- tnum()
   prefix <- paste(rep(' ', indent_level), collapse = '')
   q <- paste0(prefix, "SELECT\n",
-         prefix, " ", paste(cols, collapse = paste0(",\n", prefix, " ")), "\n",
-         prefix, "FROM (\n",
-         subsql, "\n",
-         prefix, ") ",
-         tab)
+              prefix, " ", paste(cols, collapse = paste0(",\n", prefix, " ")), "\n",
+              prefix, "FROM (\n",
+              subsql, "\n",
+              prefix, ") ",
+              tab)
   if(!is.null(limit)) {
     q <- paste(q, "LIMIT",
                format(ceiling(limit), scientific = FALSE))

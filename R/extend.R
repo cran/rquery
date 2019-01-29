@@ -394,6 +394,31 @@ to_sql.relop_extend <- function (x,
                                  tnum = mk_tmp_name_source('tsql'),
                                  append_cr = TRUE,
                                  using = NULL) {
+  if(length(list(...))>0) {
+    stop("rquery::to_sql.relop_extend unexpected arguments")
+  }
+  dispatch_to_sql_method(
+    method_name = "to_sql.relop_extend",
+    x = x,
+    db = db,
+    limit = limit,
+    source_limit = source_limit,
+    indent_level = indent_level,
+    tnum = tnum,
+    append_cr = append_cr,
+    using = using)
+}
+
+to_sql_relop_extend <- function(
+  x,
+  db,
+  ...,
+  limit = NULL,
+  source_limit = NULL,
+  indent_level = 0,
+  tnum = mk_tmp_name_source('tsql'),
+  append_cr = TRUE,
+  using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::to_sql.relop_extend")
   # re-quote expr
@@ -409,7 +434,7 @@ to_sql.relop_extend <- function (x,
   re_assignments <- unpack_assignments(x$source[[1]], re_quoted)
   # work on query
   using_incoming <- calc_used_relop_extend(x,
-                                  using = using)
+                                           using = using)
   qlimit = limit
   if(!getDBOption(db, "use_pass_limit", TRUE)) {
     qlimit = NULL
@@ -478,7 +503,7 @@ to_sql.relop_extend <- function (x,
   }
   tab <- tnum()
   q <- paste0(prefix, "SELECT\n",
-         prefix, " ", paste(c(cols, derived), collapse = paste0(",\n", prefix, " ")))
+              prefix, " ", paste(c(cols, derived), collapse = paste0(",\n", prefix, " ")))
   q <- paste0(q, "\n",
               prefix, "FROM (\n",
               subsql, "\n",
@@ -492,4 +517,3 @@ to_sql.relop_extend <- function (x,
   }
   c(subsql_list[-length(subsql_list)], q)
 }
-

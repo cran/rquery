@@ -25,7 +25,19 @@
 materialize_sql_statement <- function(db, sql, table_name,
                                       ...,
                                       temporary = FALSE) {
-  # TODO: put in more per-connection options here (including partion controls)
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery:::materialize_sql_statement")
+  # check for a per-database implementation
+  if("rquery_db_info" %in% class(db)) {
+    f <- db[["materialize_sql_statement"]]
+    if(!is.null(f)) {
+      return(f(db = db,
+               sql = sql,
+               table_name = table_name,
+               temporary = temporary))
+    }
+  }
+  # work on the general case
   if(isTRUE(temporary)) {
     create_temp <- getDBOption(db, "create_temporary", NULL)
     if(is.null(create_temp)) {
@@ -42,8 +54,7 @@ materialize_sql_statement <- function(db, sql, table_name,
   }
   storage_control <- getDBOption(db, "create_options", "")
   sqlc <- paste("CREATE",
-                ifelse(temporary, "TEMPORARY ", ""),
-                "TABLE",
+                ifelse(temporary, "TEMPORARY TABLE", "TABLE"),
                 quote_identifier(db, table_name),
                 storage_control,
                 "AS",
@@ -57,7 +68,7 @@ materialize_sql_statement <- function(db, sql, table_name,
 #' that can be applied to relop trees, not as a component to place
 #' in pipelines.
 #'
-#' @param db database connecton handle.
+#' @param db database connecton (rquery_db_info class or DBI connections preferred) handle.
 #' @param optree relop operation tree.
 #' @param table_name character, name of table to create.
 #' @param ... force later arguments to bind by name.
@@ -65,7 +76,6 @@ materialize_sql_statement <- function(db, sql, table_name,
 #' @param source_limit numeric if not NULL limit sources to this many rows.
 #' @param overwrite logical if TRUE drop an previous table.
 #' @param temporary logical if TRUE try to create a temporary table.
-#' @param precheck logical if TRUE precheck existence of table and columns.
 #' @param sql character, pre-rendered SQL matching optree and options- should not be set by user code.
 #' @return table description
 #'
@@ -81,20 +91,11 @@ materialize_sql_statement <- function(db, sql, table_name,
 #'                    temporary = TRUE, overwrite = TRUE)
 #'   optree <- extend_se(d, c("v" %:=% "AUC + R2", "x" %:=% "pmax(AUC,v)"))
 #'   cat(format(optree))
-#'   res <- materialize(my_db, optree, "example", precheck = TRUE)
+#'   res <- materialize(my_db, optree, "example")
 #'   cat(format(res))
 #'   sql <- to_sql(res, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
-#'
-#'   # extra example, table that doesn't match declared structure
-#'   rq_copy_to(my_db, 'd',
-#'               data.frame(z = 1:5),
-#'               temporary = TRUE, overwrite = TRUE)
-#'   tryCatch(
-#'      materialize(my_db, optree, "example", precheck = TRUE),
-#'      error = function(e) { as.character(e) }) %.>%
-#'      print(.)
 #'
 #'   DBI::dbDisconnect(my_db)
 #' }
@@ -109,17 +110,16 @@ materialize_impl <- function(db,
                              source_limit = NULL,
                              overwrite = TRUE,
                              temporary = FALSE,
-                             precheck = FALSE,
                              sql = NULL) {
-  wrapr::stop_if_dot_args(substitute(list(...)), "rquery::materialize")
+  wrapr::stop_if_dot_args(substitute(list(...)), "rquery:::materialize_impl")
   if(!("relop" %in% class(optree))) {
-    stop("rquery::materialize expect optree to be of class relop")
+    stop("rquery:::materialize_impl expect optree to be of class relop")
   }
   if("relop" %in% class(db)) {
-    stop("rquery::materialize_impl db can not be a relop tree (should be a database handle)")
+    stop("rquery:::materialize_impl db can not be a relop tree (should be a database handle)")
   }
   if(is.environment(db)) {
-    stop("rquery::materialize_impl db can not be an environment (should be a database handle)")
+    stop("rquery:::materialize_impl db can not be an environment (should be a database handle)")
   }
 
   if(!is.null(sql)) {
@@ -135,17 +135,28 @@ materialize_impl <- function(db,
     return(NULL)
   }
   if(!is.character(sql_list[[1]])) {
-    stop("rquery::materialize first step must be SQL")
+    stop("rquery:::materialize_impl first step must be SQL")
   }
   if(!is.character(sql_list[[n_steps]])) {
-    stop("rquery::materialize last step must be SQL")
+    stop("rquery:::materialize_impl last step must be SQL")
   }
   if(n_steps>=2) {
     for(ii in seq_len(n_steps-1)) {
       if((!is.character(sql_list[[ii]]))&&
          (!is.character(sql_list[[ii+1]]))) {
-        stop("rquery::materialize can not have two non-SQL sub-steps in a row")
+        stop("rquery:::materialize_impl can not have two non-SQL sub-steps in a row")
       }
+    }
+  }
+  # check for producing the same table twice
+  outgoing <- character(0)
+  for(ii in seq_len(n_steps)) {
+    sqli <- sql_list[[ii]]
+    if(!is.character(sqli)) {
+      if(sqli$outgoing_table_name %in% outgoing) {
+        stop("rquery:::materialize_impl repeated outgoing temp table")
+      }
+      outgoing <- c(outgoing, sqli$outgoing_table_name)
     }
   }
   # get list of temporary intermediates
@@ -159,26 +170,6 @@ materialize_impl <- function(db,
     }
   }
   temp_intermediate_tables <- sort(unique(temp_intermediate_tables))
-  if(precheck) {
-    # check we have all tables and columns we need to calculate
-    needs <- columns_used(optree)
-    for(ni in names(needs)) {
-      if(!(ni %in% temp_intermediate_tables)) {
-        col_needs <- needs[[ni]]
-        if(!rq_table_exists(db, ni)) {
-          stop(paste("rquery::materialize missing required table:", ni))
-        }
-        cols_have <- rq_colnames(db, ni)
-        missed <- setdiff(col_needs, cols_have)
-        if(length(missed)>0) {
-          stop(paste("rquery::materialize table",
-                     ni,
-                     "missing required columns:",
-                     paste(missed, collapse = ", ")))
-        }
-      }
-    }
-  }
   # check/clear final result
   if(rq_table_exists(db, table_name)) {
     if(overwrite) {
@@ -204,7 +195,6 @@ materialize_impl <- function(db,
                       stringsAsFactors = FALSE)
   notes$start_time[seq_len(n_steps)] <- NA
   notes$end_time[seq_len(n_steps)] <- NA
-  to_clear <- NULL
   if(n_steps>=2) {
     # do the work on all but the last node
     for(ii in seq_len(n_steps-1)) {
@@ -214,15 +204,11 @@ materialize_impl <- function(db,
         notes$node[[ii]] <- "sql"
         notes$sql[[ii]] <- sqli
         rq_execute(db, sqli)
-        if(!is.null(to_clear)) {
-          rq_remove_table(db, to_clear)
-          to_clear <- NULL
-        }
       } else {
+        notes$node[[ii]] <- sqli$display_form
+        notes$incoming_table_name[[ii]] <- sqli$incoming_table_name
+        notes$outgoing_table_name[[ii]] <- sqli$outgoing_table_name
         if(!is.null(sqli$f)) {
-          notes$node[[ii]] <- sqli$display_form
-          notes$incoming_table_name[[ii]] <- sqli$incoming_table_name
-          notes$outgoing_table_name[[ii]] <- sqli$outgoing_table_name
           if(length(formals(sqli$f))>=4) {
             sqli$f(db,
                    sqli$incoming_table_name,
@@ -234,19 +220,6 @@ materialize_impl <- function(db,
                    sqli$incoming_table_name,
                    sqli$outgoing_table_name)
           }
-          rq_remove_table(db, sqli$incoming_table_name)
-          if((!is.null(to_clear)) &&
-             (to_clear!=sqli$outgoing_table_name)) {
-            rq_remove_table(db, to_clear)
-          }
-          to_clear <- sqli$outgoing_table_name
-        } else {
-          if((!is.null(to_clear)) &&
-             (to_clear!=sqli$outgoing_table_name)) {
-            rq_remove_table(db, to_clear)
-            to_clean <- NULL
-          }
-          to_clear <- sqli$outgoing_table_name
         }
       }
       notes$end_time[[ii]] <- Sys.time()
@@ -271,9 +244,9 @@ materialize_impl <- function(db,
   sqlc <- materialize_sql_statement(db, sql, table_name,
                                     temporary = temporary)
   rq_execute(db, sqlc)
-  if(!is.null(to_clear)) {
-    rq_remove_table(db, to_clear)
-    to_clear <- NULL
+  # clear intermediates
+  for(ti in temp_intermediate_tables) {
+    rq_remove_table(db, ti)
   }
   res <- db_td(db, table_name)
   notes$end_time[[n_steps]] <- Sys.time()
@@ -287,7 +260,7 @@ materialize_impl <- function(db,
 #' that can be applied to relop trees, not as a component to place
 #' in pipelines.
 #'
-#' @param db database connecton.
+#' @param db database connecton (rquery_db_info class or DBI connections preferred).
 #' @param optree relop operation tree.
 #' @param table_name character, name of table to create.
 #' @param ... force later arguments to bind by name.
@@ -295,7 +268,6 @@ materialize_impl <- function(db,
 #' @param source_limit numeric if not NULL limit sources to this many rows.
 #' @param overwrite logical if TRUE drop an previous table.
 #' @param temporary logical if TRUE try to create a temporary table.
-#' @param precheck logical if TRUE precheck existence of table and columns.
 #' @return table description
 #'
 #' @seealso \code{\link{db_td}}, \code{\link{execute}}, \code{\link{to_sql}}, \code{\link{rq_copy_to}}, \code{\link{mk_td}}
@@ -310,20 +282,11 @@ materialize_impl <- function(db,
 #'                    temporary = TRUE, overwrite = TRUE)
 #'   optree <- extend_se(d, c("v" %:=% "AUC + R2", "x" %:=% "pmax(AUC,v)"))
 #'   cat(format(optree))
-#'   res <- materialize(my_db, optree, "example", precheck = TRUE)
+#'   res <- materialize(my_db, optree, "example")
 #'   cat(format(res))
 #'   sql <- to_sql(res, my_db)
 #'   cat(sql)
 #'   print(DBI::dbGetQuery(my_db, sql))
-#'
-#'   # extra example, table that doesn't match declared structure
-#'   rq_copy_to(my_db, 'd',
-#'               data.frame(z = 1:5),
-#'               temporary = TRUE, overwrite = TRUE)
-#'   tryCatch(
-#'      materialize(my_db, optree, "example", precheck = TRUE),
-#'      error = function(e) { as.character(e) }) %.>%
-#'      print(.)
 #'
 #'   DBI::dbDisconnect(my_db)
 #' }
@@ -337,8 +300,7 @@ materialize <- function(db,
                         limit = NULL,
                         source_limit = NULL,
                         overwrite = TRUE,
-                        temporary = FALSE,
-                        precheck = FALSE) {
+                        temporary = FALSE) {
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::materialize")
   materialize_impl(db = db,
                    optree = optree,
@@ -346,8 +308,7 @@ materialize <- function(db,
                    limit = limit,
                    source_limit = source_limit,
                    overwrite = overwrite,
-                   temporary = temporary,
-                   precheck = precheck)
+                   temporary = temporary)
 }
 
 
@@ -356,7 +317,7 @@ materialize <- function(db,
 #'
 #' Run the data query with a CREATE TABLE AS .
 #'
-#' @param db DBI connecton.
+#' @param db database connecton (rquery_db_info class or DBI connections preferred).
 #' @param sql character, user supplied SQL statement.
 #' @param table_name character, name of table to create.
 #' @param ... force later arguments to bind by name.
@@ -380,6 +341,8 @@ materialize <- function(db,
 #'
 #'   DBI::dbDisconnect(my_db)
 #' }
+#'
+#' @keywords internal
 #'
 #' @export
 #'
@@ -418,14 +381,13 @@ NULL
 #'
 #' Run the data query.
 #'
-#' @param source data.frame or DBI connection.
+#' @param source data.frame or database connecton (rquery_db_info class or DBI connections preferred).
 #' @param optree relop operation tree.
 #' @param ... force later arguments to bind by name.
 #' @param limit numeric, if set limit to this many rows during data bring back (not used when landing a table).
 #' @param source_limit numeric if not NULL limit sources to this many rows.
 #' @param overwrite logical if TRUE drop an previous table.
 #' @param temporary logical if TRUE try to create a temporary table.
-#' @param precheck logical if TRUE precheck existence of table and columns.
 #' @param allow_executor logical if TRUE allow any executor set as rquery.rquery_executor to be used.
 #' @param temp_source temporary name generator.
 #' @param env environment to work in.
@@ -466,7 +428,6 @@ execute <- function(source,
                     source_limit = NULL,
                     overwrite = TRUE,
                     temporary = TRUE,
-                    precheck = FALSE,
                     allow_executor = TRUE,
                     temp_source = mk_tmp_name_source('rquery_ex'),
                     env = parent.frame()) {
@@ -493,15 +454,12 @@ execute <- function(source,
   if(isS4(source) && methods::is(source, "UnaryFn")) {
     stop("rquery::execute attempt to use a wrapr::UnaryFn as a data source, please use rqdatatable::rq_fn_wrapper() to wrap the relop or rqdatatable::rq_ufn() to wrap the UnaryFn")
   }
-  db <- source # assume it is a DBI connection (as data.frame and DBI connections should not share a base class, and do not as of 5-11-2018)
+  db <- source # assume it is a database connection (as data.frame and rquery_db_info and DBI connections should not share a base class, and do not as of 5-11-2018)
   # fast SQL only path
   sql <- to_sql(optree, db,
                 limit = limit,
                 source_limit = source_limit)
   if(length(sql)==1) {
-    if(precheck) {
-      warning("rquery::execute ignoring precheck=TRUE on direct SQL commmand")
-    }
     res <- rq_get_query(db, sql)
     return(res)
   }
@@ -512,7 +470,6 @@ execute <- function(source,
                           source_limit = source_limit,
                           overwrite = overwrite,
                           temporary = temporary,
-                          precheck = precheck,
                           sql = sql)
   res <- ref
   # if last step is order we have to re-do that

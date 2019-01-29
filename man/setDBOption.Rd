@@ -14,8 +14,9 @@ setDBOption(db, optname, val)
 \item{val}{value to set}
 }
 \value{
-named list containing old value if any (invisible).
+original options value
 }
 \description{
-Set a database connection option.
+Note: we are moving away from global options to options in the DB handle.
+Prefer \code{\link{setDBOpt}}.
 }

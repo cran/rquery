@@ -142,10 +142,9 @@ sql_node.relop <- function(source, exprs,
   # translate {Q} into as.name("Q")
   exprs <- as.list(exprs)
   if(expand_braces) {
-    # TODO: switch to wrapr version
-    exprs <- split_at_brace_pairs_rq(exprs, open_symbol = ".[", close_symbol = "]")
+    exprs <- wrapr::split_at_brace_pairs(exprs, open_symbol = ".[", close_symbol = "]")
     exprs <- lapply(exprs, promote_brace_to_var, open_symbol = ".[", close_symbol = "]")
-    mods <- split_at_brace_pairs_rq(mods, open_symbol = ".[", close_symbol = "]")
+    mods <- wrapr::split_at_brace_pairs(mods, open_symbol = ".[", close_symbol = "]")
     mods <- promote_brace_to_var(mods, open_symbol = ".[", close_symbol = "]")
   }
   # look for names used
@@ -234,7 +233,7 @@ format_node.relop_sql <- function(node) {
   modsstr <- ""
   indent_sep <- "\n             "
   if(length(node$mods)>0) {
-    modsql <- prep_sql_toks(rquery_default_db_info, node$mods,
+    modsql <- prep_sql_toks(rquery_default_db_info(), node$mods,
                             translate_quotes = FALSE, qsym = '"')
     modsstr <- paste(";\n          ", modsql)
   }
@@ -292,6 +291,31 @@ to_sql.relop_sql <- function (x,
                               tnum = mk_tmp_name_source('tsql'),
                               append_cr = TRUE,
                               using = NULL) {
+  if(length(list(...))>0) {
+    stop("rquery::to_sql.relop_sql unexpected arguments")
+  }
+  dispatch_to_sql_method(
+    method_name = "to_sql.relop_sql",
+    x = x,
+    db = db,
+    limit = limit,
+    source_limit = source_limit,
+    indent_level = indent_level,
+    tnum = tnum,
+    append_cr = append_cr,
+    using = using)
+}
+
+to_sql_relop_sql <- function(
+  x,
+  db,
+  ...,
+  limit = NULL,
+  source_limit = NULL,
+  indent_level = 0,
+  tnum = mk_tmp_name_source('tsql'),
+  append_cr = TRUE,
+  using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)), "to_sql.relop_sql")
   colsA <- vapply(names(x$exprs),
                   function(ci) {
@@ -360,5 +384,4 @@ to_sql.relop_sql <- function (x,
   }
   c(subsql_list[-length(subsql_list)], q)
 }
-
 

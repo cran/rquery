@@ -7,7 +7,8 @@
 #' both the incoming and outgoing tables, so do not point them
 #' to non-temporary structures.  Also they tend to land all columns
 #' (losing narrowing optimization),
-#' so can be expensive and should be used sparingly.
+#' so can be expensive and should be used sparingly.  Finally their
+#' result can only be used once in a pipeline (else they will try to clobber their own result).
 #'
 #' @param source source to work from (data.frame or relop node)
 #' @param ... force later arguments to bind by name
@@ -24,7 +25,7 @@
 #' @param env environment to look to.
 #' @return non-sql node.
 #'
-#' @seealso \code{\link{rsummary_node}}, \code{\link{quantile_node}}, \code{\link{materialize_node}}
+#' @seealso \code{\link{rsummary_node}}, \code{\link{quantile_node}}
 #'
 #' @export
 #'
@@ -85,7 +86,8 @@ non_sql_node.relop <- function(source,
             overwrite = TRUE,
             src_cols = src_cols,
             temporary = temporary,
-            check_result_details = check_result_details)
+            check_result_details = check_result_details,
+            allow_narrowing = (length(columns_produced)==0) && orig_columns)
   r <- relop_decorate("relop_non_sql", r)
   r
 }
@@ -148,8 +150,11 @@ format_node.relop_non_sql <- function(node) {
 #' @export
 columns_used.relop_non_sql <- function (x, ...,
                                         using = NULL) {
+  if(!x$allow_narrowing) {
+    using <- NULL
+  }
   columns_used(x$source[[1]],
-               using = NULL)
+               using = using)
 }
 
 
@@ -163,13 +168,43 @@ to_sql.relop_non_sql <- function (x,
                                   tnum = mk_tmp_name_source('tsql'),
                                   append_cr = TRUE,
                                   using = NULL) {
+  if(length(list(...))>0) {
+    stop("rquery::to_sql.relop_non_sql unexpected arguments")
+  }
+  dispatch_to_sql_method(
+    method_name = "to_sql.relop_non_sql",
+    x = x,
+    db = db,
+    limit = limit,
+    source_limit = source_limit,
+    indent_level = indent_level,
+    tnum = tnum,
+    append_cr = append_cr,
+    using = using)
+}
+
+
+
+to_sql_relop_non_sql <- function(
+  x,
+  db,
+  ...,
+  limit = NULL,
+  source_limit = NULL,
+  indent_level = 0,
+  tnum = mk_tmp_name_source('tsql'),
+  append_cr = TRUE,
+  using = NULL) {
+  if(!x$allow_narrowing) {
+    using <- NULL
+  }
   subsql <- to_sql(x$source[[1]],
-                    db = db,
-                    source_limit = source_limit,
-                    indent_level = indent_level + 1,
-                    tnum = tnum,
-                    append_cr = append_cr,
-                    using = NULL)
+                   db = db,
+                   source_limit = source_limit,
+                   indent_level = indent_level + 1,
+                   tnum = tnum,
+                   append_cr = append_cr,
+                   using = using)
   nsubsql <- length(subsql)
   # non-SQL nodes must always be surrounded by SQL on both sides
   step1 <- materialize_sql_statement(db,
@@ -195,9 +230,10 @@ to_sql.relop_non_sql <- function (x,
                        indent_level = indent_level + 1,
                        tnum = tnum,
                        append_cr = append_cr,
-                       using = NULL))
+                       using = using))
   c(subsql[-length(subsql)], step1, step2, step3)
 }
+
 
 
 
@@ -211,37 +247,4 @@ print.rquery_non_sql_step <- function(x, ...) {
   print(format(x))
 }
 
-
-#' Cache results to a named table inside a pipeline.
-#'
-#'
-#' @param source source to work from (relop node)
-#' @param table_name character, name of caching table
-#' @param ... force later arguments to bind by name
-#' @param temporary logical, if TRUE mark tables temporary.
-#' @return sql node.
-#'
-#' @seealso \code{\link{rsummary_node}}, \code{\link{non_sql_node}}
-#'
-#' @export
-#'
-materialize_node <- function(source,
-                             table_name,
-                             ...,
-                             temporary = TRUE) {
-  wrapr::stop_if_dot_args(substitute(list(...)), "materialize_node")
-  if(!("relop" %in% class(source))) {
-    stop("rquery::materialize_node requires source be of class relop")
-  }
-  non_sql_node(source = source,
-               f_db = NULL,
-               f_df = function(x, nd = NULL) { x },
-               f_dt = NULL,
-               incoming_table_name = table_name,
-               outgoing_table_name = table_name,
-               columns_produced = NULL,
-               display_form = paste0("materialize_node(", table_name, ")"),
-               orig_columns = TRUE,
-               temporary = temporary)
-}
 

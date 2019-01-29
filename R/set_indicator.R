@@ -201,6 +201,31 @@ to_sql.relop_set_indicator <- function (x,
                                         tnum = mk_tmp_name_source('tsql'),
                                         append_cr = TRUE,
                                         using = NULL) {
+  if(length(list(...))>0) {
+    stop("rquery::to_sql.relop_set_indicator unexpected arguments")
+  }
+  dispatch_to_sql_method(
+    method_name = "to_sql.relop_set_indicator",
+    x = x,
+    db = db,
+    limit = limit,
+    source_limit = source_limit,
+    indent_level = indent_level,
+    tnum = tnum,
+    append_cr = append_cr,
+    using = using)
+}
+
+to_sql_relop_set_indicator <- function(
+  x,
+  db,
+  ...,
+  limit = NULL,
+  source_limit = NULL,
+  indent_level = 0,
+  tnum = mk_tmp_name_source('tsql'),
+  append_cr = TRUE,
+  using = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::to_sql.relop_set_indicator")
   cols1 <- column_names(x$source[[1]])
@@ -242,5 +267,6 @@ to_sql.relop_set_indicator <- function (x,
   }
   c(subsql_list[-length(subsql_list)], q)
 }
+
 
 

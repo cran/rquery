@@ -27,3 +27,4 @@ tokenize_for_SQL(substitute(a \%:=\% ( 3 + 4 )), colnames= NULL)
 tokenize_for_SQL(substitute(a \%:=\% rank(3, 4)), colnames= NULL)
 
 }
+\keyword{internal}

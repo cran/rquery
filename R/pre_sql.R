@@ -13,15 +13,17 @@
 #'  name is name for term
 #'
 #' @param column_name character name of column
-#' @return pre_sql_identifier
+#' @return pre_sql_token
 #'
-#' @noRd
+#' @keywords internal
+#'
+#' @export
 #'
 pre_sql_identifier <- function(column_name) {
   t <- list(token_type = "column",
             column_name = column_name,
             is_zero_argument_call = FALSE)
-  class(t) <- "pre_sql_token"
+  class(t) <- c("pre_sql_token", "pre_sql")
   t
 }
 
@@ -30,31 +32,42 @@ pre_sql_identifier <- function(column_name) {
 #' represents a string constant
 #'   value character string
 #'
-#' @noRd
+#' @param value string
+#' @return pre_sql_token
+#'
+#' @keywords internal
+#'
+#'
+#' @export
 #'
 pre_sql_string <- function(value) {
   t <- list(token_type = "string",
             value = value,
             is_zero_argument_call = FALSE)
-  class(t) <- "pre_sql_token"
+  class(t) <- c("pre_sql_token", "pre_sql")
   t
 }
 
 
-#' pre_sql_token
+#' pre_sql_token funtion name
 #'
-#' function name token
+#' @param value function tname
+#' @return pre_sql_token
 #'
 #' @param value character, token string
-#' @return pre_sql_token class
+#' @return pre_sql_token
 #'
-#' @noRd
+#'
+#' @keywords internal
+#'
+#'
+#' @export
 #'
 pre_sql_fn <- function(value) {
   t <- list(token_type = "function_name",
             value = value,
             is_zero_argument_call = FALSE)
-  class(t) <- "pre_sql_token"
+  class(t) <- c("pre_sql_token", "pre_sql")
   t
 }
 
@@ -63,31 +76,43 @@ pre_sql_fn <- function(value) {
 #' general token
 #'
 #' @param value character, token string
-#' @return pre_sql_token class
+#' @return pre_sql_token
 #'
-#' @noRd
+#' @keywords internal
+#'
+#'
+#' @export
 #'
 pre_sql_token <- function(value) {
   t <- list(token_type = "token",
             value = value,
             is_zero_argument_call = FALSE)
-  class(t) <- "pre_sql_token"
+  class(t) <- c("pre_sql_token", "pre_sql")
   t
 }
 
-#' pre_sql_expr
+#' pre_sql_sub_expr
 #'
 #' represents an expression.  Unnamed list of pre_sql_terms and character.
 #'
-#' @param terms character, term vector
-#' @return pre_sql_expr class
+#' @param terms list of pre_sql tokens
+#' @param info named list of extra info with a name slot containing a single string without spaces.
+#' @return pre_sql_sub_expr
 #'
-#' @noRd
+#' @export
 #'
-pre_sql_expr <- function(terms) {
-  t <- as.list(terms)
-  names(t) <- NULL
-  class(t) <- c("pre_sql_expr", "pre_sql")
+pre_sql_sub_expr <- function(terms, info = NULL) {
+  cl <- class(terms)
+  if((length(cl)!=1) || (cl!="list")) {
+    stop("rquery::pre_sql_sub_expr terms must be a simple list")
+  }
+  for(ti in terms) {
+    if(!("pre_sql" %in% class(ti))) {
+      stop("pre_sql_sub_expr all terms must be of class pre_sql")
+    }
+  }
+  t = list(toks = terms, info = info)
+  class(t) <- c("pre_sql_sub_expr", "pre_sql")
   t
 }
 
@@ -103,26 +128,31 @@ pre_sql_expr <- function(terms) {
 #' @param using character, if not NULL set of columns used from above.
 #' @return SQL command
 #'
-#' @noRd
+#' @keywords internal
 #'
-to_query <- function (x,
+#' @export
+#'
+pre_sql_to_query <- function (x,
                       db_info,
                       ...,
                       source_table = NULL,
                       source_limit = NA_real_,
                       using = NULL) {
-  UseMethod("to_query", x)
+  UseMethod("pre_sql_to_query", x)
 }
 
 #' @export
+#'
+#' @keywords internal
 format.pre_sql_token <- function(x, ...) {
-  if(x$token_type == "column") {
-    return(paste0("'", x$column_name, "'"))
-  }
-  if(x$token_type == "string") {
-    return(paste0('"', paste(as.character(x$value), collapse = " "), '"'))
-  }
-  paste(as.character(x$value), collapse = " ")
+  pre_sql_to_query(x, rquery_default_db_info())
+}
+
+#' @export
+#'
+#' @keywords internal
+print.pre_sql_token <- function(x, ...) {
+  print(format(x))
 }
 
 #' Convert a pre_sql token object to SQL query text.
@@ -135,16 +165,22 @@ format.pre_sql_token <- function(x, ...) {
 #' @param using TBD
 #' @return SQL query text
 #'
-#' @noRd
+#' @keywords internal
 #'
-to_query.pre_sql_token <- function (x,
+#' @export
+#'
+pre_sql_to_query.pre_sql_token <- function (x,
                                     db_info,
                                     ...,
                                     source_table = NULL,
                                     source_limit = NA_real_,
                                     using = NULL) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
+  wrapr::stop_if_dot_args(substitute(list(...)), "rquery::pre_sql_to_query.pre_sql_token")
+  if("rquery_db_info" %in% class(db_info)) {
+    tree_rewriter <- db_info[["tree_rewriter"]]
+    if(!is.null(tree_rewriter)) {
+      x <- tree_rewriter(x, db_info)
+    }
   }
   if((!is.null(x$is_zero_argument_call)) && (x$is_zero_argument_call)) {
     val <- paste(as.character(x$value), collapse = " ")
@@ -186,9 +222,12 @@ to_query.pre_sql_token <- function (x,
   paste(as.character(x$value), collapse = " ")
 }
 
-#' Convert a pre_sql expr object to SQL query text.
+
+
+
+#' Convert a pre_sql token object to SQL query text.
 #'
-#' @param x the pre_sql expr
+#' @param x the pre_sql token
 #' @param db_info representation of the database to convert to
 #' @param ... force later arguments to be by name
 #' @param source_table concrete table for query
@@ -196,26 +235,74 @@ to_query.pre_sql_token <- function (x,
 #' @param using TBD
 #' @return SQL query text
 #'
-#' @noRd
+#' @keywords internal
 #'
-to_query.pre_sql_expr <- function (x,
-                                   db_info,
-                                   ...,
-                                   source_table = NULL,
-                                   source_limit = NA_real_,
-                                   using = NULL) {
-  if(length(list(...))>0) {
-    stop("unexpected arguments")
+#' @export
+#'
+pre_sql_to_query.pre_sql_sub_expr <- function (x,
+                                       db_info,
+                                       ...,
+                                       source_table = NULL,
+                                       source_limit = NA_real_,
+                                       using = NULL) {
+  wrapr::stop_if_dot_args(substitute(list(...)), "rquery::pre_sql_to_query.pre_sql_sub_expr")
+  if("rquery_db_info" %in% class(db_info)) {
+    tree_rewriter <- db_info[["tree_rewriter"]]
+    if(!is.null(tree_rewriter)) {
+      x <- tree_rewriter(x, db_info)
+    }
   }
-  terms <- vapply(x,
+  terms <- lapply(x$toks,
                   function(ti) {
-                    to_query(ti,
+                    pre_sql_to_query(ti,
                              db_info = db_info,
                              source_table = source_table,
                              source_limit = source_limit,
                              using = using)
-                  }, character(1))
+                  })
+  terms <- as.character(unlist(terms, recursive = TRUE, use.names = FALSE))
   paste(terms, collapse = " ")
+}
+
+
+#' Structure of a pre_sql_sub_expr
+#'
+#' @param x a pre_sql_sub_expr
+#' @return charcter presentation with {} denoting nesting
+#'
+#' @keywords internal
+#'
+#' @export
+#'
+str_pre_sql_sub_expr <- function(x) {
+  # process leaf-cases
+  if(!("pre_sql_sub_expr" %in% class(x))) {
+    return(format(x))
+  }
+  # get sub-expressions
+  subs <- vapply(x$toks, str_pre_sql_sub_expr, character(1))
+  # mark
+  paste0("{:_",
+         x$info$name," ",
+         paste(paste0(seq_len(length(subs)), "_{", subs, "}"), collapse = " "),
+         " :}")
+}
+
+#' @export
+#'
+#' @keywords internal
+#'
+format.pre_sql_sub_expr <- function(x, ...) {
+  pre_sql_to_query(x, rquery_default_db_info())
+}
+
+
+#' @export
+#'
+#' @keywords internal
+#'
+print.pre_sql_sub_expr <- function(x, ...) {
+  cat(format(x))
 }
 
 
