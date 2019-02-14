@@ -1,15 +1,12 @@
-library("rquery")
 
-context("mod")
-
-test_that("test_mod: Works As Expected", {
+test_mod <- function() {
   my_db <- rquery_default_db_info()
 
   td <- mk_td("data", "x")
   ops <- extend(td, xm = x %% 2)
   sql <- to_sql(ops, my_db)
   #cat(sql)
-  testthat::expect_equal(1, grep("MOD", sql, fixed = TRUE))
+  RUnit::checkEquals(1, grep("MOD", sql, fixed = TRUE))
 
   if(requireNamespace("DBI", quietly = TRUE) &&
     requireNamespace("RSQLite", quietly = TRUE) ) {
@@ -59,9 +56,11 @@ test_that("test_mod: Works As Expected", {
       rsqlite_db
 
     expect <- data.frame(x = -3:3,
-                         y = c(1, rep(c(0,1),3)))
-    testthat::expect_equivalent(expect, data.frame(res))
+                         x_mod_2 = c(1, rep(c(0,1),3)))
+    RUnit::checkEquals(expect, data.frame(res))
 
     DBI::dbDisconnect(rsqlite_connection)
   }
-})
+
+  invisible(NULL)
+}

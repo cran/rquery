@@ -1,11 +1,5 @@
 
-library("rquery")
-
-
-context("test_set_indicator.R")
-
-
-test_that("test_set_indicator.R: Works As Expected", {
+test_set_indicator <- function() {
 
   if (requireNamespace("DBI", quietly = TRUE) && requireNamespace("RSQLite", quietly = TRUE)) {
     my_db <- DBI::dbConnect(RSQLite::SQLite(),
@@ -23,14 +17,14 @@ test_that("test_set_indicator.R: Works As Expected", {
     # example
     set <- c("1", "2")
 
-    testthat::expect_error({
+    RUnit::checkException({
       # expect an exception here
       op_tree <- d %.>%
         set_indicator(., "one_two", "a", set) %.>%
         set_indicator(., "z", "a", c()) %.>%
         select_rows(., q %in% c(1)) %.>%
         orderby(., "id")
-    }, ".*")
+    })
 
     op_tree <- d %.>%
       set_indicator(., "one_two", "a", set) %.>%
@@ -38,11 +32,11 @@ test_that("test_set_indicator.R: Works As Expected", {
       select_rows(., q == 1) %.>%
       orderby(., "id")
     res = execute(my_db, op_tree)
-    testthat::expect_equivalent(c(1,1,1,0), res$one_two)
+    RUnit::checkEquals(c(1,1,1,0), res$one_two)
 
     # cleanup
     DBI::dbDisconnect(my_db)
   }
 
-
-})
+  invisible(NULL)
+}

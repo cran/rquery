@@ -200,15 +200,22 @@ to_sql <- function (x,
 #' @export
 #'
 dimnames.relop <- function(x) {
-  column_names(x)
+  list(NULL, column_names(x))
 }
 
 
 #' @export
 #'
 dim.relop <- function(x) {
-  # not populating number of rows, as that can be expensive
+  # not populating number of rows, as that isn't known at query
+  # construction time (and can be expensive).
   c(NA_real_, length(column_names(x)))
+}
+
+#' @export
+#'
+names.relop <- function(x) {
+  column_names(x)
 }
 
 #' Format a single node for printing.

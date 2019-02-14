@@ -1,15 +1,12 @@
-library("rquery")
 
-context("pow")
-
-test_that("test_pow: Works As Expected", {
+test_pow <- function() {
   my_db <- rquery_default_db_info()
 
   td <- mk_td("data", "x")
   ops <- extend(td, xsq = x^2)
   sql <- to_sql(ops, my_db)
   #cat(sql)
-  testthat::expect_equal(1, grep("POWER", sql, fixed = TRUE))
+  RUnit::checkEquals(1, grep("POWER", sql, fixed = TRUE))
 
   if (requireNamespace("RSQLite", quietly = TRUE) &&
       requireNamespace("DBI", quietly = TRUE)) {
@@ -23,6 +20,8 @@ test_that("test_pow: Works As Expected", {
                temporary = TRUE, overwrite = TRUE)
     res <- DBI::dbGetQuery(raw_connection, sql)
     DBI::dbDisconnect(raw_connection)
-    testthat::expect_equivalent(data.frame(x = 2, xsq = 4), data.frame(res))
+    RUnit::checkEquals(data.frame(x = 2, xsq = 4), data.frame(res))
   }
-})
+
+  invisible(NULL)
+}
