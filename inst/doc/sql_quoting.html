@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2019-02-14" />
+<meta name="date" content="2019-03-10" />
 
 <title>SQL quoting</title>
 
@@ -92,7 +92,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">SQL quoting</h1>
 <h4 class="author"><em>John Mount</em></h4>
-<h4 class="date"><em>2019-02-14</em></h4>
+<h4 class="date"><em>2019-03-10</em></h4>
 
 
 
@@ -149,9 +149,9 @@ ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span>
 ##    'sales'
 ##   FROM
 ##    'df'
-##  ) tsql_51522423861230913769_0000000000
+##  ) tsql_84393699484581224203_0000000000
 ##  WHERE 'trans_date' &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
-## ) tsql_51522423861230913769_0000000001 GROUP BY  'cust'</code></pre>
+## ) tsql_84393699484581224203_0000000001 GROUP BY  'cust'</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">db2 &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(
   <span class="dt">identifier_quote_char =</span> <span class="st">'&quot;'</span>,
   <span class="dt">string_quote_char =</span> <span class="st">&quot;'&quot;</span>)
@@ -169,9 +169,9 @@ ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span>
 ##    &quot;sales&quot;
 ##   FROM
 ##    &quot;df&quot;
-##  ) tsql_02819892426754349179_0000000000
+##  ) tsql_87364504810879219810_0000000000
 ##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( '2017-04-02' , '%Y-%m-%d' )
-## ) tsql_02819892426754349179_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
+## ) tsql_87364504810879219810_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
 <p>Notice our included quote characters were translated. This is an unwanted side-effect of using the <code>qae()</code> shortcut which does not tokenize, so it does not know which quotes are in which roles in the expression.</p>
 <p>To override quote translation in the <code>sql_node()</code> (which is simple string substitution without quote context or escaping) you must use the clunkier “build up a string as a list of tokens” (where sub-listed items are string literals and names are column names).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span>
@@ -213,9 +213,9 @@ ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span>
 ##    'sales'
 ##   FROM
 ##    'df'
-##  ) tsql_37320058003685137370_0000000000
+##  ) tsql_22298855388759489368_0000000000
 ##  WHERE 'trans_date' &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
-## ) tsql_37320058003685137370_0000000001 GROUP BY  'cust'</code></pre>
+## ) tsql_22298855388759489368_0000000001 GROUP BY  'cust'</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db2))</code></pre></div>
 <pre><code>## SELECT
 ##  NA,
@@ -229,9 +229,9 @@ ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span>
 ##    &quot;sales&quot;
 ##   FROM
 ##    &quot;df&quot;
-##  ) tsql_92493277377896377526_0000000000
+##  ) tsql_74423656343580623760_0000000000
 ##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( '2017-04-02' , '%Y-%m-%d' )
-## ) tsql_92493277377896377526_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
+## ) tsql_74423656343580623760_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
 <p>Quotes within string literals are going to be a nightmare moving from db to db, so our advice is to try to avoid them.</p>
 
 
