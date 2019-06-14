@@ -60,11 +60,15 @@ unpack_assignments <- function(source, parsed,
 parse_se <- function(source, assignments, env,
                      ...,
                      have = column_names(source),
-                     check_names = TRUE) {
+                     check_names = TRUE,
+                     allow_empty = FALSE) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery:::parse_se")
   n <- length(assignments)
   if(n<=0) {
+    if(allow_empty) {
+      return(list())
+    }
     stop("must generate at least 1 expression")
   }
   nms <- names(assignments)
@@ -104,12 +108,16 @@ parse_se <- function(source, assignments, env,
 parse_nse <- function(source, exprs, env,
                       ...,
                       have = column_names(source),
-                      check_names = TRUE) {
+                      check_names = TRUE,
+                      allow_empty = FALSE) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery:::parse_nse")
   n <- length(exprs)
   if(n<=0) {
-    stop("must have at least 1 assigment")
+    if(allow_empty) {
+      return(list())
+    }
+    stop("must generate at least 1 expression")
   }
   nms <- names(exprs)
   # R-like db-info for presentation
@@ -154,8 +162,15 @@ parse_nse <- function(source, exprs, env,
 # parsed_toks is sequence of pre_sql tokens
 redo_parse_quoting <- function(parsed, db_info) {
   n <- length(parsed)
+  tree_rewriter <- NULL
+  if("rquery_db_info" %in% class(db_info)) {
+    tree_rewriter <- db_info[["tree_rewriter"]]
+  }
   for(i in seq_len(n)) {
     pi <- parsed[[i]]
+    if(!is.null(tree_rewriter)) {
+      pi$parsed_toks <- tree_rewriter(pi$parsed_toks, db_info)
+    }
     pi$parsed <- pre_sql_to_query(pi$parsed_toks,
                           db_info = db_info)
     parsed[[i]] <- pi

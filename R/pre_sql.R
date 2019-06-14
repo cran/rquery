@@ -126,6 +126,7 @@ pre_sql_sub_expr <- function(terms, info = NULL) {
 #' @param source_table character if not NULL name of source table.
 #' @param source_limit numeric if not NULL limit sources to this many rows.
 #' @param using character, if not NULL set of columns used from above.
+#' @param qualifiers named ordered vector of strings carrying additional db hierarchy terms, such as schema.
 #' @return SQL command
 #'
 #' @keywords internal
@@ -137,7 +138,8 @@ pre_sql_to_query <- function (x,
                       ...,
                       source_table = NULL,
                       source_limit = NA_real_,
-                      using = NULL) {
+                      using = NULL,
+                      qualifiers = NULL) {
   UseMethod("pre_sql_to_query", x)
 }
 
@@ -163,6 +165,7 @@ print.pre_sql_token <- function(x, ...) {
 #' @param source_table concrete table for query
 #' @param source_limit numeric limit on rows from this source table
 #' @param using TBD
+#' @param qualifiers named ordered vector of strings carrying additional db hierarchy terms, such as schema.
 #' @return SQL query text
 #'
 #' @keywords internal
@@ -174,14 +177,9 @@ pre_sql_to_query.pre_sql_token <- function (x,
                                     ...,
                                     source_table = NULL,
                                     source_limit = NA_real_,
-                                    using = NULL) {
+                                    using = NULL,
+                                    qualifiers = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::pre_sql_to_query.pre_sql_token")
-  if("rquery_db_info" %in% class(db_info)) {
-    tree_rewriter <- db_info[["tree_rewriter"]]
-    if(!is.null(tree_rewriter)) {
-      x <- tree_rewriter(x, db_info)
-    }
-  }
   if((!is.null(x$is_zero_argument_call)) && (x$is_zero_argument_call)) {
     val <- paste(as.character(x$value), collapse = " ")
     zero_arg_fn_map <- getDBOption(db_info, "zero_arg_fn_map")
@@ -197,7 +195,7 @@ pre_sql_to_query.pre_sql_token <- function (x,
   }
   if(x$token_type == "column") {
     if((!is.null(source_table)) && (!is.na(source_table))) {
-      return(paste(quote_identifier(db_info, source_table),
+      return(paste(quote_table_name(db_info, source_table, qualifiers = qualifiers),
                    quote_identifier(db_info, x$column_name),
                    sep = '.'))
     } else {
@@ -233,6 +231,7 @@ pre_sql_to_query.pre_sql_token <- function (x,
 #' @param source_table concrete table for query
 #' @param source_limit numeric limit on rows from this source table
 #' @param using TBD
+#' @param qualifiers named ordered vector of strings carrying additional db hierarchy terms, such as schema.
 #' @return SQL query text
 #'
 #' @keywords internal
@@ -244,21 +243,17 @@ pre_sql_to_query.pre_sql_sub_expr <- function (x,
                                        ...,
                                        source_table = NULL,
                                        source_limit = NA_real_,
-                                       using = NULL) {
+                                       using = NULL,
+                                       qualifiers = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::pre_sql_to_query.pre_sql_sub_expr")
-  if("rquery_db_info" %in% class(db_info)) {
-    tree_rewriter <- db_info[["tree_rewriter"]]
-    if(!is.null(tree_rewriter)) {
-      x <- tree_rewriter(x, db_info)
-    }
-  }
   terms <- lapply(x$toks,
                   function(ti) {
                     pre_sql_to_query(ti,
                              db_info = db_info,
                              source_table = source_table,
                              source_limit = source_limit,
-                             using = using)
+                             using = using,
+                             qualifiers = qualifiers)
                   })
   terms <- as.character(unlist(terms, recursive = TRUE, use.names = FALSE))
   paste(terms, collapse = " ")

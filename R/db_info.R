@@ -1,5 +1,32 @@
 
 
+tree_rewriter <- function(x, db_info) {
+  expr_map <- db_info$expr_map
+  if("pre_sql_sub_expr" %in% class(x)) {
+    # first recurse
+    for(i in seq_len(length(x$toks))) {
+      x$toks[[i]] <- tree_rewriter(x$toks[[i]], db_info)
+    }
+    # now look for special cases
+    if(("pre_sql_token" %in% class(x$toks[[1]])) &&
+       (x$toks[[1]]$token_type == "function_name")) {
+      key <- x$toks[[1]][["value"]]
+      replacement <- expr_map[[key]]
+      if(!is.null(replacement)) {
+        x_translated <- x
+        x_translated$toks <- replacement
+        for(i in seq_len(length(replacement))) {
+          if(is.numeric(replacement[[i]])) {
+            x_translated$toks[[i]] <- x$toks[[replacement[[i]]]]
+          }
+        }
+        return(x_translated)
+      }
+    }
+  }
+  x
+}
+
 #' Build a db information stand-in
 #'
 #' @param ... force all arguments to be by name.
@@ -88,7 +115,7 @@ rquery_db_info <- function(...,
       }
       if(!is.null(connection)) {
         if("schema" %in% names(qualifiers)) {
-          dbi_id <- DBI::Id(schema = qualifiers$schema, table = as.character(id))
+          dbi_id <- DBI::Id(schema = qualifiers[["schema"]], table = as.character(id))
         } else {
           dbi_id <- as.character(id) # sparklyr '0.8.4' does not implement DBI::dbQuoteIdentifier for DBI::Id
         }
@@ -130,6 +157,16 @@ rquery_db_info <- function(...,
       format(o, scientific = 11)
     }
   }
+  r$expr_map <- list("as.Date" = list( # call is 1:as.Date 2:( 3:date_col 4:)
+    pre_sql_fn("to_date"),
+    pre_sql_token("("),
+    3,  # the date column
+    pre_sql_token(","),
+    pre_sql_string("YYYY-MM-DD"),
+    pre_sql_token(")")
+  )
+  )
+  r$tree_rewriter <- tree_rewriter
   for(ni in names(overrides)) {
     r[[ni]] <- overrides[[ni]]
   }
@@ -160,6 +197,67 @@ rquery_default_db_info <- function() {
                  string_quote_char = "'",
                  is_dbi = FALSE,
                  db_methods = rquery_default_methods())
+}
+
+
+#' Return function mappings for a connection
+#'
+#' @param db a rquery_db_info
+#' @param ... not used, force later arguments to bind by name
+#' @param qualifiers optional named ordered vector of strings carrying additional db hierarchy terms, such as schema.
+#' @return data.frame of function mappings
+#'
+#' @export
+#'
+#' @keywords internal
+#'
+rq_function_mappings <- function(db,
+                                 ...,
+                                 qualifiers = NULL) {
+  if(!("rquery_db_info" %in% class(db))) {
+    stop("rquery::rq_function_mappings db must be of class rq_function_mappings")
+  }
+  # create zero row data.frame
+  mp <- data.frame(fn_name = character(0),
+                   sql_mapping = character(0),
+                   simple_name_mapping = logical(0),
+                   stringsAsFactors = FALSE)
+  # map in simple renamings
+  fn_name_map <- db$connection_options[[paste0("rquery.", rq_connection_name(db), ".", "fn_name_map")]]
+  if(length(fn_name_map)>0) {
+    fmp <- data.frame(fn_name = names(fn_name_map),
+                      stringsAsFactors = FALSE)
+    lst <- fn_name_map
+    names(lst) <- NULL
+    fmp$sql_mapping <- lst
+    fmp$simple_name_mapping <- TRUE
+    mp <- rbind(mp, fmp)
+  }
+  # map in function re-writes
+  expr_map <- db$expr_map
+  if(length(expr_map)>0) {
+    emp <- data.frame(fn_name = names(expr_map),
+                      stringsAsFactors = FALSE)
+    elst <- expr_map
+    names(elst) <- NULL
+    for(ei in seq_len(length(elst))) {
+      elsti <- elst[[ei]]
+      elsti <- vapply(elsti,
+                      function(elstij) {
+                        if("pre_sql" %in% class(elstij)) {
+                          pre_sql_to_query(elstij, db, qualifiers = qualifiers)
+                        } else {
+                          paste0(".(", elstij, ")")
+                        }
+                      }, character(1))
+      elsti <- paste(elsti, collapse = " ")
+      elst[[ei]] <- elsti
+    }
+    emp$sql_mapping <- elst
+    emp$simple_name_mapping <- FALSE
+    mp <- rbind(mp, emp)
+  }
+  mp
 }
 
 
