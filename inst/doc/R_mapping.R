@@ -5,7 +5,7 @@ library("wrapr")
 show_translation <- function(strings) {
   vapply(strings,
          function(si) {
-           format(rquery::tokenize_for_SQL(str2lang(si), colnames = NULL)$parsed_toks)
+           format(rquery::tokenize_for_SQL(parse(text = si, keep.source = FALSE)[[1]], colnames = NULL)$parsed_toks)
          }, character(1))
 }
 
@@ -18,30 +18,28 @@ mapping_table$translation <- show_translation(mapping_table$example)
 knitr::kable(mapping_table)
 
 ## ------------------------------------------------------------------------
-raw_connection <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-RSQLite::initExtension(raw_connection)
-db <- rquery_db_info(
-  connection = raw_connection,
-  is_dbi = TRUE,
-  connection_options = rq_connection_tests(raw_connection))
+have_RSQLite <- requireNamespace("RSQLite", quietly = TRUE)
 
-# RSQLite has a non-standard modulo operator
-db$expr_map[["MOD"]] <- list(pre_sql_token("("),
-                           3,
-                           pre_sql_token("%"),
-                           5,
-                           pre_sql_token(")"))
+## ---- eval=have_RSQLite--------------------------------------------------
+raw_RSQLite_connection <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+RSQLite::initExtension(raw_RSQLite_connection)
+db <- rquery_db_info(
+  connection = raw_RSQLite_connection,
+  is_dbi = TRUE,
+  connection_options = rq_connection_tests(raw_RSQLite_connection))
+
 
 fn_name_map <- db$connection_options[[paste0("rquery.", rq_connection_name(db), ".", "fn_name_map")]]
 fn_name_map
 
-## ------------------------------------------------------------------------
+## ---- eval=have_RSQLite--------------------------------------------------
 d_local <- build_frame(
    "subjectID", "surveyCategory"     , "assessmentTotal", "irrelevantCol1", "irrelevantCol2" |
    1L         , "withdrawal behavior", 5                , "irrel1"        , "irrel2"         |
    1L         , "positive re-framing", 2                , "irrel1"        , "irrel2"         |
    3L         , "withdrawal behavior", 3                , "irrel1"        , "irrel2"         |
-   3L         , "positive re-framing", 4                , "irrel1"        , "irrel2"         )
+   3L         , "positive re-framing", 2                , "irrel1"        , "irrel2"         |
+   3L         , "other"              , 1                , "irrel1"        , "irrel2"         )
 table_handle <- rq_copy_to(db, 'd',
             d_local,
             temporary = TRUE, 
@@ -59,15 +57,35 @@ ops %.>%
   execute(db, .) %.>%
   knitr::kable(.)
 
-## ------------------------------------------------------------------------
+## ---- eval=have_RSQLite--------------------------------------------------
 rquery::rq_function_mappings(db) %.>%
   knitr::kable(.)
 
-## ------------------------------------------------------------------------
-table_handle %.>% extend(., z := subjectID %% 3) -> ops
+## ---- eval=have_RSQLite--------------------------------------------------
+ops <- table_handle %.>% 
+  project(., groupby = "subjectID",
+          n := 5, 
+          count := n(),
+          mean := mean(assessmentTotal)) %.>% 
+  extend(., was_n := n)
+                 
 cat(to_sql(ops, db))
-execute(db, ops)
 
-## ------------------------------------------------------------------------
-DBI::dbDisconnect(raw_connection)
+ops %.>%
+  execute(db, .) %.>%
+  knitr::kable(.)
+
+## ---- eval=have_RSQLite--------------------------------------------------
+ops <- table_handle %.>% 
+  extend(., z := 1 + subjectID %% 3) %.>%
+  select_columns(., c("subjectID", "z"))
+                 
+cat(to_sql(ops, db))
+
+ops %.>%
+  execute(db, .) %.>%
+  knitr::kable(.)
+
+## ---- eval=have_RSQLite--------------------------------------------------
+DBI::dbDisconnect(raw_RSQLite_connection)
 

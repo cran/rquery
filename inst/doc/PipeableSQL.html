@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2019-06-14" />
+<meta name="date" content="2019-06-25" />
 
 <title>Pipeable SQL</title>
 
@@ -303,7 +303,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Pipeable SQL</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2019-06-14</h4>
+<h4 class="date">2019-06-25</h4>
 
 
 
@@ -355,9 +355,63 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ## $rquery.SQLiteConnection.check_logical_column_types
 ## [1] TRUE
 ## 
-## $rquery.SQLiteConnection.fn_name_map
-##  mean 
-## &quot;avg&quot;</code></pre>
+## $rquery.SQLiteConnection.use_DROP_TABLE_IF_EXISTS
+## [1] TRUE
+## 
+## $rquery.SQLiteConnection.expr_map
+## $rquery.SQLiteConnection.expr_map$MOD
+## $rquery.SQLiteConnection.expr_map$MOD[[1]]
+## [1] &quot;(&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$MOD[[2]]
+## [1] 3
+## 
+## $rquery.SQLiteConnection.expr_map$MOD[[3]]
+## [1] &quot;%&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$MOD[[4]]
+## [1] 5
+## 
+## $rquery.SQLiteConnection.expr_map$MOD[[5]]
+## [1] &quot;)&quot;
+## 
+## 
+## $rquery.SQLiteConnection.expr_map$rand
+## $rquery.SQLiteConnection.expr_map$rand[[1]]
+## [1] &quot;ABS&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[2]]
+## [1] &quot;(&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[3]]
+## [1] &quot;(&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[4]]
+## [1] &quot;RANDOM&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[5]]
+## [1] &quot;(&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[6]]
+## [1] &quot;)&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[7]]
+## [1] &quot;%&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[8]]
+## [1] &quot;268435456&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[9]]
+## [1] &quot;)&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[10]]
+## [1] &quot;/&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[11]]
+## [1] &quot;268435455.0&quot;
+## 
+## $rquery.SQLiteConnection.expr_map$rand[[12]]
+## [1] &quot;)&quot;</code></pre>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">options</span>(dbopts)</a>
 <a class="sourceLine" id="cb4-2" data-line-number="2"></a>
 <a class="sourceLine" id="cb4-3" data-line-number="3"><span class="co"># copy in example data</span></a>

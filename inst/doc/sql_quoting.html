@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2019-06-14" />
+<meta name="date" content="2019-06-25" />
 
 <title>SQL quoting</title>
 
@@ -303,7 +303,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">SQL quoting</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2019-06-14</h4>
+<h4 class="date">2019-06-25</h4>
 
 
 
@@ -360,9 +360,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##    'sales'
 ##   FROM
 ##    'df'
-##  ) tsql_11344751488889245374_0000000000
+##  ) tsql_98439044642113206064_0000000000
 ##  WHERE 'trans_date' &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
-## ) tsql_11344751488889245374_0000000001 GROUP BY  'cust'</code></pre>
+## ) tsql_98439044642113206064_0000000001 GROUP BY  'cust'</code></pre>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">db2 &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(</a>
 <a class="sourceLine" id="cb5-2" data-line-number="2">  <span class="dt">identifier_quote_char =</span> <span class="st">'&quot;'</span>,</a>
 <a class="sourceLine" id="cb5-3" data-line-number="3">  <span class="dt">string_quote_char =</span> <span class="st">&quot;'&quot;</span>)</a>
@@ -380,9 +380,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##    &quot;sales&quot;
 ##   FROM
 ##    &quot;df&quot;
-##  ) tsql_20771172759185263738_0000000000
+##  ) tsql_69971034639503336613_0000000000
 ##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( '2017-04-02' , '%Y-%m-%d' )
-## ) tsql_20771172759185263738_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
+## ) tsql_69971034639503336613_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
 <p>Notice our included quote characters were translated. This is an unwanted side-effect of using the <code>qae()</code> shortcut which does not tokenize, so it does not know which quotes are in which roles in the expression.</p>
 <p>To override quote translation in the <code>sql_node()</code> (which is simple string substitution without quote context or escaping) you must use the clunkier “build up a string as a list of tokens” (where sub-listed items are string literals and names are column names).</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span></a>
@@ -424,9 +424,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##    'sales'
 ##   FROM
 ##    'df'
-##  ) tsql_98439044642113206064_0000000000
+##  ) tsql_51574324830299520888_0000000000
 ##  WHERE 'trans_date' &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
-## ) tsql_98439044642113206064_0000000001 GROUP BY  'cust'</code></pre>
+## ) tsql_51574324830299520888_0000000001 GROUP BY  'cust'</code></pre>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db2))</a></code></pre></div>
 <pre><code>## SELECT
 ##  NA,
@@ -440,9 +440,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##    &quot;sales&quot;
 ##   FROM
 ##    &quot;df&quot;
-##  ) tsql_69971034639503336613_0000000000
+##  ) tsql_83314287335586063464_0000000000
 ##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( '2017-04-02' , '%Y-%m-%d' )
-## ) tsql_69971034639503336613_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
+## ) tsql_83314287335586063464_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
 <p>Quotes within string literals are going to be a nightmare moving from db to db, so our advice is to try to avoid them.</p>
 
 

@@ -2,7 +2,22 @@
 
 tree_rewriter <- function(x, db_info) {
   expr_map <- db_info$expr_map
-  if("pre_sql_sub_expr" %in% class(x)) {
+  if(("pre_sql_sub_expr" %in% class(x)) && (length(x$toks)>0)) {
+    # special case: zero argument call (unfortunately stored differently)
+    if(isTRUE(x$toks[[1]]$is_zero_argument_call)) {
+      key <- x$toks[[1]][["value"]]
+      replacement <- expr_map[[key]]
+      if(!is.null(replacement)) {
+        x_translated <- x
+        x_translated$toks <- replacement
+        for(i in seq_len(length(replacement))) {
+          if(is.numeric(replacement[[i]])) {
+            x_translated$toks[[i]] <- x$toks[[replacement[[i]]]]
+          }
+        }
+        return(x_translated)
+      }
+    }
     # first recurse
     for(i in seq_len(length(x$toks))) {
       x$toks[[i]] <- tree_rewriter(x$toks[[i]], db_info)
@@ -49,12 +64,14 @@ rquery_db_info <- function(...,
                            string_quote_char = "'",
                            overrides = NULL,
                            note = "",
-                           connection_options = list(),
+                           connection_options = rq_connection_advice(connection),
                            db_methods = rquery_default_methods()) {
   wrapr::stop_if_dot_args(substitute(list(...)), "rquery::rquery_db_info")
+  force(connection_options)
   if("rquery_db_info" %in% class(connection)) {
     stop("rquery::rquery_db_info connection is already of class rquery_db_info")
   }
+  cname <- rq_connection_name(connection)
   if(is_dbi) {
     if(!requireNamespace("DBI", quietly = TRUE)) {
       stop("rquery::rquery_db_info requires the DBI package for is_dbi=TRUE")
@@ -63,6 +80,7 @@ rquery_db_info <- function(...,
   # does not handle quotes inside strings
   r <- list(
     connection = connection,
+    cname = cname,
     is_dbi = is_dbi,
     identifier_quote_char = identifier_quote_char,
     string_quote_char = string_quote_char,
@@ -157,19 +175,39 @@ rquery_db_info <- function(...,
       format(o, scientific = 11)
     }
   }
-  r$expr_map <- list("as.Date" = list( # call is 1:as.Date 2:( 3:date_col 4:)
-    pre_sql_fn("to_date"),
-    pre_sql_token("("),
-    3,  # the date column
-    pre_sql_token(","),
-    pre_sql_string("YYYY-MM-DD"),
-    pre_sql_token(")")
-  )
+  r$expr_map <- list(
+    "as.Date" = list( # call is 1:as.Date 2:( 3:date_col 4:)
+      pre_sql_fn("to_date"),
+      pre_sql_token("("),
+      3,  # the date column
+      pre_sql_token(","),
+      pre_sql_string("YYYY-MM-DD"),
+      pre_sql_token(")")),
+    "n" = list( # call is 1:n 2:( 3:)
+      pre_sql_fn("COUNT"),
+      pre_sql_token("("),
+      pre_sql_token("1"),
+      pre_sql_token(")")),
+    "mean" = list( # call is 1:n 2:( 3:value 4:)
+      pre_sql_fn("AVG"),
+      pre_sql_token("("),
+      3, # the value column
+      pre_sql_token(")"))
   )
   r$tree_rewriter <- tree_rewriter
+  # patch in suggested expression mappings
+  key <- paste(c("rquery", cname, "expr_map"), collapse = ".")
+  expr_map <- connection_options[[key]]
+  if(length(expr_map)>0) {
+    for(ni in names(expr_map)) {
+      r$expr_map[[ni]] <- expr_map[[ni]]
+    }
+  }
+  # patch in user overrides
   for(ni in names(overrides)) {
     r[[ni]] <- overrides[[ni]]
   }
+  # declare our class and return value
   class(r) <- "rquery_db_info"
   r
 }
@@ -193,9 +231,11 @@ print.rquery_db_info <- function(x, ...) {
 #' @export
 #'
 rquery_default_db_info <- function() {
-  rquery_db_info(identifier_quote_char = '"',
+  rquery_db_info(connection = NULL,
+                 identifier_quote_char = '"',
                  string_quote_char = "'",
                  is_dbi = FALSE,
+                 connection_options = rq_connection_advice(NULL),
                  db_methods = rquery_default_methods())
 }
 
@@ -220,19 +260,7 @@ rq_function_mappings <- function(db,
   # create zero row data.frame
   mp <- data.frame(fn_name = character(0),
                    sql_mapping = character(0),
-                   simple_name_mapping = logical(0),
                    stringsAsFactors = FALSE)
-  # map in simple renamings
-  fn_name_map <- db$connection_options[[paste0("rquery.", rq_connection_name(db), ".", "fn_name_map")]]
-  if(length(fn_name_map)>0) {
-    fmp <- data.frame(fn_name = names(fn_name_map),
-                      stringsAsFactors = FALSE)
-    lst <- fn_name_map
-    names(lst) <- NULL
-    fmp$sql_mapping <- lst
-    fmp$simple_name_mapping <- TRUE
-    mp <- rbind(mp, fmp)
-  }
   # map in function re-writes
   expr_map <- db$expr_map
   if(length(expr_map)>0) {
@@ -254,7 +282,6 @@ rq_function_mappings <- function(db,
       elst[[ei]] <- elsti
     }
     emp$sql_mapping <- elst
-    emp$simple_name_mapping <- FALSE
     mp <- rbind(mp, emp)
   }
   mp

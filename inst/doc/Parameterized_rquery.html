@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2019-06-14" />
+<meta name="date" content="2019-06-25" />
 
 <title>Parameterized rquery</title>
 
@@ -303,7 +303,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Parameterized rquery</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2019-06-14</h4>
+<h4 class="date">2019-06-25</h4>
 
 
 
@@ -417,7 +417,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb19-2" data-line-number="2">sql &lt;-<span class="st"> </span><span class="kw">to_sql</span>(ops, db)</a>
 <a class="sourceLine" id="cb19-3" data-line-number="3"><span class="kw">cat</span>(sql)</a></code></pre></div>
 <pre><code>## SELECT * FROM (
-##  SELECT `am`, avg ( `hp_per_cyl` ) AS `mean_hp_per_cyl`, count ( `hp_per_cyl` ) AS `group_count` FROM (
+##  SELECT `am`, AVG ( `hp_per_cyl` ) AS `mean_hp_per_cyl`, count ( `hp_per_cyl` ) AS `group_count` FROM (
 ##   SELECT
 ##    `am`,
 ##    `hp` / `cyl`  AS `hp_per_cyl`
