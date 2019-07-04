@@ -65,6 +65,12 @@ orderby.relop <- function(source,
     if(limit<0) {
       stop("rquery::orderby.relop limit must be >=0 or NULL")
     }
+    if(length(cols)<=0) {
+      stop("rquery::orderby.relop if limit is not NULL, then cols must not be empty")
+    }
+  }
+  if(length(cols)<=0) {
+    return(source)
   }
   r <- list(source = list(source),
             table_name = NULL,

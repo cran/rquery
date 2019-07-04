@@ -1,6 +1,8 @@
 
 #' Make a drop columns node (not a relational operation).
 #'
+#' Note: must keep at least one column.
+#'
 #' @param source source to drop columns from.
 #' @param drops list of distinct column names.
 #' @param ... force later arguments to bind by name
@@ -41,11 +43,19 @@ drop_columns.relop <- function(source, drops,
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::drop_columns.relop")
   if(length(drops)<=0) {
-    stop("rquery::drop_columns must drop at least 1 column")
+    return(source)
   }
+  have <- column_names(source)
   if(strict) {
-    have <- column_names(source)
     check_have_cols(have, drops, "rquery::drop_columns drops")
+  }
+  removing <- setdiff(drops, have)
+  if(length(removing)<=0) {
+    return(source)
+  }
+  remain <- setdiff(have, drops)
+  if(length(remain)<=0) {
+    stop("rquery::drop_columns.relop must keep at least one column")
   }
   r <- list(source = list(source),
             table_name = NULL,
@@ -66,7 +76,7 @@ drop_columns.data.frame <- function(source, drops,
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery::drop_columns.data.frame")
   if(length(drops)<=0) {
-    stop("rquery::drop_columns must drop at least 1 column")
+    return(source)
   }
   tmp_name <- mk_tmp_name_source("rquery_tmp")()
   dnode <- mk_td(tmp_name, colnames(source))

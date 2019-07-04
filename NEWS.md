@@ -1,4 +1,9 @@
 
+# rquery 1.3.6 2019/07/04
+
+ * Rename before join.
+ * Allow empty specifications in more situations.
+
 # rquery 1.3.5 2019/06/25
 
  * Remove str2lang() from vignette (method is not in older R)
