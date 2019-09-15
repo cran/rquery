@@ -7,12 +7,13 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2019-07-29" />
+<meta name="date" content="2019-09-15" />
 
 <title>Query Generation</title>
 
@@ -96,7 +97,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -303,7 +304,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Query Generation</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2019-07-29</h4>
+<h4 class="date">2019-09-15</h4>
 
 
 
@@ -338,27 +339,33 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb1-26" data-line-number="26"><span class="co">#&gt; attr(,&quot;package&quot;)</span></a>
 <a class="sourceLine" id="cb1-27" data-line-number="27"><span class="co">#&gt; [1] &quot;RSQLite&quot;</span></a></code></pre></div>
 <p>Presentation format (see also <a href="https://winvector.github.io/rquery/reference/op_diagram.html"><code>op_diagram()</code></a>):</p>
-<pre><code>  table(`d`; 
-    subjectID,
-    surveyCategory,
-    assessmentTotal,
-    irrelevantCol1,
-    irrelevantCol2) %.&gt;%
+<pre><code>  mk_td(&quot;`d`&quot;, c(
+    &quot;subjectID&quot;,
+    &quot;surveyCategory&quot;,
+    &quot;assessmentTotal&quot;,
+    &quot;irrelevantCol1&quot;,
+    &quot;irrelevantCol2&quot;)) %.&gt;%
    extend(.,
     probability := exp(assessmentTotal * 0.237) / sum(exp(assessmentTotal * 0.237)),
     count := count(1),
-    p= subjectID) %.&gt;%
+    partitionby = c('subjectID'),
+    orderby = c(),
+    reverse = c()) %.&gt;%
    extend(.,
     rank := rank(),
-    p= subjectID,
-    o= &quot;probability&quot;, &quot;surveyCategory&quot;) %.&gt;%
-   rename(.,
+    partitionby = c('subjectID'),
+    orderby = c('probability', 'surveyCategory'),
+    reverse = c()) %.&gt;%
+   rename_columns(.,
     c('diagnosis' = 'surveyCategory')) %.&gt;%
    select_rows(.,
      rank == count) %.&gt;%
-   select_columns(.,
-     subjectID, diagnosis, probability) %.&gt;%
-   orderby(., subjectID)</code></pre>
+   select_columns(., c(
+     &quot;subjectID&quot;, &quot;diagnosis&quot;, &quot;probability&quot;)) %.&gt;%
+   order_rows(.,
+    c('subjectID'),
+    reverse = c(),
+    limit = NULL)</code></pre>
 <p><code>to_sql()</code> SQL (see also <a href="https://winvector.github.io/rquery/reference/materialize.html"><code>materialize()</code></a>):</p>
 <pre><code>  SELECT * FROM (
    SELECT
@@ -401,6 +408,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
    ) tsql_21099240144076170614_0000000004
   ) tsql_21099240144076170614_0000000005 ORDER BY `subjectID`</code></pre>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

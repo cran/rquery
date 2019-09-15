@@ -7,12 +7,13 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2019-07-29" />
+<meta name="date" content="2019-09-15" />
 
 <title>SQL quoting</title>
 
@@ -96,7 +97,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -303,7 +304,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">SQL quoting</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2019-07-29</h4>
+<h4 class="date">2019-09-15</h4>
 
 
 
@@ -330,10 +331,10 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb1-20" data-line-number="20">    <span class="dt">orig_columns =</span> <span class="ot">FALSE</span>)</a>
 <a class="sourceLine" id="cb1-21" data-line-number="21"></a>
 <a class="sourceLine" id="cb1-22" data-line-number="22"><span class="kw">cat</span>(<span class="kw">format</span>(ops))</a></code></pre></div>
-<pre><code>## table(df; 
-##   cust,
-##   trans_date,
-##   sales) %.&gt;%
+<pre><code>## mk_td(&quot;df&quot;, c(
+##   &quot;cust&quot;,
+##   &quot;trans_date&quot;,
+##   &quot;sales&quot;)) %.&gt;%
 ##  select_rows(.,
 ##    trans_date &lt;= str_to_date(&quot;2017-04-02&quot;, &quot;%Y-%m-%d&quot;)) %.&gt;%
 ##  sql_node(.,
@@ -399,10 +400,10 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb7-12" data-line-number="12">    <span class="dt">orig_columns =</span> <span class="ot">FALSE</span>)</a>
 <a class="sourceLine" id="cb7-13" data-line-number="13"></a>
 <a class="sourceLine" id="cb7-14" data-line-number="14"><span class="kw">cat</span>(<span class="kw">format</span>(ops))</a></code></pre></div>
-<pre><code>## table(df; 
-##   cust,
-##   trans_date,
-##   sales) %.&gt;%
+<pre><code>## mk_td(&quot;df&quot;, c(
+##   &quot;cust&quot;,
+##   &quot;trans_date&quot;,
+##   &quot;sales&quot;)) %.&gt;%
 ##  select_rows(.,
 ##    trans_date &lt;= str_to_date(&quot;2017-04-02&quot;, &quot;%Y-%m-%d&quot;)) %.&gt;%
 ##  sql_node(.,
@@ -445,6 +446,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ## ) tsql_83314287335586063464_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
 <p>Quotes within string literals are going to be a nightmare moving from db to db, so our advice is to try to avoid them.</p>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

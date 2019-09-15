@@ -7,12 +7,13 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2019-07-29" />
+<meta name="date" content="2019-09-15" />
 
 <title>Pipeable SQL</title>
 
@@ -96,7 +97,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -303,7 +304,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Pipeable SQL</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2019-07-29</h4>
+<h4 class="date">2019-09-15</h4>
 
 
 
@@ -420,7 +421,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb4-6" data-line-number="6">  <span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">-5</span>, <span class="dv">3</span>)),</a>
 <a class="sourceLine" id="cb4-7" data-line-number="7">  <span class="dt">temporary =</span> <span class="ot">FALSE</span>,</a>
 <a class="sourceLine" id="cb4-8" data-line-number="8">  <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
-<pre><code>## [1] &quot;table(`d`; v)&quot;</code></pre>
+<pre><code>## [1] &quot;mk_td(\&quot;`d`\&quot;, c( \&quot;v\&quot;))&quot;</code></pre>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="co"># produce a hande to existing table</span></a>
 <a class="sourceLine" id="cb6-2" data-line-number="2">d &lt;-<span class="st"> </span><span class="kw">db_td</span>(db, <span class="st">&quot;d&quot;</span>)</a></code></pre></div>
 <p><code>d</code> is a “table description” which is just the name of a table and the names of expected columns. <code>d</code> does not store data or a database reference (making it safe to serialize/de-serialize). All <code>rquery</code> operation trees or pipelines must start either with a table description or a <code>data.frame</code>. We will discuss table descriptions later.</p>
@@ -510,8 +511,8 @@ FROM (
 <p>The <code>list(list())</code> notation is how we say in <code>R</code> that we have a single element list (i.e. one expression) that is built up as a list of terms. The marking notation is cumbersome, but is not needed when we move on to relation nodes, which are parsed in <code>R</code> and can spot identifiers without additional help.</p>
 <p><code>op_tree</code> itself is a an object with its own presentation format:</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">format</span>(op_tree))</a></code></pre></div>
-<pre><code>## table(`d`; 
-##   v) %.&gt;%
+<pre><code>## mk_td(&quot;`d`&quot;, c(
+##   &quot;v&quot;)) %.&gt;%
 ##  sql_node(.,
 ##           absv %:=% ABS( v ),
 ##              *=TRUE) %.&gt;%
@@ -533,8 +534,8 @@ FROM (
 <a class="sourceLine" id="cb25-2" data-line-number="2"><span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;prod&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;absv * delta&quot;</span>)</a>
 <a class="sourceLine" id="cb25-3" data-line-number="3"></a>
 <a class="sourceLine" id="cb25-4" data-line-number="4"><span class="kw">cat</span>(<span class="kw">format</span>(op_tree2))</a></code></pre></div>
-<pre><code>## table(`d`; 
-##   v) %.&gt;%
+<pre><code>## mk_td(&quot;`d`&quot;, c(
+##   &quot;v&quot;)) %.&gt;%
 ##  sql_node(.,
 ##           absv %:=% ABS( v ),
 ##              *=TRUE) %.&gt;%
@@ -549,8 +550,8 @@ FROM (
 <a class="sourceLine" id="cb27-2" data-line-number="2"><span class="st">  </span><span class="kw">sql_node</span>(., <span class="kw">qae</span>(<span class="dt">prod =</span> absv <span class="op">*</span><span class="st"> </span>delta))</a>
 <a class="sourceLine" id="cb27-3" data-line-number="3"></a>
 <a class="sourceLine" id="cb27-4" data-line-number="4"><span class="kw">cat</span>(<span class="kw">format</span>(op_tree3))</a></code></pre></div>
-<pre><code>## table(`d`; 
-##   v) %.&gt;%
+<pre><code>## mk_td(&quot;`d`&quot;, c(
+##   &quot;v&quot;)) %.&gt;%
 ##  sql_node(.,
 ##           absv %:=% ABS( v ),
 ##              *=TRUE) %.&gt;%
@@ -608,10 +609,10 @@ FROM (
 <a class="sourceLine" id="cb38-2" data-line-number="2">op_tree_count_null &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span></a>
 <a class="sourceLine" id="cb38-3" data-line-number="3"><span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;num_missing&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">list</span>(expr))</a>
 <a class="sourceLine" id="cb38-4" data-line-number="4"><span class="kw">cat</span>(<span class="kw">format</span>(op_tree_count_null))</a></code></pre></div>
-<pre><code>## table(`d2`; 
-##   v1,
-##   v2,
-##   v3) %.&gt;%
+<pre><code>## mk_td(&quot;`d2`&quot;, c(
+##   &quot;v1&quot;,
+##   &quot;v2&quot;,
+##   &quot;v3&quot;)) %.&gt;%
 ##  sql_node(.,
 ##           num_missing %:=% 0 + (CASE WHEN ( v1 IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( v2 IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( v3 IS NULL ) THEN 1.0 ELSE 0.0 END),
 ##              *=TRUE)</code></pre>
@@ -862,6 +863,9 @@ FROM (
 <a class="sourceLine" id="cb64-2" data-line-number="2">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(db)</a></code></pre></div>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

@@ -7,12 +7,13 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2019-07-29" />
+<meta name="date" content="2019-09-15" />
 
 <title>Parameterized rquery</title>
 
@@ -96,7 +97,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -303,7 +304,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Parameterized rquery</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2019-07-29</h4>
+<h4 class="date">2019-09-15</h4>
 
 
 
@@ -371,15 +372,18 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <p>We can display the pipeline in various forms.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="co"># print the operator sequence</span></a>
 <a class="sourceLine" id="cb8-2" data-line-number="2"><span class="kw">cat</span>(<span class="kw">format</span>(ops))</a></code></pre></div>
-<pre><code>## table(mtcars; 
-##   am,
-##   hp,
-##   cyl) %.&gt;%
+<pre><code>## mk_td(&quot;mtcars&quot;, c(
+##   &quot;am&quot;,
+##   &quot;hp&quot;,
+##   &quot;cyl&quot;)) %.&gt;%
 ##  extend(.,
 ##   hp_per_cyl := hp / cyl) %.&gt;%
 ##  project(., mean_hp_per_cyl := mean(hp_per_cyl), group_count := count(hp_per_cyl),
-##   g= am) %.&gt;%
-##  orderby(., am)</code></pre>
+##   groupby = c('am')) %.&gt;%
+##  order_rows(.,
+##   c('am'),
+##   reverse = c(),
+##   limit = NULL)</code></pre>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="co"># draw the pipeline</span></a>
 <a class="sourceLine" id="cb10-2" data-line-number="2">ops <span class="op">%.&gt;%</span></a>
 <a class="sourceLine" id="cb10-3" data-line-number="3"><span class="st">  </span><span class="kw">op_diagram</span>(.) <span class="op">%.&gt;%</span><span class="st"> </span></a>
@@ -401,7 +405,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb13-3" data-line-number="3">                         <span class="dt">temporary =</span> <span class="ot">TRUE</span>, </a>
 <a class="sourceLine" id="cb13-4" data-line-number="4">                         <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</a>
 <a class="sourceLine" id="cb13-5" data-line-number="5"><span class="kw">print</span>(tr)</a></code></pre></div>
-<pre><code>## [1] &quot;table(`mtcars`; mpg, cyl, disp, hp, drat, wt, qsec, vs, am, gear, carb)&quot;</code></pre>
+<pre><code>## [1] &quot;mk_td(\&quot;`mtcars`\&quot;, c( \&quot;mpg\&quot;, \&quot;cyl\&quot;, \&quot;disp\&quot;, \&quot;hp\&quot;, \&quot;drat\&quot;, \&quot;wt\&quot;, \&quot;qsec\&quot;, \&quot;vs\&quot;, \&quot;am\&quot;, \&quot;gear\&quot;, \&quot;carb\&quot;))&quot;</code></pre>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="co"># materialize result remotely (without passing through R)</span></a>
 <a class="sourceLine" id="cb15-2" data-line-number="2">res &lt;-<span class="st"> </span><span class="kw">materialize</span>(db, ops)</a>
 <a class="sourceLine" id="cb15-3" data-line-number="3">DBI<span class="op">::</span><span class="kw">dbReadTable</span>(raw_connection, res<span class="op">$</span>table_name)</a></code></pre></div>
@@ -437,6 +441,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb21-2" data-line-number="2">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(raw_connection)</a>
 <a class="sourceLine" id="cb21-3" data-line-number="3"><span class="kw">rm</span>(<span class="dt">list =</span> <span class="kw">c</span>(<span class="st">&quot;raw_connection&quot;</span>, <span class="st">&quot;db&quot;</span>))</a></code></pre></div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

@@ -7,12 +7,13 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2019-07-29" />
+<meta name="date" content="2019-09-15" />
 
 <title>rquery Introduction</title>
 
@@ -96,7 +97,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -303,7 +304,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">rquery Introduction</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2019-07-29</h4>
+<h4 class="date">2019-09-15</h4>
 
 
 
@@ -422,7 +423,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb5-4" data-line-number="4">  <span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">-5</span>, <span class="dv">3</span>)),</a>
 <a class="sourceLine" id="cb5-5" data-line-number="5">  <span class="dt">temporary =</span> <span class="ot">FALSE</span>,</a>
 <a class="sourceLine" id="cb5-6" data-line-number="6">  <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
-<pre><code>## [1] &quot;table(`d`; v)&quot;</code></pre>
+<pre><code>## [1] &quot;mk_td(\&quot;`d`\&quot;, c( \&quot;v\&quot;))&quot;</code></pre>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co"># produce a hande to existing table</span></a>
 <a class="sourceLine" id="cb7-2" data-line-number="2">d &lt;-<span class="st"> </span><span class="kw">db_td</span>(db, <span class="st">&quot;d&quot;</span>)</a></code></pre></div>
 <p>The table description “<code>d</code>” we have been using in examples was produced as a result of moving data to a database by <a href="https://winvector.github.io/rquery/reference/rq_copy_to.html"><code>rq_copy_to()</code></a>. However we can also create a description of an existing database table with <a href="https://winvector.github.io/rquery/reference/db_td.html"><code>db_td()</code></a> or even build a description by hand with <a href="https://winvector.github.io/rquery/reference/mk_td.html"><code>mk_td()</code></a>. Also one can build descriptions of local or in-memory <code>data.frame</code>s with <a href="https://winvector.github.io/rquery/reference/local_td.html"><code>local_td()</code></a>.</p>
@@ -496,26 +497,32 @@ from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for
 <pre><code>## [1] &quot;subjectID&quot;   &quot;diagnosis&quot;   &quot;probability&quot;</code></pre>
 <p>The operations can be printed as an operations tree.</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">format</span>(dq))</a></code></pre></div>
-<pre><code>## table(d3; 
-##   subjectID,
-##   surveyCategory,
-##   assessmentTotal) %.&gt;%
+<pre><code>## mk_td(&quot;d3&quot;, c(
+##   &quot;subjectID&quot;,
+##   &quot;surveyCategory&quot;,
+##   &quot;assessmentTotal&quot;)) %.&gt;%
 ##  extend(.,
 ##   probability := exp(assessmentTotal * 0.237)) %.&gt;%
 ##  extend(.,
 ##   probability := probability / sum(probability),
-##   p= subjectID) %.&gt;%
+##   partitionby = c('subjectID'),
+##   orderby = c(),
+##   reverse = c()) %.&gt;%
 ##  extend(.,
 ##   row_number := row_number(),
-##   p= subjectID,
-##   o= &quot;probability&quot; DESC, &quot;surveyCategory&quot;) %.&gt;%
+##   partitionby = c('subjectID'),
+##   orderby = c('probability', 'surveyCategory'),
+##   reverse = c('probability')) %.&gt;%
 ##  select_rows(.,
 ##    row_number &lt;= 1) %.&gt;%
-##  rename(.,
+##  rename_columns(.,
 ##   c('diagnosis' = 'surveyCategory')) %.&gt;%
-##  select_columns(.,
-##    subjectID, diagnosis, probability) %.&gt;%
-##  orderby(., subjectID)</code></pre>
+##  select_columns(., c(
+##    &quot;subjectID&quot;, &quot;diagnosis&quot;, &quot;probability&quot;)) %.&gt;%
+##  order_rows(.,
+##   c('subjectID'),
+##   reverse = c(),
+##   limit = NULL)</code></pre>
 <p>Notice the returned presentation is not exactly the set of nodes we specified. This is because of the nodes we used (<code>normalize_cols()</code> and <code>pick_top_k()</code>) are actually higher-order nodes (implemented in terms of nodes). Also <code>extend()</code> nodes are re-factored to be unambiguous in their use and re-use of column names.</p>
 <p>We can also exhibit the <code>SQL</code> this operations tree renders, to (though the <code>SQLite</code> database we are using in vignettes does not have the required window-functions to execute it; we suggest using <code>PostgreSQL</code>).</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">to_sql</span>(dq, db))</a></code></pre></div>
@@ -595,11 +602,11 @@ from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for
 <a class="sourceLine" id="cb23-8" data-line-number="8">             <span class="dt">w =</span> d <span class="op">+</span><span class="st"> </span><span class="dv">1</span>)</a>
 <a class="sourceLine" id="cb23-9" data-line-number="9"></a>
 <a class="sourceLine" id="cb23-10" data-line-number="10"><span class="kw">cat</span>(<span class="kw">format</span>(ot))</a></code></pre></div>
-<pre><code>## table(d4; 
-##   a,
-##   b,
-##   c,
-##   d) %.&gt;%
+<pre><code>## mk_td(&quot;d4&quot;, c(
+##   &quot;a&quot;,
+##   &quot;b&quot;,
+##   &quot;c&quot;,
+##   &quot;d&quot;)) %.&gt;%
 ##  extend(.,
 ##   x := a + 1,
 ##   u := b + 1,
@@ -622,8 +629,8 @@ from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for
 <a class="sourceLine" id="cb25-11" data-line-number="11">                                <span class="dt">y =</span> <span class="st">'a'</span>)</a>
 <a class="sourceLine" id="cb25-12" data-line-number="12">              )))</a>
 <a class="sourceLine" id="cb25-13" data-line-number="13"><span class="kw">cat</span>(<span class="kw">format</span>(ifet))</a></code></pre></div>
-<pre><code>## table(d5; 
-##   test) %.&gt;%
+<pre><code>## mk_td(&quot;d5&quot;, c(
+##   &quot;test&quot;)) %.&gt;%
 ##  extend(.,
 ##   x := &quot;&quot;,
 ##   y := &quot;&quot;,
@@ -720,6 +727,9 @@ from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for
 <a class="sourceLine" id="cb31-2" data-line-number="2">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(db)</a></code></pre></div>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
