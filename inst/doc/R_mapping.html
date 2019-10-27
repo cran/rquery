@@ -13,7 +13,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2019-09-15" />
+<meta name="date" content="2019-10-26" />
 
 <title>R mapping</title>
 
@@ -304,7 +304,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">R mapping</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2019-09-15</h4>
+<h4 class="date">2019-10-26</h4>
 
 
 
@@ -413,7 +413,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb5-10" data-line-number="10">            <span class="dt">temporary =</span> <span class="ot">TRUE</span>, </a>
 <a class="sourceLine" id="cb5-11" data-line-number="11">            <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</a>
 <a class="sourceLine" id="cb5-12" data-line-number="12"><span class="kw">print</span>(table_handle)</a></code></pre></div>
-<pre><code>## [1] &quot;mk_td(\&quot;`d`\&quot;, c( \&quot;subjectID\&quot;, \&quot;surveyCategory\&quot;, \&quot;assessmentTotal\&quot;, \&quot;irrelevantCol1\&quot;, \&quot;irrelevantCol2\&quot;))&quot;</code></pre>
+<pre><code>## [1] &quot;mk_td(\&quot;d\&quot;, c( \&quot;subjectID\&quot;, \&quot;surveyCategory\&quot;, \&quot;assessmentTotal\&quot;, \&quot;irrelevantCol1\&quot;, \&quot;irrelevantCol2\&quot;))&quot;</code></pre>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">ops &lt;-<span class="st"> </span>table_handle <span class="op">%.&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb7-2" data-line-number="2"><span class="st">  </span><span class="kw">project</span>(., </a>
 <a class="sourceLine" id="cb7-3" data-line-number="3">          avg_total <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">avg</span>(<span class="kw">pmax</span>(<span class="dv">0</span>, assessmentTotal)),</a>
@@ -472,6 +472,14 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <tr class="odd">
 <td align="left">mean</td>
 <td align="left">AVG ( .(3) )</td>
+</tr>
+<tr class="even">
+<td align="left">cumsum</td>
+<td align="left">SUM ( .(3) )</td>
+</tr>
+<tr class="odd">
+<td align="left">shift</td>
+<td align="left">LAG ( .(3) )</td>
 </tr>
 <tr class="even">
 <td align="left">MOD</td>

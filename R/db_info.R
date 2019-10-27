@@ -192,6 +192,16 @@ rquery_db_info <- function(...,
       pre_sql_fn("AVG"),
       pre_sql_token("("),
       3, # the value column
+      pre_sql_token(")")),
+    "cumsum" = list( # call is 1:n 2:( 3:value 4:)
+      pre_sql_fn("SUM"),
+      pre_sql_token("("),
+      3, # the value column
+      pre_sql_token(")")),
+    "shift" = list( # call is 1:n 2:( 3:value 4:)
+      pre_sql_fn("LAG"),
+      pre_sql_token("("),
+      3, # the value column
       pre_sql_token(")"))
   )
   r$tree_rewriter <- tree_rewriter
@@ -254,6 +264,8 @@ rquery_default_db_info <- function() {
 rq_function_mappings <- function(db,
                                  ...,
                                  qualifiers = NULL) {
+  wrapr::stop_if_dot_args(substitute(list(...)),
+                          "rquery::rq_function_mappings")
   if(!("rquery_db_info" %in% class(db))) {
     stop("rquery::rq_function_mappings db must be of class rq_function_mappings")
   }

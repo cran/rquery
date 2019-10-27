@@ -49,7 +49,7 @@ drop_columns.relop <- function(source, drops,
   if(strict) {
     check_have_cols(have, drops, "rquery::drop_columns drops")
   }
-  removing <- setdiff(drops, have)
+  removing <- intersect(drops, have)
   if(length(removing)<=0) {
     return(source)
   }
@@ -95,7 +95,7 @@ column_names.relop_drop_columns <- function (x, ...) {
 #' @export
 format_node.relop_drop_columns <- function(node) {
   paste0("drop_columns(.,\n   ",
-         paste(node$drops, collapse = ", "),
+         wrapr::map_to_char(node$drops),
          ")",
          "\n")
 }

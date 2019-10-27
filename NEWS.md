@@ -1,4 +1,15 @@
 
+# rquery 1.3.9 2019/10/26
+
+ * Tune yaml path.
+ * Fix project signatures.
+ * Fold consecutive select_columns nodes.
+ * Don't print quoted table name.
+ * Add arrow example.
+ * Add wrap/ex pattern.
+ * Remove relop_list paths.
+ * Fix drop_columns shortcut.
+
 # rquery 1.3.8 2019/09/15
 
  * Add YAML path for operator trees.

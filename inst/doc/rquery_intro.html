@@ -13,7 +13,7 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2019-09-15" />
+<meta name="date" content="2019-10-26" />
 
 <title>rquery Introduction</title>
 
@@ -304,7 +304,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">rquery Introduction</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2019-09-15</h4>
+<h4 class="date">2019-10-26</h4>
 
 
 
@@ -423,7 +423,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb5-4" data-line-number="4">  <span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">-5</span>, <span class="dv">3</span>)),</a>
 <a class="sourceLine" id="cb5-5" data-line-number="5">  <span class="dt">temporary =</span> <span class="ot">FALSE</span>,</a>
 <a class="sourceLine" id="cb5-6" data-line-number="6">  <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
-<pre><code>## [1] &quot;mk_td(\&quot;`d`\&quot;, c( \&quot;v\&quot;))&quot;</code></pre>
+<pre><code>## [1] &quot;mk_td(\&quot;d\&quot;, c( \&quot;v\&quot;))&quot;</code></pre>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co"># produce a hande to existing table</span></a>
 <a class="sourceLine" id="cb7-2" data-line-number="2">d &lt;-<span class="st"> </span><span class="kw">db_td</span>(db, <span class="st">&quot;d&quot;</span>)</a></code></pre></div>
 <p>The table description “<code>d</code>” we have been using in examples was produced as a result of moving data to a database by <a href="https://winvector.github.io/rquery/reference/rq_copy_to.html"><code>rq_copy_to()</code></a>. However we can also create a description of an existing database table with <a href="https://winvector.github.io/rquery/reference/db_td.html"><code>db_td()</code></a> or even build a description by hand with <a href="https://winvector.github.io/rquery/reference/mk_td.html"><code>mk_td()</code></a>. Also one can build descriptions of local or in-memory <code>data.frame</code>s with <a href="https://winvector.github.io/rquery/reference/local_td.html"><code>local_td()</code></a>.</p>
@@ -517,8 +517,8 @@ from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for
 ##    row_number &lt;= 1) %.&gt;%
 ##  rename_columns(.,
 ##   c('diagnosis' = 'surveyCategory')) %.&gt;%
-##  select_columns(., c(
-##    &quot;subjectID&quot;, &quot;diagnosis&quot;, &quot;probability&quot;)) %.&gt;%
+##  select_columns(., 
+##     c('subjectID', 'diagnosis', 'probability')) %.&gt;%
 ##  order_rows(.,
 ##   c('subjectID'),
 ##   reverse = c(),
@@ -627,8 +627,11 @@ from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for
 <a class="sourceLine" id="cb25-9" data-line-number="9">                                <span class="dt">y =</span> <span class="st">'b'</span>),</a>
 <a class="sourceLine" id="cb25-10" data-line-number="10">                <span class="dt">elseexprs =</span> <span class="kw">qae</span>(<span class="dt">x =</span> <span class="st">'b'</span>, </a>
 <a class="sourceLine" id="cb25-11" data-line-number="11">                                <span class="dt">y =</span> <span class="st">'a'</span>)</a>
-<a class="sourceLine" id="cb25-12" data-line-number="12">              )))</a>
-<a class="sourceLine" id="cb25-13" data-line-number="13"><span class="kw">cat</span>(<span class="kw">format</span>(ifet))</a></code></pre></div>
+<a class="sourceLine" id="cb25-12" data-line-number="12">              )))</a></code></pre></div>
+<pre><code>## Warning in extend_impl_list(source = source, parsed = parsed, partitionby
+## = partitionby, : rquery:::extend_impl_list assigned same column more than
+## once in an extend</code></pre>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">format</span>(ifet))</a></code></pre></div>
 <pre><code>## mk_td(&quot;d5&quot;, c(
 ##   &quot;test&quot;)) %.&gt;%
 ##  extend(.,
@@ -653,12 +656,12 @@ from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for
 </blockquote>
 <p>In addition <code>rquery</code> includes automatic column narrowing: where only columns used to construct the final result are pulled from initial tables. This feature is important in production (where data marts can be quite wide) and has show significant additional performance advantages</p>
 <p>From a coding point of view the automatic narrowing effect looks like this.</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1">wp &lt;-<span class="st"> </span><span class="kw">mk_td</span>(<span class="dt">table =</span> <span class="st">'d6'</span>,</a>
-<a class="sourceLine" id="cb27-2" data-line-number="2">                   <span class="dt">columns =</span> letters[<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>]) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb27-3" data-line-number="3"><span class="st">  </span><span class="kw">extend</span>(., res <span class="op">:</span><span class="er">=</span><span class="st"> </span>a <span class="op">+</span><span class="st"> </span>b)</a>
-<a class="sourceLine" id="cb27-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb27-5" data-line-number="5"><span class="co"># full query</span></a>
-<a class="sourceLine" id="cb27-6" data-line-number="6"><span class="kw">cat</span>(<span class="kw">to_sql</span>(wp, db))</a></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1">wp &lt;-<span class="st"> </span><span class="kw">mk_td</span>(<span class="dt">table =</span> <span class="st">'d6'</span>,</a>
+<a class="sourceLine" id="cb29-2" data-line-number="2">                   <span class="dt">columns =</span> letters[<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>]) <span class="op">%.&gt;%</span></a>
+<a class="sourceLine" id="cb29-3" data-line-number="3"><span class="st">  </span><span class="kw">extend</span>(., res <span class="op">:</span><span class="er">=</span><span class="st"> </span>a <span class="op">+</span><span class="st"> </span>b)</a>
+<a class="sourceLine" id="cb29-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb29-5" data-line-number="5"><span class="co"># full query</span></a>
+<a class="sourceLine" id="cb29-6" data-line-number="6"><span class="kw">cat</span>(<span class="kw">to_sql</span>(wp, db))</a></code></pre></div>
 <pre><code>## SELECT
 ##  `a`,
 ##  `b`,
@@ -676,14 +679,14 @@ from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for
 ##  FROM
 ##   `d6`
 ##  ) tsql_98438208511990152058_0000000000</code></pre>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="co"># longer pipeline</span></a>
-<a class="sourceLine" id="cb29-2" data-line-number="2">wn &lt;-<span class="st"> </span>wp <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb29-3" data-line-number="3"><span class="st">  </span><span class="kw">select_columns</span>(., <span class="st">&quot;res&quot;</span>)</a>
-<a class="sourceLine" id="cb29-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb29-5" data-line-number="5"><span class="co"># notice select at end of the pipeline automatically </span></a>
-<a class="sourceLine" id="cb29-6" data-line-number="6"><span class="co"># gets propagated back to the beginning of the</span></a>
-<a class="sourceLine" id="cb29-7" data-line-number="7"><span class="co"># pipeline</span></a>
-<a class="sourceLine" id="cb29-8" data-line-number="8"><span class="kw">cat</span>(<span class="kw">to_sql</span>(wn, db))</a></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="co"># longer pipeline</span></a>
+<a class="sourceLine" id="cb31-2" data-line-number="2">wn &lt;-<span class="st"> </span>wp <span class="op">%.&gt;%</span></a>
+<a class="sourceLine" id="cb31-3" data-line-number="3"><span class="st">  </span><span class="kw">select_columns</span>(., <span class="st">&quot;res&quot;</span>)</a>
+<a class="sourceLine" id="cb31-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb31-5" data-line-number="5"><span class="co"># notice select at end of the pipeline automatically </span></a>
+<a class="sourceLine" id="cb31-6" data-line-number="6"><span class="co"># gets propagated back to the beginning of the</span></a>
+<a class="sourceLine" id="cb31-7" data-line-number="7"><span class="co"># pipeline</span></a>
+<a class="sourceLine" id="cb31-8" data-line-number="8"><span class="kw">cat</span>(<span class="kw">to_sql</span>(wn, db))</a></code></pre></div>
 <pre><code>## SELECT
 ##  `res`
 ## FROM (
@@ -723,8 +726,8 @@ from <a href="http://www.win-vector.com/blog/2017/08/lets-have-some-sympathy-for
 </div>
 <div id="appendix-always-clean-up-on-the-way-out" class="section level1">
 <h1>Appendix: Always clean up on the way out</h1>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="kw">options</span>(old_o)</a>
-<a class="sourceLine" id="cb31-2" data-line-number="2">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(db)</a></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1"><span class="kw">options</span>(old_o)</a>
+<a class="sourceLine" id="cb33-2" data-line-number="2">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(db)</a></code></pre></div>
 </div>
 
 

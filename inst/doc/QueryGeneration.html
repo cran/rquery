@@ -13,7 +13,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2019-09-15" />
+<meta name="date" content="2019-10-26" />
 
 <title>Query Generation</title>
 
@@ -304,7 +304,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Query Generation</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2019-09-15</h4>
+<h4 class="date">2019-10-26</h4>
 
 
 
@@ -339,7 +339,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb1-26" data-line-number="26"><span class="co">#&gt; attr(,&quot;package&quot;)</span></a>
 <a class="sourceLine" id="cb1-27" data-line-number="27"><span class="co">#&gt; [1] &quot;RSQLite&quot;</span></a></code></pre></div>
 <p>Presentation format (see also <a href="https://winvector.github.io/rquery/reference/op_diagram.html"><code>op_diagram()</code></a>):</p>
-<pre><code>  mk_td(&quot;`d`&quot;, c(
+<pre><code>  mk_td(&quot;d&quot;, c(
     &quot;subjectID&quot;,
     &quot;surveyCategory&quot;,
     &quot;assessmentTotal&quot;,
@@ -360,8 +360,8 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
     c('diagnosis' = 'surveyCategory')) %.&gt;%
    select_rows(.,
      rank == count) %.&gt;%
-   select_columns(., c(
-     &quot;subjectID&quot;, &quot;diagnosis&quot;, &quot;probability&quot;)) %.&gt;%
+   select_columns(., 
+      c('subjectID', 'diagnosis', 'probability')) %.&gt;%
    order_rows(.,
     c('subjectID'),
     reverse = c(),

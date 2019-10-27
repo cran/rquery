@@ -39,6 +39,9 @@ select_columns.relop <- function(source, columns, env = parent.frame()) {
   if(length(dropping)<=0) {
     return(source)
   }
+  if(is(source, 'relop_select_columns')) {
+    source = source$source[[1]]
+  }
   r <- list(source = list(source),
             table_name = NULL,
             parsed = NULL,
@@ -71,9 +74,9 @@ column_names.relop_select_columns <- function (x, ...) {
 #' @export
 format_node.relop_select_columns <- function(node) {
   cols <- paste0('"', node$columns, '"')
-  paste0("select_columns(., c(\n   ",
-         paste(cols, collapse = ", "),
-         "))",
+  paste0("select_columns(., \n    ",
+         wrapr::map_to_char(node$columns),
+         ")",
          "\n")
 }
 

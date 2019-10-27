@@ -13,7 +13,7 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2019-09-15" />
+<meta name="date" content="2019-10-26" />
 
 <title>Assignment Partitioner</title>
 
@@ -304,7 +304,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Assignment Partitioner</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2019-09-15</h4>
+<h4 class="date">2019-10-26</h4>
 
 
 
@@ -421,7 +421,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb3-44" data-line-number="44">                    e_<span class="dv">1</span>, e_<span class="dv">2</span>))</a>
 <a class="sourceLine" id="cb3-45" data-line-number="45"></a>
 <a class="sourceLine" id="cb3-46" data-line-number="46"><span class="kw">cat</span>(<span class="kw">format</span>(plan))</a></code></pre></div>
-<pre><code>mk_td(&quot;`example_table`&quot;, c(
+<pre><code>mk_td(&quot;example_table&quot;, c(
   &quot;id&quot;,
   &quot;rand_a&quot;,
   &quot;rand_b&quot;,
@@ -445,8 +445,8 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
   d_2 := ifelse(choice_d, &quot;C&quot;, &quot;T&quot;),
   e_1 := ifelse(choice_e, &quot;T&quot;, &quot;C&quot;),
   e_2 := ifelse(choice_e, &quot;C&quot;, &quot;T&quot;)) %.&gt;%
- select_columns(., c(
-   &quot;id&quot;, &quot;a_1&quot;, &quot;a_2&quot;, &quot;b_1&quot;, &quot;b_2&quot;, &quot;c_1&quot;, &quot;c_2&quot;, &quot;d_1&quot;, &quot;d_2&quot;, &quot;e_1&quot;, &quot;e_2&quot;))</code></pre>
+ select_columns(., 
+    c('id', 'a_1', 'a_2', 'b_1', 'b_2', 'c_1', 'c_2', 'd_1', 'd_2', 'e_1', 'e_2'))</code></pre>
 <p>Notice <code>rquery::extend_se()</code> split the work into 3 unambiguous groups. The statements inside each group can now be executed in any order (or even in parallel) with no ambiguity of meaning or risk of error. The goal was: split into a small number of groups such that the observable execution semantics are very close to executing the original statements in order in completely separate groups (which is likely what a user intends).</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">sql &lt;-<span class="st"> </span><span class="kw">to_sql</span>(plan, my_db)</a>
 <a class="sourceLine" id="cb5-2" data-line-number="2"><span class="kw">cat</span>(sql)</a></code></pre></div>
@@ -613,10 +613,12 @@ FROM (
 <a class="sourceLine" id="cb8-40" data-line-number="40">                 <span class="kw">qc</span>(id,</a>
 <a class="sourceLine" id="cb8-41" data-line-number="41">                    a_<span class="dv">1</span>, a_<span class="dv">2</span>, b_<span class="dv">1</span>, b_<span class="dv">2</span>,</a>
 <a class="sourceLine" id="cb8-42" data-line-number="42">                    c_<span class="dv">1</span>, c_<span class="dv">2</span>, d_<span class="dv">1</span>, d_<span class="dv">2</span>,</a>
-<a class="sourceLine" id="cb8-43" data-line-number="43">                    e_<span class="dv">1</span>, e_<span class="dv">2</span>))</a>
-<a class="sourceLine" id="cb8-44" data-line-number="44"></a>
-<a class="sourceLine" id="cb8-45" data-line-number="45"><span class="kw">cat</span>(<span class="kw">format</span>(plan2))</a></code></pre></div>
-<pre><code>mk_td(&quot;`example_table`&quot;, c(
+<a class="sourceLine" id="cb8-43" data-line-number="43">                    e_<span class="dv">1</span>, e_<span class="dv">2</span>))</a></code></pre></div>
+<pre><code>Warning in extend_impl_list(source = source, parsed = parsed, partitionby
+= partitionby, : rquery:::extend_impl_list assigned same column more than
+once in an extend</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">format</span>(plan2))</a></code></pre></div>
+<pre><code>mk_td(&quot;example_table&quot;, c(
   &quot;id&quot;,
   &quot;rand_a&quot;,
   &quot;rand_b&quot;,
@@ -648,11 +650,11 @@ FROM (
  extend(.,
   e_1 := ifelse(choice, &quot;T&quot;, &quot;C&quot;),
   e_2 := ifelse(choice, &quot;C&quot;, &quot;T&quot;)) %.&gt;%
- select_columns(., c(
-   &quot;id&quot;, &quot;a_1&quot;, &quot;a_2&quot;, &quot;b_1&quot;, &quot;b_2&quot;, &quot;c_1&quot;, &quot;c_2&quot;, &quot;d_1&quot;, &quot;d_2&quot;, &quot;e_1&quot;, &quot;e_2&quot;))</code></pre>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">sql2 &lt;-<span class="st"> </span><span class="kw">to_sql</span>(plan2, my_db)</a>
-<a class="sourceLine" id="cb10-2" data-line-number="2">DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(my_db, sql2) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
+ select_columns(., 
+    c('id', 'a_1', 'a_2', 'b_1', 'b_2', 'c_1', 'c_2', 'd_1', 'd_2', 'e_1', 'e_2'))</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1">sql2 &lt;-<span class="st"> </span><span class="kw">to_sql</span>(plan2, my_db)</a>
+<a class="sourceLine" id="cb12-2" data-line-number="2">DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(my_db, sql2) <span class="op">%.&gt;%</span></a>
+<a class="sourceLine" id="cb12-3" data-line-number="3"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
 <table>
 <thead>
 <tr class="header">
@@ -725,7 +727,7 @@ FROM (
 </tbody>
 </table>
 <p>Notice the returned tables are identical (as they should be, <a href="https://github.com/WinVector/rquery/blob/master/extras/AssigmentPartitioner.md#dplyr-example">which is not always the case for database backed <code>dplyr</code></a>).</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(my_db)</a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(my_db)</a></code></pre></div>
 
 
 
