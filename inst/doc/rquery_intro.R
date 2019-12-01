@@ -1,8 +1,8 @@
-## ----chpkg---------------------------------------------------------------
+## ----chpkg--------------------------------------------------------------------
 run_vignette <- requireNamespace("DBI", quietly = TRUE) && 
   requireNamespace("RSQLite", quietly = TRUE)
 
-## ----setup, eval=run_vignette--------------------------------------------
+## ----setup, eval=run_vignette-------------------------------------------------
 library("rquery")
 library("wrapr")
 
@@ -13,13 +13,12 @@ RSQLite::initExtension(db)
 
 # adapt to database
 dbopts <- rq_connection_tests(db)
-print(dbopts)
 options(dbopts)
 
 # register database
 old_o <- options(list("rquery.rquery_db_executor" = list(db = db)))
 
-## ----tabledescr1---------------------------------------------------------
+## ----tabledescr1--------------------------------------------------------------
 # copy in example data
 rq_copy_to(
   db, 'd',
@@ -30,13 +29,13 @@ rq_copy_to(
 # produce a hande to existing table
 d <- db_td(db, "d")
 
-## ----isna, eval=run_vignette---------------------------------------------
+## ----isna, eval=run_vignette--------------------------------------------------
 d %.>% 
   extend(., was_na := ifelse(is.na(v), 1, 0)) %.>%
   to_sql(., db) %.>%
   cat(.)
 
-## ----logisticex, eval=run_vignette---------------------------------------
+## ----logisticex, eval=run_vignette--------------------------------------------
 scale <- 0.237
 
 dq <- mk_td("d3", 
@@ -59,25 +58,25 @@ dq <- mk_td("d3",
                       'probability')) %.>%
   orderby(., 'subjectID')
 
-## ----logprops, eval=run_vignette-----------------------------------------
+## ----logprops, eval=run_vignette----------------------------------------------
 tables_used(dq)
 
 columns_used(dq)
 
 column_names(dq)
 
-## ----printlogistic, eval=run_vignette------------------------------------
+## ----printlogistic, eval=run_vignette-----------------------------------------
 cat(format(dq))
 
-## ----printlogisticsq, eval=run_vignette----------------------------------
+## ----printlogisticsq, eval=run_vignette---------------------------------------
 cat(to_sql(dq, db))
 
-## ----rsummaryex, eval=run_vignette---------------------------------------
+## ----rsummaryex, eval=run_vignette--------------------------------------------
 d %.>%
   rsummary_node(.) %.>%
   execute(db, .)
 
-## ----assignmentpart, eval=run_vignette-----------------------------------
+## ----assignmentpart, eval=run_vignette----------------------------------------
 ot <- mk_td('d4',
                    columns = qc('a', 'b', 'c', 'd')) %.>%
   extend(., 
@@ -89,7 +88,7 @@ ot <- mk_td('d4',
 
 cat(format(ot))
 
-## ----ifelseblock, eval=run_vignette--------------------------------------
+## ----ifelseblock, eval=run_vignette-------------------------------------------
 ifet <- mk_td("d5",
                      columns = "test") %.>%
   extend_se(.,
@@ -104,7 +103,7 @@ ifet <- mk_td("d5",
               )))
 cat(format(ifet))
 
-## ---- eval=run_vignette--------------------------------------------------
+## ---- eval=run_vignette-------------------------------------------------------
 wp <- mk_td(table = 'd6',
                    columns = letters[1:5]) %.>%
   extend(., res := a + b)
@@ -121,7 +120,7 @@ wn <- wp %.>%
 # pipeline
 cat(to_sql(wn, db))
 
-## ----cleanup, eval=run_vignette------------------------------------------
+## ----cleanup, eval=run_vignette-----------------------------------------------
 options(old_o)
 DBI::dbDisconnect(db)
 

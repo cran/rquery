@@ -1,4 +1,13 @@
 
+# rquery 1.4.0 2019/11/30
+
+ * Fix name substitution in immediate mode.
+ * Fix union_all.
+ * Allow ad-hoc (not-bquote) early LHS eval.
+ * Deal with bound variable types.
+ * Deal with degenerate partition in extend.
+ * Work on operator composition shortcuts.
+
 # rquery 1.3.9 2019/10/26
 
  * Tune yaml path.

@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -13,7 +12,7 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2019-10-26" />
+<meta name="date" content="2019-11-30" />
 
 <title>Assignment Partitioner</title>
 
@@ -23,7 +22,7 @@
 <style type="text/css" data-origin="pandoc">
 a.sourceLine { display: inline-block; line-height: 1.25; }
 a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+a.sourceLine:empty { height: 1.2em; position: absolute; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -36,11 +35,13 @@ code.sourceCode { white-space: pre-wrap; }
 a.sourceLine { text-indent: -1em; padding-left: 1em; }
 }
 pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
+  { position: relative; }
+pre.numberSource a.sourceLine:empty
+  { position: absolute; }
 pre.numberSource a.sourceLine::before
   { content: attr(data-line-number);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -304,7 +305,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Assignment Partitioner</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2019-10-26</h4>
+<h4 class="date">2019-11-30</h4>
 
 
 
@@ -493,9 +494,9 @@ FROM (
     `rand_e`
    FROM
     `example_table`
-   ) tsql_59110515983599244008_0000000000
-  ) tsql_59110515983599244008_0000000001
-) tsql_59110515983599244008_0000000002</code></pre>
+   ) tsql_53272849086359897594_0000000000
+  ) tsql_53272849086359897594_0000000001
+) tsql_53272849086359897594_0000000002</code></pre>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(my_db, sql) <span class="op">%.&gt;%</span></a>
 <a class="sourceLine" id="cb7-2" data-line-number="2"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
 <table>
@@ -613,11 +614,9 @@ FROM (
 <a class="sourceLine" id="cb8-40" data-line-number="40">                 <span class="kw">qc</span>(id,</a>
 <a class="sourceLine" id="cb8-41" data-line-number="41">                    a_<span class="dv">1</span>, a_<span class="dv">2</span>, b_<span class="dv">1</span>, b_<span class="dv">2</span>,</a>
 <a class="sourceLine" id="cb8-42" data-line-number="42">                    c_<span class="dv">1</span>, c_<span class="dv">2</span>, d_<span class="dv">1</span>, d_<span class="dv">2</span>,</a>
-<a class="sourceLine" id="cb8-43" data-line-number="43">                    e_<span class="dv">1</span>, e_<span class="dv">2</span>))</a></code></pre></div>
-<pre><code>Warning in extend_impl_list(source = source, parsed = parsed, partitionby
-= partitionby, : rquery:::extend_impl_list assigned same column more than
-once in an extend</code></pre>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">format</span>(plan2))</a></code></pre></div>
+<a class="sourceLine" id="cb8-43" data-line-number="43">                    e_<span class="dv">1</span>, e_<span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb8-44" data-line-number="44"></a>
+<a class="sourceLine" id="cb8-45" data-line-number="45"><span class="kw">cat</span>(<span class="kw">format</span>(plan2))</a></code></pre></div>
 <pre><code>mk_td(&quot;example_table&quot;, c(
   &quot;id&quot;,
   &quot;rand_a&quot;,
@@ -652,9 +651,9 @@ once in an extend</code></pre>
   e_2 := ifelse(choice, &quot;C&quot;, &quot;T&quot;)) %.&gt;%
  select_columns(., 
     c('id', 'a_1', 'a_2', 'b_1', 'b_2', 'c_1', 'c_2', 'd_1', 'd_2', 'e_1', 'e_2'))</code></pre>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1">sql2 &lt;-<span class="st"> </span><span class="kw">to_sql</span>(plan2, my_db)</a>
-<a class="sourceLine" id="cb12-2" data-line-number="2">DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(my_db, sql2) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb12-3" data-line-number="3"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">sql2 &lt;-<span class="st"> </span><span class="kw">to_sql</span>(plan2, my_db)</a>
+<a class="sourceLine" id="cb10-2" data-line-number="2">DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(my_db, sql2) <span class="op">%.&gt;%</span></a>
+<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
 <table>
 <thead>
 <tr class="header">
@@ -727,7 +726,7 @@ once in an extend</code></pre>
 </tbody>
 </table>
 <p>Notice the returned tables are identical (as they should be, <a href="https://github.com/WinVector/rquery/blob/master/extras/AssigmentPartitioner.md#dplyr-example">which is not always the case for database backed <code>dplyr</code></a>).</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(my_db)</a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(my_db)</a></code></pre></div>
 
 
 

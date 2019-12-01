@@ -1,8 +1,8 @@
-## ----chpkg---------------------------------------------------------------
+## ----chpkg--------------------------------------------------------------------
 run_vignette <- requireNamespace("DBI", quietly = TRUE) && 
   requireNamespace("RSQLite", quietly = TRUE)
 
-## ----setup, eval=run_vignette--------------------------------------------
+## ----setup, eval=run_vignette-------------------------------------------------
 library("rquery")
 library("wrapr")
 
@@ -25,7 +25,7 @@ rq_copy_to(
 # produce a hande to existing table
 d <- db_td(db, "d")
 
-## ----defcoltwice, eval=run_vignette--------------------------------------
+## ----defcoltwice, eval=run_vignette-------------------------------------------
 DBI::dbGetQuery(db, "
   SELECT
     *,
@@ -35,7 +35,7 @@ DBI::dbGetQuery(db, "
     d
 ")
 
-## ----nestsql, eval=run_vignette------------------------------------------
+## ----nestsql, eval=run_vignette-----------------------------------------------
 DBI::dbGetQuery(db, "
   SELECT
     *,
@@ -49,52 +49,52 @@ DBI::dbGetQuery(db, "
   ) subtab
 ")
 
-## ----rquerypipe1, eval=run_vignette--------------------------------------
+## ----rquerypipe1, eval=run_vignette-------------------------------------------
 op_tree <- d %.>%
   sql_node(., "absv" := "ABS(v)") %.>%
   sql_node(., "delta" := "absv - v")
 execute(db, op_tree)
 
-## ----printsql, comment="", eval=run_vignette-----------------------------
+## ----printsql, comment="", eval=run_vignette----------------------------------
 cat(to_sql(op_tree, db))
 
-## ----rquerypipe11, comment="", eval=run_vignette-------------------------
+## ----rquerypipe11, comment="", eval=run_vignette------------------------------
 op_tree <- d %.>%
   sql_node(., "absv" := list(list("ABS(", quote(v), ")"))) %.>%
   sql_node(., "delta" := list(list(quote(absv),"-", quote(v))))
 cat(to_sql(op_tree, db))
 
-## ----printoptree, eval=run_vignette--------------------------------------
+## ----printoptree, eval=run_vignette-------------------------------------------
 cat(format(op_tree))
 
-## ----opsummaries, eval=run_vignette--------------------------------------
+## ----opsummaries, eval=run_vignette-------------------------------------------
 column_names(op_tree)
 
 tables_used(op_tree)
 
 columns_used(op_tree)
 
-## ----addop, eval=run_vignette--------------------------------------------
+## ----addop, eval=run_vignette-------------------------------------------------
 op_tree2 <- op_tree %.>%
   sql_node(., "prod" := "absv * delta")
 
 cat(format(op_tree2))
 
-## ----addopq, eval=run_vignette-------------------------------------------
+## ----addopq, eval=run_vignette------------------------------------------------
 op_tree3 <- op_tree %.>%
   sql_node(., qae(prod = absv * delta))
 
 cat(format(op_tree3))
 
-## ----addoperror, error=TRUE, eval=run_vignette---------------------------
+## ----addoperror, error=TRUE, eval=run_vignette--------------------------------
 op_tree4 <- op_tree %.>%
   sql_node(., "z" := list(list("1 + ", quote(z))))
 
-## ----addoperror2, error=TRUE, eval=run_vignette--------------------------
+## ----addoperror2, error=TRUE, eval=run_vignette-------------------------------
 op_tree4 <- op_tree %.>%
   sql_node(., qae(z = 1 + z))
 
-## ----countna, eval=run_vignette------------------------------------------
+## ----countna, eval=run_vignette-----------------------------------------------
 # load up example data
 d2 <- rq_copy_to(
   db, 'd2',
@@ -135,13 +135,13 @@ cat(sql)
 # execute
 execute(db, op_tree_count_null)
 
-## ----countna2, eval=run_vignette-----------------------------------------
+## ----countna2, eval=run_vignette----------------------------------------------
 # whole process wrapped in convenience node
 d2 %.>%
   count_null_cols(., vars, "nnull") %.>%
   execute(db, .)
 
-## ----psql, eval=run_vignette---------------------------------------------
+## ----psql, eval=run_vignette--------------------------------------------------
 # vector of columns we want to work on
 colset <- qc(v1, v2, v3)
 # build new names we want as results
@@ -155,19 +155,19 @@ s_tree <- d2 %.>%
 cat(to_sql(s_tree, db))
 execute(db, s_tree)
 
-## ----execd, eval=run_vignette--------------------------------------------
+## ----execd, eval=run_vignette-------------------------------------------------
 old_o <- options(list("rquery.rquery_db_executor" = list(db = db)))
 
 data.frame(v = -2:2) %.>%
   execute(., op_tree)
 
-## ----rwpipe, eval=run_vignette-------------------------------------------
+## ----rwpipe, eval=run_vignette------------------------------------------------
 data.frame(v = -2:2) %.>% op_tree
 
-## ----adhocops, eval=run_vignette-----------------------------------------
+## ----adhocops, eval=run_vignette----------------------------------------------
 data.frame(x = 5) %.>% sql_node(., "z" := "sqrt(x)")
 
-## ----qex-----------------------------------------------------------------
+## ----qex----------------------------------------------------------------------
 library("rquery")
 
 date_cutoff <- '2017-04-02'
@@ -218,7 +218,7 @@ ops <- td %.>%
 
 cat(to_sql(ops, rquery::rquery_default_db_info()))
 
-## ----q2ex----------------------------------------------------------------
+## ----q2ex---------------------------------------------------------------------
 library("rquery")
 
 date_cutoff <- '2017-04-02'
@@ -244,7 +244,7 @@ ops <- td %.>%
 
 cat(to_sql(ops, rquery::rquery_default_db_info()))
 
-## ----cleanup, eval=run_vignette------------------------------------------
+## ----cleanup, eval=run_vignette-----------------------------------------------
 options(old_o)
 DBI::dbDisconnect(db)
 

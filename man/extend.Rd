@@ -5,11 +5,25 @@
 \alias{extend_nse}
 \title{Extend data by adding more columns.}
 \usage{
-extend(source, ..., partitionby = NULL, orderby = NULL,
-  reverse = NULL, display_form = NULL, env = parent.frame())
+extend(
+  source,
+  ...,
+  partitionby = NULL,
+  orderby = NULL,
+  reverse = NULL,
+  display_form = NULL,
+  env = parent.frame()
+)
 
-extend_nse(source, ..., partitionby = NULL, orderby = NULL,
-  reverse = NULL, display_form = NULL, env = parent.frame())
+extend_nse(
+  source,
+  ...,
+  partitionby = NULL,
+  orderby = NULL,
+  reverse = NULL,
+  display_form = NULL,
+  env = parent.frame()
+)
 }
 \arguments{
 \item{source}{source to select from.}
@@ -34,7 +48,12 @@ Create a node similar to a Codd extend relational operator (add derived columns)
 }
 \details{
 Partitionby and orderby can only be used with a database that supports window-functions
-(such as PostgreSQL, Spark, and so on).  extend() used bquote() .()-style abstraction.
+(such as PostgreSQL, Spark, and so on).
+
+Supports bquote() .()-style name abstraction (please see here: \url{https://github.com/WinVector/rquery/blob/master/Examples/Substitution/Substitution.md}).
+
+Note: if any window/aggregation functions are present then at least one of partitionby or orderby
+must be non empty.  For this purpose partitionby=1 is allowed and means "single partition on the constant 1."
 }
 \examples{
 

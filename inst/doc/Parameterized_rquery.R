@@ -1,4 +1,4 @@
-## ----pkgs, message=FALSE, warning=FALSE----------------------------------
+## ----pkgs, message=FALSE, warning=FALSE---------------------------------------
 have_rqdatatable <- FALSE
 if (requireNamespace("rqdatatable", quietly = TRUE)) {
   library("rqdatatable")
@@ -10,7 +10,7 @@ if (requireNamespace("RSQLite", quietly = TRUE) &&
   have_db <- TRUE
 }
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library("rquery")
 
 # define our parameters
@@ -23,7 +23,7 @@ derived_nm <- as.name(paste0(num_nm, "_per_", den_nm))
 mean_nm <- as.name(paste0("mean_", derived_nm))
 count_nm <- as.name("group_count")
 
-## ---- eval = have_rqdatatable--------------------------------------------
+## ---- eval = have_rqdatatable-------------------------------------------------
 # apply a parameterized pipeline using bquote
 mtcars %.>%
   extend(., 
@@ -35,7 +35,7 @@ mtcars %.>%
   orderby(., 
           group_nm)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # make an abstract description of the table to start with
 td <- mk_td("mtcars",
             as.character(list(group_nm, num_nm, den_nm)))
@@ -55,21 +55,21 @@ ops <- td %.>%
           group_nm)
 
 
-## ----localexec, eval=have_rqdatatable, message=FALSE, warning=FALSE------
+## ----localexec, eval=have_rqdatatable, message=FALSE, warning=FALSE-----------
 # apply it to data
 mtcars %.>% ops
 
-## ----message=FALSE, warning=FALSE----------------------------------------
+## ----message=FALSE, warning=FALSE---------------------------------------------
 # print the operator sequence
 cat(format(ops))
 
-## ----eval=FALSE, message=FALSE, warning=FALSE----------------------------
+## ----eval=FALSE, message=FALSE, warning=FALSE---------------------------------
 #  # draw the pipeline
 #  ops %.>%
 #    op_diagram(.) %.>%
 #    DiagrammeR::grViz(.)
 
-## ----dbex, eval=have_db, message=FALSE, warning=FALSE--------------------
+## ----dbex, eval=have_db, message=FALSE, warning=FALSE-------------------------
 # connect to a database
 raw_connection <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 

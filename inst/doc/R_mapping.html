@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -13,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2019-10-26" />
+<meta name="date" content="2019-11-30" />
 
 <title>R mapping</title>
 
@@ -23,7 +22,7 @@
 <style type="text/css" data-origin="pandoc">
 a.sourceLine { display: inline-block; line-height: 1.25; }
 a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+a.sourceLine:empty { height: 1.2em; position: absolute; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -36,11 +35,13 @@ code.sourceCode { white-space: pre-wrap; }
 a.sourceLine { text-indent: -1em; padding-left: 1em; }
 }
 pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
+  { position: relative; }
+pre.numberSource a.sourceLine:empty
+  { position: absolute; }
 pre.numberSource a.sourceLine::before
   { content: attr(data-line-number);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -304,7 +305,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">R mapping</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2019-10-26</h4>
+<h4 class="date">2019-11-30</h4>
 
 
 
@@ -426,7 +427,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##   `assessmentTotal`
 ##  FROM
 ##   `d`
-##  ) tsql_35868337402762883376_0000000000
+##  ) tsql_65462274853167728695_0000000000
 ## GROUP BY
 ##  `subjectID`</code></pre>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">ops <span class="op">%.&gt;%</span></a>
@@ -512,10 +513,10 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##    `assessmentTotal`
 ##   FROM
 ##    `d`
-##   ) tsql_14279028501846047745_0000000000
+##   ) tsql_39509694548160172767_0000000000
 ##  GROUP BY
 ##   `subjectID`
-##  ) tsql_14279028501846047745_0000000001</code></pre>
+##  ) tsql_39509694548160172767_0000000001</code></pre>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">ops <span class="op">%.&gt;%</span></a>
 <a class="sourceLine" id="cb13-2" data-line-number="2"><span class="st">  </span><span class="kw">execute</span>(db, .) <span class="op">%.&gt;%</span></a>
 <a class="sourceLine" id="cb13-3" data-line-number="3"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
@@ -564,8 +565,8 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ##    `subjectID`
 ##   FROM
 ##    `d`
-##   ) tsql_13321979988058939637_0000000000
-## ) tsql_13321979988058939637_0000000001</code></pre>
+##   ) tsql_55352380060428343442_0000000000
+## ) tsql_55352380060428343442_0000000001</code></pre>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1">ops <span class="op">%.&gt;%</span></a>
 <a class="sourceLine" id="cb16-2" data-line-number="2"><span class="st">  </span><span class="kw">execute</span>(db, .) <span class="op">%.&gt;%</span></a>
 <a class="sourceLine" id="cb16-3" data-line-number="3"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>

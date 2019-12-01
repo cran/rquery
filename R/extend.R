@@ -1,4 +1,48 @@
 
+try_merge_parsed_exprs <- function(p1, p2) {
+  # see if we can remove any results in p1
+  produced_1 <- unlist(lapply(p1, function(pi) { pi$symbols_produced }), recursive = TRUE, use.names = FALSE)
+  produced_2 <- unlist(lapply(p2, function(pi) { pi$symbols_produced }), recursive = TRUE, use.names = FALSE)
+  common_results <- intersect(produced_1, produced_2)
+  if(length(common_results)>0) {
+    # make our condition that neigher set of expressions use any produced columns
+    p1_common <- p1[vapply(p1, function(pi) { pi$symbols_produced %in% common_results }, logical(1))]
+    p2_common <- p2[vapply(p2, function(pi) { pi$symbols_produced %in% common_results }, logical(1))]
+    used_common_1 <- unlist(lapply(p1_common, function(pi) { pi$symbols_used }), recursive = TRUE, use.names = FALSE)
+    produced_common_1 <- unlist(lapply(p1_common, function(pi) { pi$symbols_produced }), recursive = TRUE, use.names = FALSE)
+    used_common_2 <- unlist(lapply(p2_common, function(pi) { pi$symbols_used }), recursive = TRUE, use.names = FALSE)
+    produced_common_2 <- unlist(lapply(p2_common, function(pi) { pi$symbols_produced }), recursive = TRUE, use.names = FALSE)
+    if(length(intersect(used_common_1, produced_2)) > 0) {
+      return(NULL)
+    }
+    if(length(intersect(used_common_1, produced_1)) > 0) {
+      return(NULL)
+    }
+    if(length(intersect(produced_1, used_common_2)) > 0) {
+      return(NULL)
+    }
+    if(length(intersect(produced_2, used_common_2)) > 0) {
+      return(NULL)
+    }
+    # can remove p1 common portions
+    p1 <- p1[vapply(p1, function(pi) { !(pi$symbols_produced %in% common_results) }, logical(1))]
+  }
+  # check disjointness conditions, that will allows us to merge
+  used_1 <- unlist(lapply(p1, function(pi) { pi$symbols_used }), recursive = TRUE, use.names = FALSE)
+  produced_1 <- unlist(lapply(p1, function(pi) { pi$symbols_produced }), recursive = TRUE, use.names = FALSE)
+  used_2 <- unlist(lapply(p2, function(pi) { pi$symbols_used }), recursive = TRUE, use.names = FALSE)
+  produced_2 <- unlist(lapply(p2, function(pi) { pi$symbols_produced }), recursive = TRUE, use.names = FALSE)
+  if(length(intersect(produced_1, produced_2)) > 0) {
+    return(NULL)
+  }
+  if(length(intersect(used_1, produced_2)) > 0) {
+    return(NULL)
+  }
+  if(length(intersect(produced_1, used_2)) > 0) {
+    return(NULL)
+  }
+  c(p1, p2)
+}
 
 
 #' Extend data by adding more columns.
@@ -13,6 +57,7 @@
 #' @param orderby ordering (in window function) terms.
 #' @param reverse reverse order (in window function)
 #' @param display_form chacter presentation form
+#' @param windowed logial, if TRUE we are in a window function situation
 #' @return extend node.
 #'
 #'
@@ -23,9 +68,23 @@ extend_impl <- function(source, parsed,
                         partitionby = NULL,
                         orderby = NULL,
                         reverse = NULL,
-                        display_form = NULL) {
+                        display_form = NULL,
+                        windowed = FALSE) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery:::extend_impl")
+  if(length(parsed) <=0 ) {
+    return(source)
+  }
+  if(length(partitionby)>0) {
+    if(!windowed) {
+      stop("rquery::extend_impl partionby non-trivial, but windowed==FALSE")
+    }
+  }
+  if(length(orderby)>0) {
+    if(!windowed) {
+      stop("rquery::extend_impl orderby non-trivial, but windowed==FALSE")
+    }
+  }
   if(length(partitionby)!=length(unique(partitionby))) {
     stop("rquery:::extend_impl duplicatge partitionby columns")
   }
@@ -35,8 +94,8 @@ extend_impl <- function(source, parsed,
   if(length(orderby)!=length(unique(orderby))) {
     stop("rquery:::extend_impl duplicatge orderby columns")
   }
-  if(length(setdiff(reverse, c(orderby, partitionby)))>0) {
-    stop("rquery::extend_imp all reverse columns must also be orderby or partitionby columns")
+  if(length(setdiff(reverse, orderby))>0) {
+    stop("rquery::extend_imp all reverse columns must also be orderby columns")
   }
   src_columns <- column_names(source)
   required_cols <- sort(unique(c(
@@ -46,6 +105,23 @@ extend_impl <- function(source, parsed,
     orderby
   )))
   check_have_cols(src_columns, required_cols, "rquery::extend")
+  if(("relop_extend" %in% class(source)) && is.null(display_form)) {
+    # see if we can merge nodes
+    if( (windowed == source$windowed) &&
+        isTRUE(all.equal(partitionby, source$partitionby)) &&
+        isTRUE(all.equal(orderby, source$orderby)) &&
+        isTRUE(all.equal(reverse, source$reverse)) ) {
+      parsed_merged <- try_merge_parsed_exprs(source$parsed, parsed)
+      if(length(parsed_merged) > 0) {
+        return(extend_impl(source = source$source[[1]], parsed = parsed_merged,
+                           partitionby = partitionby,
+                           orderby = orderby,
+                           reverse = reverse,
+                           display_form = NULL,
+                           windowed = windowed))
+      }
+    }
+  }
   assignments <- unpack_assignments(source, parsed)
   r <- list(source = list(source),
             table_name = NULL,
@@ -57,7 +133,8 @@ extend_impl <- function(source, parsed,
             required_cols = required_cols,
             columns_produced = names(assignments),
             src_columns = src_columns,
-            display_form = display_form)
+            display_form = display_form,
+            windowed = windowed)
   r <- relop_decorate("relop_extend", r)
   r
 }
@@ -87,13 +164,18 @@ extend_impl_list <- function(source, parsed,
                              display_form = NULL) {
   wrapr::stop_if_dot_args(substitute(list(...)),
                           "rquery:::extend_impl_list")
-  if(length(setdiff(reverse, c(orderby, partitionby)))>0) {
-    stop("rquery::extend_impl_list all reverse columns must also be orderby or partitionby columns")
+  windowed = (length(orderby)>0) || (length(partitionby)>0)
+  if(is.numeric(partitionby)) {
+    partitionby = NULL
+    windowed = TRUE
+  }
+  if(length(setdiff(reverse, orderby))>0) {
+    stop("rquery::extend_impl_list all reverse columns must also be orderby columns")
   }
   produced <- vapply(parsed, function(pi) pi$symbols_produced, character(1))
-  if(length(produced)!=length(unique(produced))) {
-    warning("rquery:::extend_impl_list assigned same column more than once in an extend")
-  }
+  # if(length(produced)!=length(unique(produced))) {
+  #   warning("rquery:::extend_impl_list assigned same column more than once in an extend")
+  # }
   parts <- partition_assignments(parsed)
   ndchain <- source
   for(parti in parts) {
@@ -102,7 +184,8 @@ extend_impl_list <- function(source, parsed,
                            partitionby = partitionby,
                            orderby = orderby,
                            reverse = reverse,
-                           display_form = display_form)
+                           display_form = display_form,
+                           windowed = windowed)
   }
   ndchain
 }
@@ -115,6 +198,9 @@ extend_impl_list <- function(source, parsed,
 #'
 #' Partitionby and orderby can only be used with a database that supports window-functions
 #' (such as PostgreSQL, Spark and so on).
+#'
+#' Note: if any window/aggregation functions are present then at least one of partitionby or orderby
+#' must be non empty.  For this purpose partitionby=1 is allowed and means "single partition on the constant 1."
 #'
 #' @param source source to select from.
 #' @param assignments new column assignment expressions.
@@ -219,7 +305,12 @@ extend_se.data.frame <- function(source, assignments,
 #' Create a node similar to a Codd extend relational operator (add derived columns).
 #'
 #' Partitionby and orderby can only be used with a database that supports window-functions
-#' (such as PostgreSQL, Spark, and so on).  extend() used bquote() .()-style abstraction.
+#' (such as PostgreSQL, Spark, and so on).
+#'
+#' Supports bquote() .()-style name abstraction (please see here: \url{https://github.com/WinVector/rquery/blob/master/Examples/Substitution/Substitution.md}).
+#'
+#' Note: if any window/aggregation functions are present then at least one of partitionby or orderby
+#' must be non empty.  For this purpose partitionby=1 is allowed and means "single partition on the constant 1."
 #'
 #' @param source source to select from.
 #' @param ... new column assignment expressions.
@@ -274,7 +365,7 @@ extend.relop <- function(source,
                              display_form = NULL,
                              env = parent.frame()) {
   force(env)
-  # Recommend way to caputre ... unevalauted from
+  # Recommend way to capture ... unevalauted from
   # http://adv-r.had.co.nz/Computing-on-the-language.html#substitute "Capturing unevaluated ..."
   exprs <-  eval(substitute(alist(...)))
   exprs <- lapply_bquote_to_langauge_list(exprs, env)
@@ -342,8 +433,12 @@ format_node.relop_extend <- function(node) {
   pterms <- ""
   oterms <- ""
   rterms <- ""
-  if(length(node$partitionby)>0) {
-    pterms <- paste0(",\n  partitionby = ", wrapr::map_to_char(node$partitionby))
+  if(node$windowed) {
+    if(length(node$partitionby)>0) {
+      pterms <- paste0(",\n  partitionby = ", wrapr::map_to_char(node$partitionby))
+    } else {
+      pterms <- paste0(",\n  partitionby = 1")
+    }
   }
   if(length(node$partitionby)>0) {
     oterms <- paste0(",\n  orderby = ", wrapr::map_to_char(node$orderby))
@@ -471,7 +566,7 @@ to_sql_relop_extend <- function(
   derived <- NULL
   if(length(re_assignments)>0) {
     windowTerm <- ""
-    if((length(x$partitionby)>0) || (length(x$orderby)>0)) {
+    if(x$windowed) {
       windowTerm <- "OVER ( "
       if(length(x$partitionby)>0) {
         pcols <- vapply(x$partitionby,
