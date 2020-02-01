@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2020-01-17" />
+<meta name="date" content="2020-02-01" />
 
 <title>Pipeable SQL</title>
 
@@ -303,7 +303,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Pipeable SQL</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2020-01-17</h4>
+<h4 class="date">2020-02-01</h4>
 
 
 
@@ -700,25 +700,25 @@ FROM (
 <a class="sourceLine" id="cb52-2" data-line-number="2"></a>
 <a class="sourceLine" id="cb52-3" data-line-number="3"><span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="dv">-2</span><span class="op">:</span><span class="dv">2</span>) <span class="op">%.&gt;%</span></a>
 <a class="sourceLine" id="cb52-4" data-line-number="4"><span class="st">  </span><span class="kw">execute</span>(., op_tree)</a></code></pre></div>
-<pre><code>##    absv delta  v
-## 1:    2     4 -2
-## 2:    1     2 -1
-## 3:    0     0  0
-## 4:    1     0  1
-## 5:    2     0  2</code></pre>
+<pre><code>##   absv delta  v
+## 1    2     4 -2
+## 2    1     2 -1
+## 3    0     0  0
+## 4    1     0  1
+## 5    2     0  2</code></pre>
 <p>When using the <code>wrapr</code> dot pipe the above can be abbreviated as:</p>
 <div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb54-1" data-line-number="1"><span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="dv">-2</span><span class="op">:</span><span class="dv">2</span>) <span class="op">%.&gt;%</span><span class="st"> </span>op_tree</a></code></pre></div>
-<pre><code>##    absv delta  v
-## 1:    2     4 -2
-## 2:    1     2 -1
-## 3:    0     0  0
-## 4:    1     0  1
-## 5:    2     0  2</code></pre>
+<pre><code>##   absv delta  v
+## 1    2     4 -2
+## 2    1     2 -1
+## 3    0     0  0
+## 4    1     0  1
+## 5    2     0  2</code></pre>
 <p>The above calculation is managed by <a href="https://github.com/WinVector/wrapr/blob/master/extras/wrapr_pipe.pdf"><code>wrapr</code> dot pipe <code>S3</code> <code>wrapr_function</code></a> extensions.</p>
 <p><code>rquery</code> operators can be used directly (without any table description nodes) when working with in-memory <code>data.frame</code>s.</p>
 <div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb56-1" data-line-number="1"><span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="dv">5</span>) <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">sql_node</span>(., <span class="st">&quot;z&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;sqrt(x)&quot;</span>)</a></code></pre></div>
-<pre><code>##    x        z
-## 1: 5 2.236068</code></pre>
+<pre><code>##   x        z
+## 1 5 2.236068</code></pre>
 <p>The above calculation is triggered by <code>S3</code> override of any of <code>print()</code>, <code>as.data.frame()</code> and <code>head()</code>. Remote tables need an <code>execute()</code> or <code>materialize()</code> step to specify the database connection.</p>
 </div>
 <div id="table-descriptions" class="section level1">

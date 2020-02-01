@@ -1,4 +1,12 @@
 
+# rquery 1.4.3 2020/02/01
+
+ * Work on noSuggests issue.
+ * Better error message on named argument function.
+ * Don't optimize out select_columns as often.
+ * Add .(-x) notation to promote string values to names.
+ * Move wrapr to Depends.
+
 # rquery 1.4.2 2020/01/17
 
  * Work on query generation and clean up db adaptor path.

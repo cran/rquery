@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2020-01-17" />
+<meta name="date" content="2020-02-01" />
 
 <title>Parameterized rquery</title>
 
@@ -303,7 +303,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Parameterized rquery</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2020-01-17</h4>
+<h4 class="date">2020-02-01</h4>
 
 
 
@@ -342,9 +342,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb3-8" data-line-number="8">          <span class="dt">groupby =</span> group_nm) <span class="op">%.&gt;%</span></a>
 <a class="sourceLine" id="cb3-9" data-line-number="9"><span class="st">  </span><span class="kw">orderby</span>(., </a>
 <a class="sourceLine" id="cb3-10" data-line-number="10">          group_nm)</a></code></pre></div>
-<pre><code>##    am mean_hp_per_cyl group_count
-## 1:  0        22.71491          19
-## 2:  1        23.41987          13</code></pre>
+<pre><code>##   am mean_hp_per_cyl group_count
+## 1  0        22.71491          19
+## 2  1        23.41987          13</code></pre>
 <p>Stored operator tree examples.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co"># make an abstract description of the table to start with</span></a>
 <a class="sourceLine" id="cb5-2" data-line-number="2">td &lt;-<span class="st"> </span><span class="kw">mk_td</span>(<span class="st">&quot;mtcars&quot;</span>,</a>
@@ -365,9 +365,9 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb5-17" data-line-number="17">          group_nm)</a></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="co"># apply it to data</span></a>
 <a class="sourceLine" id="cb6-2" data-line-number="2">mtcars <span class="op">%.&gt;%</span><span class="st"> </span>ops</a></code></pre></div>
-<pre><code>##    am mean_hp_per_cyl group_count
-## 1:  0        22.71491          19
-## 2:  1        23.41987          13</code></pre>
+<pre><code>##   am mean_hp_per_cyl group_count
+## 1  0        22.71491          19
+## 2  1        23.41987          13</code></pre>
 <p>We can display the pipeline in various forms.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="co"># print the operator sequence</span></a>
 <a class="sourceLine" id="cb8-2" data-line-number="2"><span class="kw">cat</span>(<span class="kw">format</span>(ops))</a></code></pre></div>

@@ -86,13 +86,13 @@ extend_impl <- function(source, parsed,
     }
   }
   if(length(partitionby)!=length(unique(partitionby))) {
-    stop("rquery:::extend_impl duplicatge partitionby columns")
+    stop("rquery:::extend_impl duplicate partitionby columns")
   }
   if(length(reverse)!=length(unique(reverse))) {
-    stop("rquery:::extend_impl duplicatge reverse columns")
+    stop("rquery:::extend_impl duplicate reverse columns")
   }
   if(length(orderby)!=length(unique(orderby))) {
-    stop("rquery:::extend_impl duplicatge orderby columns")
+    stop("rquery:::extend_impl duplicate orderby columns")
   }
   if(length(setdiff(reverse, orderby))>0) {
     stop("rquery::extend_imp all reverse columns must also be orderby columns")
@@ -307,7 +307,8 @@ extend_se.data.frame <- function(source, assignments,
 #' Partitionby and orderby can only be used with a database that supports window-functions
 #' (such as PostgreSQL, Spark, and so on).
 #'
-#' Supports bquote() .()-style name abstraction (please see here: \url{https://github.com/WinVector/rquery/blob/master/Examples/Substitution/Substitution.md}).
+#' Supports \code{bquote()} \code{.()}-style name abstraction with the extenson that \code{-} promotes strings to names
+#' (please see here: \url{https://github.com/WinVector/rquery/blob/master/Examples/Substitution/Substitution.md}).
 #'
 #' Note: if any window/aggregation functions are present then at least one of partitionby or orderby
 #' must be non empty.  For this purpose partitionby=1 is allowed and means "single partition on the constant 1."

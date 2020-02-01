@@ -2,10 +2,11 @@
 run_vignette <- requireNamespace("DBI", quietly = TRUE) && 
   requireNamespace("RSQLite", quietly = TRUE)
 
-## ----setup, eval=run_vignette-------------------------------------------------
+## ----import-------------------------------------------------------------------
 library("rquery")
 library("wrapr")
 
+## ----setup, eval=run_vignette-------------------------------------------------
 # example database connection
 db <- DBI::dbConnect(RSQLite::SQLite(),
                      ":memory:")
@@ -18,7 +19,7 @@ options(dbopts)
 # register database
 old_o <- options(list("rquery.rquery_db_executor" = list(db = db)))
 
-## ----tabledescr1--------------------------------------------------------------
+## ----tabledescr1, eval=run_vignette-------------------------------------------
 # copy in example data
 rq_copy_to(
   db, 'd',
