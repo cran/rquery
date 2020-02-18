@@ -108,15 +108,20 @@ new `data.frame` without certain columns.
 
 ``` r
 library(rquery)
+```
+
+    ## Loading required package: wrapr
+
+``` r
 library(rqdatatable)
 
 drop_columns(d, c('y', 'z'))
 ```
 
-    ##    x
-    ## 1: 1
-    ## 2: 1
-    ## 3: 2
+    ##   x
+    ## 1 1
+    ## 2 1
+    ## 3 2
 
 In all cases the first argument of a `rquery` operator is either the
 data to be processed, or an earlier `rquery` pipeline to be extended. We
@@ -552,10 +557,10 @@ cat(to_sql(ops, db))
     ##     `z`
     ##    FROM
     ##     `d`
-    ##    ) tsql_36251475914729678432_0000000000
-    ##  ) tsql_36251475914729678432_0000000001
+    ##    ) tsql_01277139158959309293_0000000000
+    ##  ) tsql_01277139158959309293_0000000001
     ##  WHERE `row_number` = 1
-    ## ) tsql_36251475914729678432_0000000002
+    ## ) tsql_01277139158959309293_0000000002
 
 ``` r
 # clean up
@@ -632,6 +637,30 @@ provider. We are trying to put the Codd relational operators front and
 center (using the original naming, and back-porting `SQL` progress such
 as window functions to the appropriate relational operator).
 
+Some related work includes:
+
+  - [`data.table`](http://r-datatable.com)
+  - [`disk.frame`](https://github.com/xiaodaigh/disk.frame)
+  - [`dbplyr`](https://dbplyr.tidyverse.org)
+  - [`dplyr`](https://dplyr.tidyverse.org)
+  - [`dtplyr`](https://github.com/tidyverse/dtplyr)
+  - [`maditr`](https://github.com/gdemin/maditr)
+  - [`nc`](https://github.com/tdhock/nc)
+  - [`rqdatatable`](https://github.com/WinVector/rqdatatable)
+  - [`SparkR`](https://CRAN.R-project.org/package=SparkR)
+  - [`sparklyr`](https://spark.rstudio.com)
+  - [`sqldf`](https://github.com/ggrothendieck/sqldf)
+  - [`table.express`](https://github.com/asardaes/table.express)
+  - [`tidyfast`](https://github.com/TysonStanley/tidyfast)
+  - [`tidyquery`](https://github.com/ianmcook/tidyquery)
+  - [`tidyr`](https://tidyr.tidyverse.org)
+  - [`tidytable`](https://github.com/markfairbanks/tidytable) (formerly
+    `gdt`/`tidydt`)
+
+# Installing
+
+To install `rquery` please try `install.packages("rquery")`.
+
 # Note
 
 `rquery` is intended to work with “tame column names”, that is column
@@ -639,7 +668,3 @@ names that are legitimate symbols in `R` and `SQL`.
 
 The previous `rquery` introduction is available
 [here](https://github.com/WinVector/rquery/blob/master/Examples/old_readme/README.md).
-
-# Installing
-
-To install `rquery` please try `install.packages("rquery")`.
