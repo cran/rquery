@@ -12,17 +12,33 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2020-02-18" />
+<meta name="date" content="2020-08-11" />
 
 <title>rquery Substitution</title>
 
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -32,14 +48,16 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -48,9 +66,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -301,7 +319,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">rquery Substitution</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2020-02-18</h4>
+<h4 class="date">2020-08-11</h4>
 
 
 
@@ -310,30 +328,30 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="stringscharacter-versus-namessymbols" class="section level2">
 <h2>strings/character versus names/symbols</h2>
 <p>Let’s take a look at this through small examples. First let’s take a look at the difference between strings and symbols in <code>R</code>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">col_string &lt;-<span class="st"> &quot;x&quot;</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">col_name &lt;-<span class="st"> </span><span class="kw">as.name</span>(col_string)</a></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">str</span>(col_string)</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>col_string &lt;-<span class="st"> &quot;x&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a>col_name &lt;-<span class="st"> </span><span class="kw">as.name</span>(col_string)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">str</span>(col_string)</span></code></pre></div>
 <pre><code>##  chr &quot;x&quot;</code></pre>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">str</span>(col_name)</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">str</span>(col_name)</span></code></pre></div>
 <pre><code>##  symbol x</code></pre>
 <p>Notice, in <code>R</code> a string is different than a symbol.</p>
 <p>We can see this difference in <code>rquery</code> where an un-quoted <code>x</code> is treated as a symbol (and therefore is translated to a database column) and a quoted entity is treated as a string (and therefore is translated to a literal or constant, not to a column).</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</a>
-<a class="sourceLine" id="cb6-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb6-3" data-line-number="3">d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="kw">c</span>(<span class="st">'a'</span>, <span class="st">'b'</span>),</a>
-<a class="sourceLine" id="cb6-4" data-line-number="4">                <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</a>
-<a class="sourceLine" id="cb6-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb6-6" data-line-number="6">d_rep &lt;-<span class="st"> </span><span class="kw">local_td</span>(d)</a>
-<a class="sourceLine" id="cb6-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb6-8" data-line-number="8">db_info &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(<span class="dt">identifier_quote_char =</span> <span class="st">&quot;__IDENTIFIER__&quot;</span>,</a>
-<a class="sourceLine" id="cb6-9" data-line-number="9">                          <span class="dt">string_quote_char =</span> <span class="st">&quot;__STRING_CONSTANT__&quot;</span>)</a></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co"># direct use, comparing to a string constant</span></a>
-<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="co"># probaly not the query we intend as the</span></a>
-<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="co"># result is going to be empty independent</span></a>
-<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="co"># of the data.</span></a>
-<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="kw">cat</span>(<span class="kw">to_sql</span>(</a>
-<a class="sourceLine" id="cb7-6" data-line-number="6">  d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(<span class="st">'x'</span>)),</a>
-<a class="sourceLine" id="cb7-7" data-line-number="7">  db_info))</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3"></a>d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="kw">c</span>(<span class="st">&#39;a&#39;</span>, <span class="st">&#39;b&#39;</span>),</span>
+<span id="cb6-4"><a href="#cb6-4"></a>                <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb6-5"><a href="#cb6-5"></a></span>
+<span id="cb6-6"><a href="#cb6-6"></a>d_rep &lt;-<span class="st"> </span><span class="kw">local_td</span>(d)</span>
+<span id="cb6-7"><a href="#cb6-7"></a></span>
+<span id="cb6-8"><a href="#cb6-8"></a>db_info &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(<span class="dt">identifier_quote_char =</span> <span class="st">&quot;__IDENTIFIER__&quot;</span>,</span>
+<span id="cb6-9"><a href="#cb6-9"></a>                          <span class="dt">string_quote_char =</span> <span class="st">&quot;__STRING_CONSTANT__&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># direct use, comparing to a string constant</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="co"># probaly not the query we intend as the</span></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="co"># result is going to be empty independent</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="co"># of the data.</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(</span>
+<span id="cb7-6"><a href="#cb7-6"></a>  d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(<span class="st">&#39;x&#39;</span>)),</span>
+<span id="cb7-7"><a href="#cb7-7"></a>  db_info))</span></code></pre></div>
 <pre><code>## Warning in warn_about_filter_conditions(parsed): rquery::select_rows: expression
 ## is.na(&quot;x&quot;) refers to no columns (so is a constant)</code></pre>
 <pre><code>## SELECT * FROM (
@@ -345,10 +363,10 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## WHERE ( ( __STRING_CONSTANT__x__STRING_CONSTANT__ ) IS NULL )</code></pre>
 <p>We take careful note what is marked as “<code>__IDENTIFIER__</code>”, versus what is marked as “<code>__STRING_CONSTANT__</code>”. Notice “<code>__IDENTIFIER__</code>” is used in the <code>SQL</code> for table names and column name, and “<code>__STRING_CONSTANT__</code>” is used for string constants. The above query is probably not what a user intended as we are checking if a user supplied string constant is <code>NA</code>, which is not interesting.</p>
 <p>Likely the correct query omits the quote marks from the <code>x</code>.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="co"># direct use, comparing to a column</span></a>
-<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="kw">cat</span>(<span class="kw">to_sql</span>(</a>
-<a class="sourceLine" id="cb10-3" data-line-number="3">  d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(x)),</a>
-<a class="sourceLine" id="cb10-4" data-line-number="4">  db_info))</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="co"># direct use, comparing to a column</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(</span>
+<span id="cb10-3"><a href="#cb10-3"></a>  d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(x)),</span>
+<span id="cb10-4"><a href="#cb10-4"></a>  db_info))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
@@ -358,9 +376,9 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## WHERE ( ( __IDENTIFIER__x__IDENTIFIER__ ) IS NULL )</code></pre>
 <p>In the above query we are now comparing an identifier to <code>NULL</code>, which is how <code>SQL</code> expresses comparing the contents of the column named to <code>NULL</code> in a row by row fashion (a useful query).</p>
 <p>Or combing the two ideas. We check which rows of the column <code>x</code> have the value <code>&quot;a&quot;</code> as follows.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">to_sql</span>(</a>
-<a class="sourceLine" id="cb12-2" data-line-number="2">  d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., x <span class="op">==</span><span class="st"> 'a'</span>),</a>
-<a class="sourceLine" id="cb12-3" data-line-number="3">  db_info))</a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(</span>
+<span id="cb12-2"><a href="#cb12-2"></a>  d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., x <span class="op">==</span><span class="st"> &#39;a&#39;</span>),</span>
+<span id="cb12-3"><a href="#cb12-3"></a>  db_info))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
@@ -374,12 +392,12 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p><code>wrapr::let()</code> substitution is designed only to substitute in names as if the user had typed them. It is deliberately not designed to deal with other value substitutions (such as strings, integers, or floating point values). This is intentional and to keep <code>wrapr::let()</code> to one job: adapting NSE (Non-standard interfaces) to accept names as values.</p>
 <p><code>wrapr::let()</code>’s principle is that there is no reason for <code>wrapr::let()</code> to ever substitute in a value (such as a string or an integer) as normal evaluation of variable names in environments already supplies a better way to do that. The only thing that is hard to substitute in are new symbols, so <code>wrapr::let()</code> has code to make sure it is doing only that.</p>
 <p>Accordingly <code>wrapr::let()</code> treats both names/symbols and strings as symbols.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="co"># Let substitution treats all substitutions as source-text</span></a>
-<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="co"># so strings and names are as if the user had typed them</span></a>
-<a class="sourceLine" id="cb14-3" data-line-number="3"><span class="co"># in and behave as names (becoming the name of a column).</span></a>
-<a class="sourceLine" id="cb14-4" data-line-number="4"><span class="kw">let</span>(<span class="kw">c</span>(<span class="dt">COL_STRING =</span> col_string),</a>
-<a class="sourceLine" id="cb14-5" data-line-number="5">    <span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(COL_STRING)),</a>
-<a class="sourceLine" id="cb14-6" data-line-number="6">               db_info)))</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="co"># Let substitution treats all substitutions as source-text</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="co"># so strings and names are as if the user had typed them</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="co"># in and behave as names (becoming the name of a column).</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="kw">let</span>(<span class="kw">c</span>(<span class="dt">COL_STRING =</span> col_string),</span>
+<span id="cb14-5"><a href="#cb14-5"></a>    <span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(COL_STRING)),</span>
+<span id="cb14-6"><a href="#cb14-6"></a>               db_info)))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
@@ -387,12 +405,12 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##   __IDENTIFIER__d__IDENTIFIER__
 ## ) tsql_11344751488889245374_0000000000
 ## WHERE ( ( __IDENTIFIER__x__IDENTIFIER__ ) IS NULL )</code></pre>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="co"># Let substitution treats all substitutions as source-text</span></a>
-<a class="sourceLine" id="cb16-2" data-line-number="2"><span class="co"># so strings and names are as if the user had typed them</span></a>
-<a class="sourceLine" id="cb16-3" data-line-number="3"><span class="co"># in and behave as names (becoming the name of a column).</span></a>
-<a class="sourceLine" id="cb16-4" data-line-number="4"><span class="kw">let</span>(<span class="kw">c</span>(<span class="dt">COL_NAME =</span> col_name),</a>
-<a class="sourceLine" id="cb16-5" data-line-number="5">    <span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(COL_NAME)),</a>
-<a class="sourceLine" id="cb16-6" data-line-number="6">               db_info)))</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="co"># Let substitution treats all substitutions as source-text</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="co"># so strings and names are as if the user had typed them</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a><span class="co"># in and behave as names (becoming the name of a column).</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a><span class="kw">let</span>(<span class="kw">c</span>(<span class="dt">COL_NAME =</span> col_name),</span>
+<span id="cb16-5"><a href="#cb16-5"></a>    <span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(COL_NAME)),</span>
+<span id="cb16-6"><a href="#cb16-6"></a>               db_info)))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
@@ -401,11 +419,11 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## ) tsql_20771172759185263738_0000000000
 ## WHERE ( ( __IDENTIFIER__x__IDENTIFIER__ ) IS NULL )</code></pre>
 <p><code>wrapr::let()</code>’s operating assumption is: if the user was using <code>wrapr::let()</code> the user was intending a symbol, regardless if they specify that symbol using a string or a symbol type. This means the user doesn’t have to maintain the distinction between string representations of names and symbol representations of names when using <code>wrapr::let()</code>. And again, for substituting string-values in: there are already much better ways, such as <code>R</code> evaluation itself (as we show below).</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1">value_we_want &lt;-<span class="st"> &quot;a&quot;</span></a>
-<a class="sourceLine" id="cb18-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb18-3" data-line-number="3"><span class="kw">let</span>(<span class="kw">c</span>(<span class="dt">COL_NAME =</span> col_name),</a>
-<a class="sourceLine" id="cb18-4" data-line-number="4">    <span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., COL_NAME <span class="op">==</span><span class="st"> </span>value_we_want),</a>
-<a class="sourceLine" id="cb18-5" data-line-number="5">               db_info)))</a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>value_we_want &lt;-<span class="st"> &quot;a&quot;</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a></span>
+<span id="cb18-3"><a href="#cb18-3"></a><span class="kw">let</span>(<span class="kw">c</span>(<span class="dt">COL_NAME =</span> col_name),</span>
+<span id="cb18-4"><a href="#cb18-4"></a>    <span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., COL_NAME <span class="op">==</span><span class="st"> </span>value_we_want),</span>
+<span id="cb18-5"><a href="#cb18-5"></a>               db_info)))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
@@ -421,11 +439,11 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p>In this case the emergent behavior is: strings are treated as string constants, and names/symbols are treated as column names. That is the consequences of the substitution performed by <code>bquote()</code> is a function of the type of what is being substituted in. This actually makes sense, but it is something the user has to learn.</p>
 <p><code>rquery</code> can use <code>bquote()</code> substitution two ways: through its own NSE methods, or through <a href="https://winvector.github.io/wrapr/reference/qe.html"><code>wrapr:qe()</code></a> (<code>wrapr</code> quote expression). Both work the same: they treat names/symbols as column names, and character/strings as string constants. So users must express their intent by passing in the correct type.</p>
 <p>Here are examples to show the differences. In all cases substitution is triggered by the <code>.()</code>-notation.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" data-line-number="1"><span class="co"># bquote substitution on string type: col_string </span></a>
-<a class="sourceLine" id="cb20-2" data-line-number="2"><span class="co"># is taken to represent a string constant, not</span></a>
-<a class="sourceLine" id="cb20-3" data-line-number="3"><span class="co"># the name of a column.</span></a>
-<a class="sourceLine" id="cb20-4" data-line-number="4"><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(.(col_string))),</a>
-<a class="sourceLine" id="cb20-5" data-line-number="5">           db_info))</a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="co"># bquote substitution on string type: col_string </span></span>
+<span id="cb20-2"><a href="#cb20-2"></a><span class="co"># is taken to represent a string constant, not</span></span>
+<span id="cb20-3"><a href="#cb20-3"></a><span class="co"># the name of a column.</span></span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(.(col_string))),</span>
+<span id="cb20-5"><a href="#cb20-5"></a>           db_info))</span></code></pre></div>
 <pre><code>## Warning in warn_about_filter_conditions(parsed): rquery::select_rows: expression
 ## is.na(&quot;x&quot;) refers to no columns (so is a constant)</code></pre>
 <pre><code>## SELECT * FROM (
@@ -435,10 +453,10 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##   __IDENTIFIER__d__IDENTIFIER__
 ## ) tsql_69971034639503336613_0000000000
 ## WHERE ( ( __STRING_CONSTANT__x__STRING_CONSTANT__ ) IS NULL )</code></pre>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="co"># bquote substitution on name type: col_name </span></a>
-<a class="sourceLine" id="cb23-2" data-line-number="2"><span class="co"># is taken to represent a column name.</span></a>
-<a class="sourceLine" id="cb23-3" data-line-number="3"><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(.(col_name))),</a>
-<a class="sourceLine" id="cb23-4" data-line-number="4">           db_info))</a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="co"># bquote substitution on name type: col_name </span></span>
+<span id="cb23-2"><a href="#cb23-2"></a><span class="co"># is taken to represent a column name.</span></span>
+<span id="cb23-3"><a href="#cb23-3"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(.(col_name))),</span>
+<span id="cb23-4"><a href="#cb23-4"></a>           db_info))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
@@ -446,11 +464,11 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##   __IDENTIFIER__d__IDENTIFIER__
 ## ) tsql_51574324830299520888_0000000000
 ## WHERE ( ( __IDENTIFIER__x__IDENTIFIER__ ) IS NULL )</code></pre>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="co"># bquote substitution on string type: col_string </span></a>
-<a class="sourceLine" id="cb25-2" data-line-number="2"><span class="co"># is taken to represent a string constant, not</span></a>
-<a class="sourceLine" id="cb25-3" data-line-number="3"><span class="co"># the name of a column.</span></a>
-<a class="sourceLine" id="cb25-4" data-line-number="4"><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows_se</span>(., <span class="kw">qe</span>(<span class="kw">is.na</span>(.(col_string)))),</a>
-<a class="sourceLine" id="cb25-5" data-line-number="5">           db_info))</a></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a><span class="co"># bquote substitution on string type: col_string </span></span>
+<span id="cb25-2"><a href="#cb25-2"></a><span class="co"># is taken to represent a string constant, not</span></span>
+<span id="cb25-3"><a href="#cb25-3"></a><span class="co"># the name of a column.</span></span>
+<span id="cb25-4"><a href="#cb25-4"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows_se</span>(., <span class="kw">qe</span>(<span class="kw">is.na</span>(.(col_string)))),</span>
+<span id="cb25-5"><a href="#cb25-5"></a>           db_info))</span></code></pre></div>
 <pre><code>## Warning in warn_about_filter_conditions(parsed): rquery::select_rows: expression
 ## is.na(&quot;x&quot;) refers to no columns (so is a constant)</code></pre>
 <pre><code>## SELECT * FROM (
@@ -460,10 +478,10 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##   __IDENTIFIER__d__IDENTIFIER__
 ## ) tsql_83314287335586063464_0000000000
 ## WHERE ( ( __STRING_CONSTANT__x__STRING_CONSTANT__ ) IS NULL )</code></pre>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="co"># bquote substitution on name type: col_name </span></a>
-<a class="sourceLine" id="cb28-2" data-line-number="2"><span class="co"># is taken to represent a column name.</span></a>
-<a class="sourceLine" id="cb28-3" data-line-number="3"><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows_se</span>(., <span class="kw">qe</span>(<span class="kw">is.na</span>(.(col_name)))),</a>
-<a class="sourceLine" id="cb28-4" data-line-number="4">           db_info))</a></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="co"># bquote substitution on name type: col_name </span></span>
+<span id="cb28-2"><a href="#cb28-2"></a><span class="co"># is taken to represent a column name.</span></span>
+<span id="cb28-3"><a href="#cb28-3"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows_se</span>(., <span class="kw">qe</span>(<span class="kw">is.na</span>(.(col_name)))),</span>
+<span id="cb28-4"><a href="#cb28-4"></a>           db_info))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__

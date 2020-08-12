@@ -12,17 +12,33 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2020-02-18" />
+<meta name="date" content="2020-08-11" />
 
 <title>Query Generation</title>
 
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -32,14 +48,16 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -48,9 +66,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -301,40 +319,40 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Query Generation</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2020-02-18</h4>
+<h4 class="date">2020-08-11</h4>
 
 
 
 <p>This is a very brief place-holder example (not executed, as <code>SQLite</code> does not have the needed window functions). For more details please see the fuller note: <a href="https://winvector.github.io/rquery/index.html"><code>rquery README</code></a>.</p>
 <p>The primary purpose of <code>rquery</code> is <code>SQL</code> query generation. We demonstrate this below.</p>
 <p>Note: in examples we use <code>rq_copy_to()</code> to create data. This is only for the purpose of having easy portable examples. With big data the data is usually already in the remote database or Spark system. The task is almost always to connect and work with this pre-existing remote data and the method to do this is <a href="https://winvector.github.io/rquery/reference/db_td.html"><code>db_td()</code></a>, which builds a reference to a remote table given the table name.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># produce a hande to existing table</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">d &lt;-<span class="st"> </span><span class="kw">db_td</span>(my_db, <span class="st">&quot;d&quot;</span>)</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">scale &lt;-<span class="st"> </span><span class="fl">0.237</span></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">dq &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="st">  </span><span class="kw">extend</span>(.,</a>
-<a class="sourceLine" id="cb1-8" data-line-number="8">         probability <span class="op">:</span><span class="er">=</span></a>
-<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="st">           </span><span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)<span class="op">/</span></a>
-<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="st">           </span><span class="kw">sum</span>(<span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)),</a>
-<a class="sourceLine" id="cb1-11" data-line-number="11">         count <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">count</span>(<span class="dv">1</span>),</a>
-<a class="sourceLine" id="cb1-12" data-line-number="12">         <span class="dt">partitionby =</span> <span class="st">'subjectID'</span>) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="st">  </span><span class="kw">extend</span>(.,</a>
-<a class="sourceLine" id="cb1-14" data-line-number="14">         rank <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">rank</span>(),</a>
-<a class="sourceLine" id="cb1-15" data-line-number="15">         <span class="dt">partitionby =</span> <span class="st">'subjectID'</span>,</a>
-<a class="sourceLine" id="cb1-16" data-line-number="16">         <span class="dt">orderby =</span> <span class="kw">c</span>(<span class="st">'probability'</span>, <span class="st">'surveyCategory'</span>))  <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb1-17" data-line-number="17"><span class="st">  </span><span class="kw">rename_columns</span>(., <span class="st">'diagnosis'</span> <span class="op">:</span><span class="er">=</span><span class="st"> 'surveyCategory'</span>) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="st">  </span><span class="kw">select_rows</span>(., rank <span class="op">==</span><span class="st"> </span>count) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb1-19" data-line-number="19"><span class="st">  </span><span class="kw">select_columns</span>(., <span class="kw">c</span>(<span class="st">'subjectID'</span>, </a>
-<a class="sourceLine" id="cb1-20" data-line-number="20">                      <span class="st">'diagnosis'</span>, </a>
-<a class="sourceLine" id="cb1-21" data-line-number="21">                      <span class="st">'probability'</span>)) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb1-22" data-line-number="22"><span class="st">  </span><span class="kw">orderby</span>(., <span class="st">'subjectID'</span>)</a>
-<a class="sourceLine" id="cb1-23" data-line-number="23"></a>
-<a class="sourceLine" id="cb1-24" data-line-number="24"><span class="kw">class</span>(my_db)</a>
-<a class="sourceLine" id="cb1-25" data-line-number="25"><span class="co">#&gt; [1] &quot;SQLiteConnection&quot;</span></a>
-<a class="sourceLine" id="cb1-26" data-line-number="26"><span class="co">#&gt; attr(,&quot;package&quot;)</span></a>
-<a class="sourceLine" id="cb1-27" data-line-number="27"><span class="co">#&gt; [1] &quot;RSQLite&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># produce a hande to existing table</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a>d &lt;-<span class="st"> </span><span class="kw">db_td</span>(my_db, <span class="st">&quot;d&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4"></a>scale &lt;-<span class="st"> </span><span class="fl">0.237</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a></span>
+<span id="cb1-6"><a href="#cb1-6"></a>dq &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="st">  </span><span class="kw">extend</span>(.,</span>
+<span id="cb1-8"><a href="#cb1-8"></a>         <span class="dt">probability :=</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>           <span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)<span class="op">/</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="st">           </span><span class="kw">sum</span>(<span class="kw">exp</span>(assessmentTotal <span class="op">*</span><span class="st"> </span>scale)),</span>
+<span id="cb1-11"><a href="#cb1-11"></a>         <span class="dt">count :=</span> <span class="kw">count</span>(<span class="dv">1</span>),</span>
+<span id="cb1-12"><a href="#cb1-12"></a>         <span class="dt">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>) <span class="op">%.&gt;%</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="st">  </span><span class="kw">extend</span>(.,</span>
+<span id="cb1-14"><a href="#cb1-14"></a>         <span class="dt">rank :=</span> <span class="kw">rank</span>(),</span>
+<span id="cb1-15"><a href="#cb1-15"></a>         <span class="dt">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>,</span>
+<span id="cb1-16"><a href="#cb1-16"></a>         <span class="dt">orderby =</span> <span class="kw">c</span>(<span class="st">&#39;probability&#39;</span>, <span class="st">&#39;surveyCategory&#39;</span>))  <span class="op">%.&gt;%</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a><span class="st">  </span><span class="kw">rename_columns</span>(., <span class="st">&#39;diagnosis&#39;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &#39;surveyCategory&#39;</span>) <span class="op">%.&gt;%</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a><span class="st">  </span><span class="kw">select_rows</span>(., rank <span class="op">==</span><span class="st"> </span>count) <span class="op">%.&gt;%</span></span>
+<span id="cb1-19"><a href="#cb1-19"></a><span class="st">  </span><span class="kw">select_columns</span>(., <span class="kw">c</span>(<span class="st">&#39;subjectID&#39;</span>, </span>
+<span id="cb1-20"><a href="#cb1-20"></a>                      <span class="st">&#39;diagnosis&#39;</span>, </span>
+<span id="cb1-21"><a href="#cb1-21"></a>                      <span class="st">&#39;probability&#39;</span>)) <span class="op">%.&gt;%</span></span>
+<span id="cb1-22"><a href="#cb1-22"></a><span class="st">  </span><span class="kw">orderby</span>(., <span class="st">&#39;subjectID&#39;</span>)</span>
+<span id="cb1-23"><a href="#cb1-23"></a></span>
+<span id="cb1-24"><a href="#cb1-24"></a><span class="kw">class</span>(my_db)</span>
+<span id="cb1-25"><a href="#cb1-25"></a><span class="co">#&gt; [1] &quot;SQLiteConnection&quot;</span></span>
+<span id="cb1-26"><a href="#cb1-26"></a><span class="co">#&gt; attr(,&quot;package&quot;)</span></span>
+<span id="cb1-27"><a href="#cb1-27"></a><span class="co">#&gt; [1] &quot;RSQLite&quot;</span></span></code></pre></div>
 <p>Presentation format (see also <a href="https://winvector.github.io/rquery/reference/op_diagram.html"><code>op_diagram()</code></a>):</p>
 <pre><code>  mk_td(&quot;d&quot;, c(
     &quot;subjectID&quot;,
@@ -345,22 +363,22 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
    extend(.,
     probability := exp(assessmentTotal * 0.237) / sum(exp(assessmentTotal * 0.237)),
     count := count(1),
-    partitionby = c('subjectID'),
+    partitionby = c(&#39;subjectID&#39;),
     orderby = c(),
     reverse = c()) %.&gt;%
    extend(.,
     rank := rank(),
-    partitionby = c('subjectID'),
-    orderby = c('probability', 'surveyCategory'),
+    partitionby = c(&#39;subjectID&#39;),
+    orderby = c(&#39;probability&#39;, &#39;surveyCategory&#39;),
     reverse = c()) %.&gt;%
    rename_columns(.,
-    c('diagnosis' = 'surveyCategory')) %.&gt;%
+    c(&#39;diagnosis&#39; = &#39;surveyCategory&#39;)) %.&gt;%
    select_rows(.,
      rank == count) %.&gt;%
    select_columns(., 
-      c('subjectID', 'diagnosis', 'probability')) %.&gt;%
+      c(&#39;subjectID&#39;, &#39;diagnosis&#39;, &#39;probability&#39;)) %.&gt;%
    order_rows(.,
-    c('subjectID'),
+    c(&#39;subjectID&#39;),
     reverse = c(),
     limit = NULL)</code></pre>
 <p><code>to_sql()</code> SQL (see also <a href="https://winvector.github.io/rquery/reference/materialize.html"><code>materialize()</code></a>):</p>

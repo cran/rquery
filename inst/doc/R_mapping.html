@@ -12,17 +12,33 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2020-02-18" />
+<meta name="date" content="2020-08-11" />
 
 <title>R mapping</title>
 
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -32,14 +48,16 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -48,9 +66,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -301,30 +319,34 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">R mapping</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2020-02-18</h4>
+<h4 class="date">2020-08-11</h4>
 
 
 
 <p><code>rquery</code> re-maps a number of symbols during <code>SQL</code> translation.</p>
 <p>During expression parsing the internal <code>rquery</code> function <code>tokenize_call_for_SQL()</code> implements the following re-mappings from <code>R</code> idioms to <code>SQL</code> notation.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(<span class="st">&quot;wrapr&quot;</span>)</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">show_translation &lt;-<span class="st"> </span><span class="cf">function</span>(strings) {</a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">  <span class="kw">vapply</span>(strings,</a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">         <span class="cf">function</span>(si) {</a>
-<a class="sourceLine" id="cb1-7" data-line-number="7">           <span class="kw">format</span>(rquery<span class="op">::</span><span class="kw">tokenize_for_SQL</span>(<span class="kw">parse</span>(<span class="dt">text =</span> si, <span class="dt">keep.source =</span> <span class="ot">FALSE</span>)[[<span class="dv">1</span>]], <span class="dt">colnames =</span> <span class="ot">NULL</span>)<span class="op">$</span>parsed_toks)</a>
-<a class="sourceLine" id="cb1-8" data-line-number="8">         }, <span class="kw">character</span>(<span class="dv">1</span>))</a>
-<a class="sourceLine" id="cb1-9" data-line-number="9">}</a>
-<a class="sourceLine" id="cb1-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb1-11" data-line-number="11">mapping_table &lt;-<span class="st"> </span><span class="kw">data.frame</span>(</a>
-<a class="sourceLine" id="cb1-12" data-line-number="12">  <span class="dt">example =</span> <span class="kw">c</span>(<span class="st">'!x'</span>, <span class="st">'is.na(x)'</span>, <span class="st">'ifelse(a, b, c)'</span>, <span class="st">'a^b'</span>, <span class="st">'a%%b'</span>, </a>
-<a class="sourceLine" id="cb1-13" data-line-number="13">               <span class="st">'a==b'</span>, <span class="st">'a&amp;&amp;b'</span>, <span class="st">'a&amp;b'</span>, <span class="st">'a||b'</span>, <span class="st">'a|b'</span>, </a>
-<a class="sourceLine" id="cb1-14" data-line-number="14">              <span class="st">'pmin(a, b)'</span>, <span class="st">'pmax(a, b)'</span>),</a>
-<a class="sourceLine" id="cb1-15" data-line-number="15">  <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</a>
-<a class="sourceLine" id="cb1-16" data-line-number="16">mapping_table<span class="op">$</span>translation &lt;-<span class="st"> </span><span class="kw">show_translation</span>(mapping_table<span class="op">$</span>example)</a>
-<a class="sourceLine" id="cb1-17" data-line-number="17">knitr<span class="op">::</span><span class="kw">kable</span>(mapping_table)</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">library</span>(<span class="st">&quot;wrapr&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4"></a>show_translation &lt;-<span class="st"> </span><span class="cf">function</span>(strings) {</span>
+<span id="cb1-5"><a href="#cb1-5"></a>  <span class="kw">vapply</span>(strings,</span>
+<span id="cb1-6"><a href="#cb1-6"></a>         <span class="cf">function</span>(si) {</span>
+<span id="cb1-7"><a href="#cb1-7"></a>           <span class="kw">format</span>(rquery<span class="op">::</span><span class="kw">tokenize_for_SQL</span>(<span class="kw">parse</span>(<span class="dt">text =</span> si, <span class="dt">keep.source =</span> <span class="ot">FALSE</span>)[[<span class="dv">1</span>]], <span class="dt">colnames =</span> <span class="ot">NULL</span>)<span class="op">$</span>parsed_toks)</span>
+<span id="cb1-8"><a href="#cb1-8"></a>         }, <span class="kw">character</span>(<span class="dv">1</span>))</span>
+<span id="cb1-9"><a href="#cb1-9"></a>}</span>
+<span id="cb1-10"><a href="#cb1-10"></a></span>
+<span id="cb1-11"><a href="#cb1-11"></a>mapping_table &lt;-<span class="st"> </span><span class="kw">data.frame</span>(</span>
+<span id="cb1-12"><a href="#cb1-12"></a>  <span class="dt">example =</span> <span class="kw">c</span>(<span class="st">&#39;!x&#39;</span>, <span class="st">&#39;is.na(x)&#39;</span>, <span class="st">&#39;ifelse(a, b, c)&#39;</span>, <span class="st">&#39;a^b&#39;</span>, <span class="st">&#39;a%%b&#39;</span>, </span>
+<span id="cb1-13"><a href="#cb1-13"></a>               <span class="st">&#39;a==b&#39;</span>, <span class="st">&#39;a&amp;&amp;b&#39;</span>, <span class="st">&#39;a&amp;b&#39;</span>, <span class="st">&#39;a||b&#39;</span>, <span class="st">&#39;a|b&#39;</span>, </span>
+<span id="cb1-14"><a href="#cb1-14"></a>              <span class="st">&#39;pmin(a, b)&#39;</span>, <span class="st">&#39;pmax(a, b)&#39;</span>),</span>
+<span id="cb1-15"><a href="#cb1-15"></a>  <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb1-16"><a href="#cb1-16"></a>mapping_table<span class="op">$</span>translation &lt;-<span class="st"> </span><span class="kw">show_translation</span>(mapping_table<span class="op">$</span>example)</span>
+<span id="cb1-17"><a href="#cb1-17"></a>knitr<span class="op">::</span><span class="kw">kable</span>(mapping_table)</span></code></pre></div>
 <table>
+<colgroup>
+<col width="12%"></col>
+<col width="87%"></col>
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">example</th>
@@ -384,39 +406,45 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </table>
 <p>Note: not all possible mappings are implemented. For example we currently do not re-map <code>%in%</code>, preferring the user to explicitly work with <a href="https://winvector.github.io/rquery/reference/set_indicator.html"><code>set_indicator()</code></a> directly.</p>
 <p>In addition to this the database connectors can specify additional re-mappings. This can be found by building a formal connector and inspecting the re-mappings.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">have_RSQLite &lt;-<span class="st"> </span><span class="kw">requireNamespace</span>(<span class="st">&quot;RSQLite&quot;</span>, <span class="dt">quietly =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">raw_RSQLite_connection &lt;-<span class="st"> </span>DBI<span class="op">::</span><span class="kw">dbConnect</span>(RSQLite<span class="op">::</span><span class="kw">SQLite</span>(), <span class="st">&quot;:memory:&quot;</span>)</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">RSQLite<span class="op">::</span><span class="kw">initExtension</span>(raw_RSQLite_connection)</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">db &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(</a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">  <span class="dt">connection =</span> raw_RSQLite_connection,</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">  <span class="dt">is_dbi =</span> <span class="ot">TRUE</span>,</a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">  <span class="dt">connection_options =</span> <span class="kw">rq_connection_tests</span>(raw_RSQLite_connection))</a>
-<a class="sourceLine" id="cb3-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb3-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">fn_name_map &lt;-<span class="st"> </span>db<span class="op">$</span>connection_options[[<span class="kw">paste0</span>(<span class="st">&quot;rquery.&quot;</span>, <span class="kw">rq_connection_name</span>(db), <span class="st">&quot;.&quot;</span>, <span class="st">&quot;fn_name_map&quot;</span>)]]</a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">fn_name_map</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>have_RSQLite &lt;-<span class="st"> </span><span class="kw">requireNamespace</span>(<span class="st">&quot;RSQLite&quot;</span>, <span class="dt">quietly =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>raw_RSQLite_connection &lt;-<span class="st"> </span>DBI<span class="op">::</span><span class="kw">dbConnect</span>(RSQLite<span class="op">::</span><span class="kw">SQLite</span>(), <span class="st">&quot;:memory:&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2"></a>RSQLite<span class="op">::</span><span class="kw">initExtension</span>(raw_RSQLite_connection)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>db &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(</span>
+<span id="cb3-4"><a href="#cb3-4"></a>  <span class="dt">connection =</span> raw_RSQLite_connection,</span>
+<span id="cb3-5"><a href="#cb3-5"></a>  <span class="dt">is_dbi =</span> <span class="ot">TRUE</span>,</span>
+<span id="cb3-6"><a href="#cb3-6"></a>  <span class="dt">connection_options =</span> <span class="kw">rq_connection_tests</span>(raw_RSQLite_connection))</span>
+<span id="cb3-7"><a href="#cb3-7"></a></span>
+<span id="cb3-8"><a href="#cb3-8"></a></span>
+<span id="cb3-9"><a href="#cb3-9"></a>fn_name_map &lt;-<span class="st"> </span>db<span class="op">$</span>connection_options[[<span class="kw">paste0</span>(<span class="st">&quot;rquery.&quot;</span>, <span class="kw">rq_connection_name</span>(db), <span class="st">&quot;.&quot;</span>, <span class="st">&quot;fn_name_map&quot;</span>)]]</span>
+<span id="cb3-10"><a href="#cb3-10"></a>fn_name_map</span></code></pre></div>
 <pre><code>## NULL</code></pre>
 <p>We see above that “<code>mean</code>” is re-mapped to “<code>avg</code>”.</p>
 <p>In all cases we can see what re-mappings happen by examining a query.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">d_local &lt;-<span class="st"> </span><span class="kw">build_frame</span>(</a>
-<a class="sourceLine" id="cb5-2" data-line-number="2">   <span class="st">&quot;subjectID&quot;</span>, <span class="st">&quot;surveyCategory&quot;</span>     , <span class="st">&quot;assessmentTotal&quot;</span>, <span class="st">&quot;irrelevantCol1&quot;</span>, <span class="st">&quot;irrelevantCol2&quot;</span> <span class="op">|</span></a>
-<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="st">   </span>1L         , <span class="st">&quot;withdrawal behavior&quot;</span>, <span class="dv">5</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         <span class="op">|</span></a>
-<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="st">   </span>1L         , <span class="st">&quot;positive re-framing&quot;</span>, <span class="dv">2</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         <span class="op">|</span></a>
-<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="st">   </span>3L         , <span class="st">&quot;withdrawal behavior&quot;</span>, <span class="dv">3</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         <span class="op">|</span></a>
-<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="st">   </span>3L         , <span class="st">&quot;positive re-framing&quot;</span>, <span class="dv">2</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         <span class="op">|</span></a>
-<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="st">   </span>3L         , <span class="st">&quot;other&quot;</span>              , <span class="dv">1</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         )</a>
-<a class="sourceLine" id="cb5-8" data-line-number="8">table_handle &lt;-<span class="st"> </span><span class="kw">rq_copy_to</span>(db, <span class="st">'d'</span>,</a>
-<a class="sourceLine" id="cb5-9" data-line-number="9">            d_local,</a>
-<a class="sourceLine" id="cb5-10" data-line-number="10">            <span class="dt">temporary =</span> <span class="ot">TRUE</span>, </a>
-<a class="sourceLine" id="cb5-11" data-line-number="11">            <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb5-12" data-line-number="12"><span class="kw">print</span>(table_handle)</a></code></pre></div>
-<pre><code>## [1] &quot;mk_td(\&quot;d\&quot;, c( \&quot;subjectID\&quot;, \&quot;surveyCategory\&quot;, \&quot;assessmentTotal\&quot;, \&quot;irrelevantCol1\&quot;, \&quot;irrelevantCol2\&quot;))&quot;</code></pre>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">ops &lt;-<span class="st"> </span>table_handle <span class="op">%.&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="st">  </span><span class="kw">project</span>(., </a>
-<a class="sourceLine" id="cb7-3" data-line-number="3">          avg_total <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">avg</span>(<span class="kw">pmax</span>(<span class="dv">0</span>, assessmentTotal)),</a>
-<a class="sourceLine" id="cb7-4" data-line-number="4">          <span class="dt">groupby =</span> <span class="st">&quot;subjectID&quot;</span>)</a>
-<a class="sourceLine" id="cb7-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db))</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>d_local &lt;-<span class="st"> </span><span class="kw">build_frame</span>(</span>
+<span id="cb5-2"><a href="#cb5-2"></a>   <span class="st">&quot;subjectID&quot;</span>, <span class="st">&quot;surveyCategory&quot;</span>     , <span class="st">&quot;assessmentTotal&quot;</span>, <span class="st">&quot;irrelevantCol1&quot;</span>, <span class="st">&quot;irrelevantCol2&quot;</span> <span class="op">|</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="st">   </span>1L         , <span class="st">&quot;withdrawal behavior&quot;</span>, <span class="dv">5</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         <span class="op">|</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="st">   </span>1L         , <span class="st">&quot;positive re-framing&quot;</span>, <span class="dv">2</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         <span class="op">|</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="st">   </span>3L         , <span class="st">&quot;withdrawal behavior&quot;</span>, <span class="dv">3</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         <span class="op">|</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="st">   </span>3L         , <span class="st">&quot;positive re-framing&quot;</span>, <span class="dv">2</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         <span class="op">|</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="st">   </span>3L         , <span class="st">&quot;other&quot;</span>              , <span class="dv">1</span>                , <span class="st">&quot;irrel1&quot;</span>        , <span class="st">&quot;irrel2&quot;</span>         )</span>
+<span id="cb5-8"><a href="#cb5-8"></a>table_handle &lt;-<span class="st"> </span><span class="kw">rq_copy_to</span>(db, <span class="st">&#39;d&#39;</span>,</span>
+<span id="cb5-9"><a href="#cb5-9"></a>            d_local,</span>
+<span id="cb5-10"><a href="#cb5-10"></a>            <span class="dt">temporary =</span> <span class="ot">TRUE</span>, </span>
+<span id="cb5-11"><a href="#cb5-11"></a>            <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb5-12"><a href="#cb5-12"></a><span class="kw">print</span>(table_handle)</span></code></pre></div>
+<pre><code>## [1] &quot;mk_td(\&quot;d\&quot;, c( \&quot;subjectID\&quot;, \&quot;surveyCategory\&quot;, \&quot;assessmentTotal\&quot;, \&quot;irrelevantCol1\&quot;, \&quot;irrelevantCol2\&quot;))&quot;
+##   subjectID      surveyCategory assessmentTotal irrelevantCol1 irrelevantCol2
+## 1         1 withdrawal behavior               5         irrel1         irrel2
+## 2         1 positive re-framing               2         irrel1         irrel2
+## 3         3 withdrawal behavior               3         irrel1         irrel2
+## 4         3 positive re-framing               2         irrel1         irrel2
+## 5         3               other               1         irrel1         irrel2</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>ops &lt;-<span class="st"> </span>table_handle <span class="op">%.&gt;%</span><span class="st"> </span></span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="st">  </span><span class="kw">project</span>(., </span>
+<span id="cb7-3"><a href="#cb7-3"></a>          <span class="dt">avg_total :=</span> <span class="kw">avg</span>(<span class="kw">pmax</span>(<span class="dv">0</span>, assessmentTotal)),</span>
+<span id="cb7-4"><a href="#cb7-4"></a>          <span class="dt">groupby =</span> <span class="st">&quot;subjectID&quot;</span>)</span>
+<span id="cb7-5"><a href="#cb7-5"></a></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db))</span></code></pre></div>
 <pre><code>## SELECT `subjectID`, avg ( ( CASE WHEN ( 0 ) IS NULL THEN ( `assessmentTotal` ) WHEN ( `assessmentTotal` ) IS NULL THEN ( 0 ) WHEN ( 0 ) &gt;= ( `assessmentTotal` ) THEN ( 0 ) ELSE ( `assessmentTotal` ) END ) ) AS `avg_total` FROM (
 ##  SELECT
 ##   `subjectID`,
@@ -426,9 +454,9 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##  ) tsql_35868337402762883376_0000000000
 ## GROUP BY
 ##  `subjectID`</code></pre>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">ops <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="st">  </span><span class="kw">execute</span>(db, .) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>ops <span class="op">%.&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="st">  </span><span class="kw">execute</span>(db, .) <span class="op">%.&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</span></code></pre></div>
 <table>
 <thead>
 <tr class="header">
@@ -448,8 +476,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </tbody>
 </table>
 <p>The basic mappings are stored in database option structures, and depend on the database. For example <code>MOD</code> is re-mapped back to <code>%</code> for <code>RSQLite</code>.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">rquery<span class="op">::</span><span class="kw">rq_function_mappings</span>(db) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>rquery<span class="op">::</span><span class="kw">rq_function_mappings</span>(db) <span class="op">%.&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</span></code></pre></div>
 <table>
 <thead>
 <tr class="header">
@@ -488,14 +516,14 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1">ops &lt;-<span class="st"> </span>table_handle <span class="op">%.&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb11-2" data-line-number="2"><span class="st">  </span><span class="kw">project</span>(., <span class="dt">groupby =</span> <span class="st">&quot;subjectID&quot;</span>,</a>
-<a class="sourceLine" id="cb11-3" data-line-number="3">          n <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="dv">5</span>, </a>
-<a class="sourceLine" id="cb11-4" data-line-number="4">          count <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">n</span>(),</a>
-<a class="sourceLine" id="cb11-5" data-line-number="5">          mean <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">mean</span>(assessmentTotal)) <span class="op">%.&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb11-6" data-line-number="6"><span class="st">  </span><span class="kw">extend</span>(., was_n <span class="op">:</span><span class="er">=</span><span class="st"> </span>n)</a>
-<a class="sourceLine" id="cb11-7" data-line-number="7">                 </a>
-<a class="sourceLine" id="cb11-8" data-line-number="8"><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db))</a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>ops &lt;-<span class="st"> </span>table_handle <span class="op">%.&gt;%</span><span class="st"> </span></span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="st">  </span><span class="kw">project</span>(., <span class="dt">groupby =</span> <span class="st">&quot;subjectID&quot;</span>,</span>
+<span id="cb11-3"><a href="#cb11-3"></a>          <span class="dt">n :=</span> <span class="dv">5</span>, </span>
+<span id="cb11-4"><a href="#cb11-4"></a>          <span class="dt">count :=</span> <span class="kw">n</span>(),</span>
+<span id="cb11-5"><a href="#cb11-5"></a>          <span class="dt">mean :=</span> <span class="kw">mean</span>(assessmentTotal)) <span class="op">%.&gt;%</span><span class="st"> </span></span>
+<span id="cb11-6"><a href="#cb11-6"></a><span class="st">  </span><span class="kw">extend</span>(., <span class="dt">was_n :=</span> n)</span>
+<span id="cb11-7"><a href="#cb11-7"></a>                 </span>
+<span id="cb11-8"><a href="#cb11-8"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db))</span></code></pre></div>
 <pre><code>## SELECT
 ##  `subjectID`,
 ##  `n`,
@@ -513,9 +541,9 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##  GROUP BY
 ##   `subjectID`
 ##  ) tsql_14279028501846047745_0000000001</code></pre>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">ops <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="st">  </span><span class="kw">execute</span>(db, .) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb13-3" data-line-number="3"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>ops <span class="op">%.&gt;%</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="st">  </span><span class="kw">execute</span>(db, .) <span class="op">%.&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3"></a><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</span></code></pre></div>
 <table>
 <thead>
 <tr class="header">
@@ -544,11 +572,11 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </tbody>
 </table>
 <p>Additional function re-mappings can be specified by user code. One such example is re-writing <code>MOD</code> as <code>%</code> for <code>RSQLite</code>.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1">ops &lt;-<span class="st"> </span>table_handle <span class="op">%.&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="st">  </span><span class="kw">extend</span>(., z <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="dv">1</span> <span class="op">+</span><span class="st"> </span>subjectID <span class="op">%%</span><span class="st"> </span><span class="dv">3</span>) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb14-3" data-line-number="3"><span class="st">  </span><span class="kw">select_columns</span>(., <span class="kw">c</span>(<span class="st">&quot;subjectID&quot;</span>, <span class="st">&quot;z&quot;</span>))</a>
-<a class="sourceLine" id="cb14-4" data-line-number="4">                 </a>
-<a class="sourceLine" id="cb14-5" data-line-number="5"><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db))</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>ops &lt;-<span class="st"> </span>table_handle <span class="op">%.&gt;%</span><span class="st"> </span></span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="st">  </span><span class="kw">extend</span>(., <span class="dt">z :=</span> <span class="dv">1</span> <span class="op">+</span><span class="st"> </span>subjectID <span class="op">%%</span><span class="st"> </span><span class="dv">3</span>) <span class="op">%.&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="st">  </span><span class="kw">select_columns</span>(., <span class="kw">c</span>(<span class="st">&quot;subjectID&quot;</span>, <span class="st">&quot;z&quot;</span>))</span>
+<span id="cb14-4"><a href="#cb14-4"></a>                 </span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db))</span></code></pre></div>
 <pre><code>## SELECT
 ##  `subjectID`,
 ##  `z`
@@ -563,9 +591,9 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##    `d`
 ##   ) tsql_13321979988058939637_0000000000
 ## ) tsql_13321979988058939637_0000000001</code></pre>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1">ops <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb16-2" data-line-number="2"><span class="st">  </span><span class="kw">execute</span>(db, .) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb16-3" data-line-number="3"><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>ops <span class="op">%.&gt;%</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="st">  </span><span class="kw">execute</span>(db, .) <span class="op">%.&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a><span class="st">  </span>knitr<span class="op">::</span><span class="kw">kable</span>(.)</span></code></pre></div>
 <table>
 <thead>
 <tr class="header">
@@ -597,7 +625,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </tbody>
 </table>
 <p><code>rqdatatable</code> also supplies some re-mappings (described <a href="https://winvector.github.io/rqdatatable/articles/R_mapping.html">here</a>). This can allow us to use a uniform notation for tasks such as random number generation to allow portable pipelines.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(raw_RSQLite_connection)</a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(raw_RSQLite_connection)</span></code></pre></div>
 
 
 

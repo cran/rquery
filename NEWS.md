@@ -1,4 +1,9 @@
 
+# rquery 1.4.5 2020/08/11
+
+ * Add more related work links.
+ * More info in table handle.
+
 # rquery 1.4.4 2020/02/18
 
  * Isolate bquote a bit more.

@@ -12,17 +12,33 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2020-02-18" />
+<meta name="date" content="2020-08-11" />
 
 <title>SQL quoting</title>
 
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -32,14 +48,16 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -48,9 +66,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -301,33 +319,33 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">SQL quoting</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2020-02-18</h4>
+<h4 class="date">2020-08-11</h4>
 
 
 
 <p><code>rquery</code> does not parse expression of the <code>SQL</code> node. Thus it does not know which tokens are string-literals, and which are column names. To assist with this user can annotate column names with <code>.[]</code>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">date_cutoff &lt;-<span class="st"> '2017-04-02'</span></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">td &lt;-<span class="st"> </span><span class="kw">mk_td</span>(<span class="st">&quot;df&quot;</span>, </a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">            <span class="kw">c</span>(<span class="st">&quot;cust&quot;</span>,</a>
-<a class="sourceLine" id="cb1-7" data-line-number="7">              <span class="st">&quot;trans_date&quot;</span>,</a>
-<a class="sourceLine" id="cb1-8" data-line-number="8">              <span class="st">&quot;sales&quot;</span>))</a>
-<a class="sourceLine" id="cb1-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb1-10" data-line-number="10">ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="st">  </span><span class="kw">select_rows_se</span>(</a>
-<a class="sourceLine" id="cb1-12" data-line-number="12">    ., </a>
-<a class="sourceLine" id="cb1-13" data-line-number="13">    <span class="kw">qe</span>(trans_date <span class="op">&lt;=</span><span class="st">  </span><span class="kw">str_to_date</span>(.(date_cutoff), <span class="st">'%Y-%m-%d'</span>))) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb1-14" data-line-number="14"><span class="st">  </span><span class="kw">sql_node</span>(</a>
-<a class="sourceLine" id="cb1-15" data-line-number="15">    .,</a>
-<a class="sourceLine" id="cb1-16" data-line-number="16">    <span class="kw">qae</span>(<span class="dt">max_date =</span> <span class="kw">max</span>(.[trans_date]),</a>
-<a class="sourceLine" id="cb1-17" data-line-number="17">        <span class="dt">const_col1 =</span> <span class="st">&quot;a'&quot;</span>,</a>
-<a class="sourceLine" id="cb1-18" data-line-number="18">        <span class="dt">const_col2 =</span> <span class="st">'a&quot;'</span>),</a>
-<a class="sourceLine" id="cb1-19" data-line-number="19">    <span class="dt">mods =</span> <span class="st">&quot;GROUP BY .[cust]&quot;</span>,</a>
-<a class="sourceLine" id="cb1-20" data-line-number="20">    <span class="dt">orig_columns =</span> <span class="ot">FALSE</span>)</a>
-<a class="sourceLine" id="cb1-21" data-line-number="21"></a>
-<a class="sourceLine" id="cb1-22" data-line-number="22"><span class="kw">cat</span>(<span class="kw">format</span>(ops))</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2"></a></span>
+<span id="cb1-3"><a href="#cb1-3"></a>date_cutoff &lt;-<span class="st"> &#39;2017-04-02&#39;</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a></span>
+<span id="cb1-5"><a href="#cb1-5"></a>td &lt;-<span class="st"> </span><span class="kw">mk_td</span>(<span class="st">&quot;df&quot;</span>, </span>
+<span id="cb1-6"><a href="#cb1-6"></a>            <span class="kw">c</span>(<span class="st">&quot;cust&quot;</span>,</span>
+<span id="cb1-7"><a href="#cb1-7"></a>              <span class="st">&quot;trans_date&quot;</span>,</span>
+<span id="cb1-8"><a href="#cb1-8"></a>              <span class="st">&quot;sales&quot;</span>))</span>
+<span id="cb1-9"><a href="#cb1-9"></a></span>
+<span id="cb1-10"><a href="#cb1-10"></a>ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="st">  </span><span class="kw">select_rows_se</span>(</span>
+<span id="cb1-12"><a href="#cb1-12"></a>    ., </span>
+<span id="cb1-13"><a href="#cb1-13"></a>    <span class="kw">qe</span>(trans_date <span class="op">&lt;=</span><span class="st">  </span><span class="kw">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="op">%.&gt;%</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="st">  </span><span class="kw">sql_node</span>(</span>
+<span id="cb1-15"><a href="#cb1-15"></a>    .,</span>
+<span id="cb1-16"><a href="#cb1-16"></a>    <span class="kw">qae</span>(<span class="dt">max_date =</span> <span class="kw">max</span>(.[trans_date]),</span>
+<span id="cb1-17"><a href="#cb1-17"></a>        <span class="dt">const_col1 =</span> <span class="st">&quot;a&#39;&quot;</span>,</span>
+<span id="cb1-18"><a href="#cb1-18"></a>        <span class="dt">const_col2 =</span> <span class="st">&#39;a&quot;&#39;</span>),</span>
+<span id="cb1-19"><a href="#cb1-19"></a>    <span class="dt">mods =</span> <span class="st">&quot;GROUP BY .[cust]&quot;</span>,</span>
+<span id="cb1-20"><a href="#cb1-20"></a>    <span class="dt">orig_columns =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb1-21"><a href="#cb1-21"></a></span>
+<span id="cb1-22"><a href="#cb1-22"></a><span class="kw">cat</span>(<span class="kw">format</span>(ops))</span></code></pre></div>
 <pre><code>## mk_td(&quot;df&quot;, c(
 ##   &quot;cust&quot;,
 ##   &quot;trans_date&quot;,
@@ -336,40 +354,40 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##    trans_date &lt;= str_to_date(&quot;2017-04-02&quot;, &quot;%Y-%m-%d&quot;)) %.&gt;%
 ##  sql_node(.,
 ##           max_date %:=% max( trans_date )
-##              const_col1 %:=% &quot;a'&quot;
+##              const_col1 %:=% &quot;a&#39;&quot;
 ##              const_col2 %:=% &quot;a\&quot;&quot;;
 ##            GROUP BY  &quot;cust&quot;,
 ##              *=FALSE)</code></pre>
 <p>Notice how this renders into different <code>SQL</code> for each of our two database descriptions.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">db1 &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">  <span class="dt">identifier_quote_char =</span> <span class="st">&quot;'&quot;</span>,</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  <span class="dt">string_quote_char =</span> <span class="st">'&quot;'</span>)</a>
-<a class="sourceLine" id="cb3-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db1))</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>db1 &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(</span>
+<span id="cb3-2"><a href="#cb3-2"></a>  <span class="dt">identifier_quote_char =</span> <span class="st">&quot;&#39;&quot;</span>,</span>
+<span id="cb3-3"><a href="#cb3-3"></a>  <span class="dt">string_quote_char =</span> <span class="st">&#39;&quot;&#39;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4"></a></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db1))</span></code></pre></div>
 <pre><code>## SELECT
-##  max( 'trans_date' ) AS 'max_date',
-##  &quot;a'&quot; AS 'const_col1',
-##  &quot;a\&quot;&quot; AS 'const_col2'
+##  max( &#39;trans_date&#39; ) AS &#39;max_date&#39;,
+##  &quot;a&#39;&quot; AS &#39;const_col1&#39;,
+##  &quot;a\&quot;&quot; AS &#39;const_col2&#39;
 ## FROM (
 ##  SELECT * FROM (
 ##   SELECT
-##    'cust',
-##    'trans_date',
-##    'sales'
+##    &#39;cust&#39;,
+##    &#39;trans_date&#39;,
+##    &#39;sales&#39;
 ##   FROM
-##    'df'
+##    &#39;df&#39;
 ##  ) tsql_67729689893246546433_0000000000
-##  WHERE 'trans_date' &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
-## ) tsql_67729689893246546433_0000000001 GROUP BY  'cust'</code></pre>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">db2 &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(</a>
-<a class="sourceLine" id="cb5-2" data-line-number="2">  <span class="dt">identifier_quote_char =</span> <span class="st">'&quot;'</span>,</a>
-<a class="sourceLine" id="cb5-3" data-line-number="3">  <span class="dt">string_quote_char =</span> <span class="st">&quot;'&quot;</span>)</a>
-<a class="sourceLine" id="cb5-4" data-line-number="4">  </a>
-<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db2))</a></code></pre></div>
+##  WHERE &#39;trans_date&#39; &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
+## ) tsql_67729689893246546433_0000000001 GROUP BY  &#39;cust&#39;</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>db2 &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(</span>
+<span id="cb5-2"><a href="#cb5-2"></a>  <span class="dt">identifier_quote_char =</span> <span class="st">&#39;&quot;&#39;</span>,</span>
+<span id="cb5-3"><a href="#cb5-3"></a>  <span class="dt">string_quote_char =</span> <span class="st">&quot;&#39;&quot;</span>)</span>
+<span id="cb5-4"><a href="#cb5-4"></a>  </span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db2))</span></code></pre></div>
 <pre><code>## SELECT
 ##  max( &quot;trans_date&quot; ) AS &quot;max_date&quot;,
-##  'a'' AS &quot;const_col1&quot;,
-##  'a\'' AS &quot;const_col2&quot;
+##  &#39;a&#39;&#39; AS &quot;const_col1&quot;,
+##  &#39;a\&#39;&#39; AS &quot;const_col2&quot;
 ## FROM (
 ##  SELECT * FROM (
 ##   SELECT
@@ -379,24 +397,24 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##   FROM
 ##    &quot;df&quot;
 ##  ) tsql_15078633867930377947_0000000000
-##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( '2017-04-02' , '%Y-%m-%d' )
+##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( &#39;2017-04-02&#39; , &#39;%Y-%m-%d&#39; )
 ## ) tsql_15078633867930377947_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
 <p>Notice our included quote characters were translated. This is an unwanted side-effect of using the <code>qae()</code> shortcut which does not tokenize, so it does not know which quotes are in which roles in the expression.</p>
 <p>To override quote translation in the <code>sql_node()</code> (which is simple string substitution without quote context or escaping) you must use the clunkier “build up a string as a list of tokens” (where sub-listed items are string literals and names are column names).</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="st">  </span><span class="kw">select_rows_se</span>(</a>
-<a class="sourceLine" id="cb7-3" data-line-number="3">    ., </a>
-<a class="sourceLine" id="cb7-4" data-line-number="4">    <span class="kw">qe</span>(trans_date <span class="op">&lt;=</span><span class="st">  </span><span class="kw">str_to_date</span>(.(date_cutoff), <span class="st">'%Y-%m-%d'</span>))) <span class="op">%.&gt;%</span></a>
-<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="st">  </span><span class="kw">sql_node</span>(</a>
-<a class="sourceLine" id="cb7-6" data-line-number="6">    .,</a>
-<a class="sourceLine" id="cb7-7" data-line-number="7">    <span class="kw">list</span>(</a>
-<a class="sourceLine" id="cb7-8" data-line-number="8">      <span class="st">&quot;max_date&quot;</span> <span class="op">%:=%</span><span class="st"> &quot;max(.[trans_date])&quot;</span>,</a>
-<a class="sourceLine" id="cb7-9" data-line-number="9">      <span class="st">&quot;const_col1&quot;</span> =<span class="st"> </span><span class="kw">list</span>(<span class="kw">list</span>(<span class="st">&quot;a'&quot;</span>)),</a>
-<a class="sourceLine" id="cb7-10" data-line-number="10">      <span class="st">&quot;const_col2&quot;</span> =<span class="st"> </span><span class="kw">list</span>(<span class="kw">list</span>(<span class="st">'b&quot;'</span>))),</a>
-<a class="sourceLine" id="cb7-11" data-line-number="11">    <span class="dt">mods =</span> <span class="st">&quot;GROUP BY .[cust]&quot;</span>,</a>
-<a class="sourceLine" id="cb7-12" data-line-number="12">    <span class="dt">orig_columns =</span> <span class="ot">FALSE</span>)</a>
-<a class="sourceLine" id="cb7-13" data-line-number="13"></a>
-<a class="sourceLine" id="cb7-14" data-line-number="14"><span class="kw">cat</span>(<span class="kw">format</span>(ops))</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="st">  </span><span class="kw">select_rows_se</span>(</span>
+<span id="cb7-3"><a href="#cb7-3"></a>    ., </span>
+<span id="cb7-4"><a href="#cb7-4"></a>    <span class="kw">qe</span>(trans_date <span class="op">&lt;=</span><span class="st">  </span><span class="kw">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="op">%.&gt;%</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="st">  </span><span class="kw">sql_node</span>(</span>
+<span id="cb7-6"><a href="#cb7-6"></a>    .,</span>
+<span id="cb7-7"><a href="#cb7-7"></a>    <span class="kw">list</span>(</span>
+<span id="cb7-8"><a href="#cb7-8"></a>      <span class="st">&quot;max_date&quot;</span> <span class="op">%:=%</span><span class="st"> &quot;max(.[trans_date])&quot;</span>,</span>
+<span id="cb7-9"><a href="#cb7-9"></a>      <span class="st">&quot;const_col1&quot;</span> =<span class="st"> </span><span class="kw">list</span>(<span class="kw">list</span>(<span class="st">&quot;a&#39;&quot;</span>)),</span>
+<span id="cb7-10"><a href="#cb7-10"></a>      <span class="st">&quot;const_col2&quot;</span> =<span class="st"> </span><span class="kw">list</span>(<span class="kw">list</span>(<span class="st">&#39;b&quot;&#39;</span>))),</span>
+<span id="cb7-11"><a href="#cb7-11"></a>    <span class="dt">mods =</span> <span class="st">&quot;GROUP BY .[cust]&quot;</span>,</span>
+<span id="cb7-12"><a href="#cb7-12"></a>    <span class="dt">orig_columns =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb7-13"><a href="#cb7-13"></a></span>
+<span id="cb7-14"><a href="#cb7-14"></a><span class="kw">cat</span>(<span class="kw">format</span>(ops))</span></code></pre></div>
 <pre><code>## mk_td(&quot;df&quot;, c(
 ##   &quot;cust&quot;,
 ##   &quot;trans_date&quot;,
@@ -405,31 +423,31 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##    trans_date &lt;= str_to_date(&quot;2017-04-02&quot;, &quot;%Y-%m-%d&quot;)) %.&gt;%
 ##  sql_node(.,
 ##            %:=% max( trans_date )
-##              const_col1 %:=% list(&quot;a'&quot;)
+##              const_col1 %:=% list(&quot;a&#39;&quot;)
 ##              const_col2 %:=% list(&quot;b\&quot;&quot;);
 ##            GROUP BY  &quot;cust&quot;,
 ##              *=FALSE)</code></pre>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db1))</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db1))</span></code></pre></div>
 <pre><code>## SELECT
 ##  NA,
-##  &quot;a'&quot; AS 'const_col1',
-##  &quot;b\&quot;&quot; AS 'const_col2'
+##  &quot;a&#39;&quot; AS &#39;const_col1&#39;,
+##  &quot;b\&quot;&quot; AS &#39;const_col2&#39;
 ## FROM (
 ##  SELECT * FROM (
 ##   SELECT
-##    'cust',
-##    'trans_date',
-##    'sales'
+##    &#39;cust&#39;,
+##    &#39;trans_date&#39;,
+##    &#39;sales&#39;
 ##   FROM
-##    'df'
+##    &#39;df&#39;
 ##  ) tsql_20822659458285677705_0000000000
-##  WHERE 'trans_date' &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
-## ) tsql_20822659458285677705_0000000001 GROUP BY  'cust'</code></pre>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db2))</a></code></pre></div>
+##  WHERE &#39;trans_date&#39; &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
+## ) tsql_20822659458285677705_0000000001 GROUP BY  &#39;cust&#39;</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, db2))</span></code></pre></div>
 <pre><code>## SELECT
 ##  NA,
-##  'a\'' AS &quot;const_col1&quot;,
-##  'b&quot;' AS &quot;const_col2&quot;
+##  &#39;a\&#39;&#39; AS &quot;const_col1&quot;,
+##  &#39;b&quot;&#39; AS &quot;const_col2&quot;
 ## FROM (
 ##  SELECT * FROM (
 ##   SELECT
@@ -439,7 +457,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##   FROM
 ##    &quot;df&quot;
 ##  ) tsql_18777689918276174215_0000000000
-##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( '2017-04-02' , '%Y-%m-%d' )
+##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( &#39;2017-04-02&#39; , &#39;%Y-%m-%d&#39; )
 ## ) tsql_18777689918276174215_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
 <p>Quotes within string literals are going to be a nightmare moving from db to db, so our advice is to try to avoid them.</p>
 
