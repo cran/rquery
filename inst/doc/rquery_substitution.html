@@ -12,26 +12,11 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2020-10-17" />
+<meta name="date" content="2021-06-10" />
 
 <title>rquery Substitution</title>
 
-<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
-// v0.0.1
-// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
-
-document.addEventListener('DOMContentLoaded', function() {
-  const codeList = document.getElementsByClassName("sourceCode");
-  for (var i = 0; i < codeList.length; i++) {
-    var linkList = codeList[i].getElementsByTagName('a');
-    for (var j = 0; j < linkList.length; j++) {
-      if (linkList[j].innerHTML === "") {
-        linkList[j].setAttribute('aria-hidden', 'true');
-      }
-    }
-  }
-});
-</script>
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -40,87 +25,31 @@ document.addEventListener('DOMContentLoaded', function() {
   div.column{display: inline-block; vertical-align: top; width: 50%;}
   div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
   ul.task-list{list-style: none;}
-      code.sourceCode > span { display: inline-block; line-height: 1.25; }
-  code.sourceCode > span { color: inherit; text-decoration: inherit; }
-  code.sourceCode > span:empty { height: 1.2em; }
-  .sourceCode { overflow: visible; }
-  code.sourceCode { white-space: pre; position: relative; }
-  div.sourceCode { margin: 1em 0; }
-  pre.sourceCode { margin: 0; }
-  @media screen {
-  div.sourceCode { overflow: auto; }
-  }
-  @media print {
-  code.sourceCode { white-space: pre-wrap; }
-  code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-  }
-  pre.numberSource code
-    { counter-reset: source-line 0; }
-  pre.numberSource code > span
-    { position: relative; left: -4em; counter-increment: source-line; }
-  pre.numberSource code > span > a:first-child::before
-    { content: counter(source-line);
-      position: relative; left: -1em; text-align: right; vertical-align: baseline;
-      border: none; display: inline-block;
-      -webkit-touch-callout: none; -webkit-user-select: none;
-      -khtml-user-select: none; -moz-user-select: none;
-      -ms-user-select: none; user-select: none;
-      padding: 0 4px; width: 4em;
-      color: #aaaaaa;
-    }
-  pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
-  div.sourceCode
-    {   }
-  @media screen {
-  code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-  }
-  code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-  code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-  code span.at { color: #7d9029; } /* Attribute */
-  code span.bn { color: #40a070; } /* BaseN */
-  code span.bu { } /* BuiltIn */
-  code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-  code span.ch { color: #4070a0; } /* Char */
-  code span.cn { color: #880000; } /* Constant */
-  code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-  code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-  code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-  code span.dt { color: #902000; } /* DataType */
-  code span.dv { color: #40a070; } /* DecVal */
-  code span.er { color: #ff0000; font-weight: bold; } /* Error */
-  code span.ex { } /* Extension */
-  code span.fl { color: #40a070; } /* Float */
-  code span.fu { color: #06287e; } /* Function */
-  code span.im { } /* Import */
-  code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-  code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-  code span.op { color: #666666; } /* Operator */
-  code span.ot { color: #007020; } /* Other */
-  code span.pp { color: #bc7a00; } /* Preprocessor */
-  code span.sc { color: #4070a0; } /* SpecialChar */
-  code span.ss { color: #bb6688; } /* SpecialString */
-  code span.st { color: #4070a0; } /* String */
-  code span.va { color: #19177c; } /* Variable */
-  code span.vs { color: #4070a0; } /* VerbatimString */
-  code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
     </style>
 
 
-<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
 <style type="text/css" data-origin="pandoc">
-code.sourceCode > span { display: inline-block; line-height: 1.25; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-code.sourceCode > span:empty { height: 1.2em; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -140,7 +69,7 @@ pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-le
 div.sourceCode
   {   }
 @media screen {
-code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -197,187 +126,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<style type="text/css">body {
-background-color: #fff;
-margin: 1em auto;
-max-width: 700px;
-overflow: visible;
-padding-left: 2em;
-padding-right: 2em;
-font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-font-size: 14px;
-line-height: 1.35;
-}
-#TOC {
-clear: both;
-margin: 0 0 10px 10px;
-padding: 4px;
-width: 400px;
-border: 1px solid #CCCCCC;
-border-radius: 5px;
-background-color: #f6f6f6;
-font-size: 13px;
-line-height: 1.3;
-}
-#TOC .toctitle {
-font-weight: bold;
-font-size: 15px;
-margin-left: 5px;
-}
-#TOC ul {
-padding-left: 40px;
-margin-left: -1.5em;
-margin-top: 5px;
-margin-bottom: 5px;
-}
-#TOC ul ul {
-margin-left: -2em;
-}
-#TOC li {
-line-height: 16px;
-}
-table {
-margin: 1em auto;
-border-width: 1px;
-border-color: #DDDDDD;
-border-style: outset;
-border-collapse: collapse;
-}
-table th {
-border-width: 2px;
-padding: 5px;
-border-style: inset;
-}
-table td {
-border-width: 1px;
-border-style: inset;
-line-height: 18px;
-padding: 5px 5px;
-}
-table, table th, table td {
-border-left-style: none;
-border-right-style: none;
-}
-table thead, table tr.even {
-background-color: #f7f7f7;
-}
-p {
-margin: 0.5em 0;
-}
-blockquote {
-background-color: #f6f6f6;
-padding: 0.25em 0.75em;
-}
-hr {
-border-style: solid;
-border: none;
-border-top: 1px solid #777;
-margin: 28px 0;
-}
-dl {
-margin-left: 0;
-}
-dl dd {
-margin-bottom: 13px;
-margin-left: 13px;
-}
-dl dt {
-font-weight: bold;
-}
-ul {
-margin-top: 0;
-}
-ul li {
-list-style: circle outside;
-}
-ul ul {
-margin-bottom: 0;
-}
-pre, code {
-background-color: #f7f7f7;
-border-radius: 3px;
-color: #333;
-white-space: pre-wrap; 
-}
-pre {
-border-radius: 3px;
-margin: 5px 0px 10px 0px;
-padding: 10px;
-}
-pre:not([class]) {
-background-color: #f7f7f7;
-}
-code {
-font-family: Consolas, Monaco, 'Courier New', monospace;
-font-size: 85%;
-}
-p > code, li > code {
-padding: 2px 0px;
-}
-div.figure {
-text-align: center;
-}
-img {
-background-color: #FFFFFF;
-padding: 2px;
-border: 1px solid #DDDDDD;
-border-radius: 3px;
-border: 1px solid #CCCCCC;
-margin: 0 5px;
-}
-h1 {
-margin-top: 0;
-font-size: 35px;
-line-height: 40px;
-}
-h2 {
-border-bottom: 4px solid #f7f7f7;
-padding-top: 10px;
-padding-bottom: 2px;
-font-size: 145%;
-}
-h3 {
-border-bottom: 2px solid #f7f7f7;
-padding-top: 10px;
-font-size: 120%;
-}
-h4 {
-border-bottom: 1px solid #f7f7f7;
-margin-left: 8px;
-font-size: 105%;
-}
-h5, h6 {
-border-bottom: 1px solid #ccc;
-font-size: 105%;
-}
-a {
-color: #0033dd;
-text-decoration: none;
-}
-a:hover {
-color: #6666ff; }
-a:visited {
-color: #800080; }
-a:visited:hover {
-color: #BB00BB; }
-a[href^="http:"] {
-text-decoration: underline; }
-a[href^="https:"] {
-text-decoration: underline; }
 
-code > span.kw { color: #555; font-weight: bold; } 
-code > span.dt { color: #902000; } 
-code > span.dv { color: #40a070; } 
-code > span.bn { color: #d14; } 
-code > span.fl { color: #d14; } 
-code > span.ch { color: #d14; } 
-code > span.st { color: #d14; } 
-code > span.co { color: #888888; font-style: italic; } 
-code > span.ot { color: #007020; } 
-code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; } 
-code > span.er { color: #a61717; background-color: #e3d2d2; } 
-</style>
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
 
 
 
@@ -391,7 +141,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">rquery Substitution</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2020-10-17</h4>
+<h4 class="date">2021-06-10</h4>
 
 
 
@@ -400,30 +150,30 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="stringscharacter-versus-namessymbols" class="section level2">
 <h2>strings/character versus names/symbols</h2>
 <p>Let’s take a look at this through small examples. First let’s take a look at the difference between strings and symbols in <code>R</code>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>col_string &lt;-<span class="st"> &quot;x&quot;</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a>col_name &lt;-<span class="st"> </span><span class="kw">as.name</span>(col_string)</span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">str</span>(col_string)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>col_string <span class="ot">&lt;-</span> <span class="st">&quot;x&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>col_name <span class="ot">&lt;-</span> <span class="fu">as.name</span>(col_string)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(col_string)</span></code></pre></div>
 <pre><code>##  chr &quot;x&quot;</code></pre>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">str</span>(col_name)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(col_name)</span></code></pre></div>
 <pre><code>##  symbol x</code></pre>
 <p>Notice, in <code>R</code> a string is different than a symbol.</p>
 <p>We can see this difference in <code>rquery</code> where an un-quoted <code>x</code> is treated as a symbol (and therefore is translated to a database column) and a quoted entity is treated as a string (and therefore is translated to a literal or constant, not to a column).</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
-<span id="cb6-2"><a href="#cb6-2"></a></span>
-<span id="cb6-3"><a href="#cb6-3"></a>d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="kw">c</span>(<span class="st">&#39;a&#39;</span>, <span class="st">&#39;b&#39;</span>),</span>
-<span id="cb6-4"><a href="#cb6-4"></a>                <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</span>
-<span id="cb6-5"><a href="#cb6-5"></a></span>
-<span id="cb6-6"><a href="#cb6-6"></a>d_rep &lt;-<span class="st"> </span><span class="kw">local_td</span>(d)</span>
-<span id="cb6-7"><a href="#cb6-7"></a></span>
-<span id="cb6-8"><a href="#cb6-8"></a>db_info &lt;-<span class="st"> </span><span class="kw">rquery_db_info</span>(<span class="dt">identifier_quote_char =</span> <span class="st">&quot;__IDENTIFIER__&quot;</span>,</span>
-<span id="cb6-9"><a href="#cb6-9"></a>                          <span class="dt">string_quote_char =</span> <span class="st">&quot;__STRING_CONSTANT__&quot;</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># direct use, comparing to a string constant</span></span>
-<span id="cb7-2"><a href="#cb7-2"></a><span class="co"># probaly not the query we intend as the</span></span>
-<span id="cb7-3"><a href="#cb7-3"></a><span class="co"># result is going to be empty independent</span></span>
-<span id="cb7-4"><a href="#cb7-4"></a><span class="co"># of the data.</span></span>
-<span id="cb7-5"><a href="#cb7-5"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(</span>
-<span id="cb7-6"><a href="#cb7-6"></a>  d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(<span class="st">&#39;x&#39;</span>)),</span>
-<span id="cb7-7"><a href="#cb7-7"></a>  db_info))</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="st">&#39;a&#39;</span>, <span class="st">&#39;b&#39;</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>d_rep <span class="ot">&lt;-</span> <span class="fu">local_td</span>(d)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>db_info <span class="ot">&lt;-</span> <span class="fu">rquery_db_info</span>(<span class="at">identifier_quote_char =</span> <span class="st">&quot;__IDENTIFIER__&quot;</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                          <span class="at">string_quote_char =</span> <span class="st">&quot;__STRING_CONSTANT__&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># direct use, comparing to a string constant</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># probaly not the query we intend as the</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># result is going to be empty independent</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># of the data.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows</span>(., <span class="fu">is.na</span>(<span class="st">&#39;x&#39;</span>)),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  db_info))</span></code></pre></div>
 <pre><code>## Warning in warn_about_filter_conditions(parsed): rquery::select_rows: expression
 ## is.na(&quot;x&quot;) refers to no columns (so is a constant)</code></pre>
 <pre><code>## SELECT * FROM (
@@ -431,32 +181,32 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_31680563571638426351_0000000000
+## ) tsql_53739465413029083355_0000000000
 ## WHERE ( ( __STRING_CONSTANT__x__STRING_CONSTANT__ ) IS NULL )</code></pre>
 <p>We take careful note what is marked as “<code>__IDENTIFIER__</code>”, versus what is marked as “<code>__STRING_CONSTANT__</code>”. Notice “<code>__IDENTIFIER__</code>” is used in the <code>SQL</code> for table names and column name, and “<code>__STRING_CONSTANT__</code>” is used for string constants. The above query is probably not what a user intended as we are checking if a user supplied string constant is <code>NA</code>, which is not interesting.</p>
 <p>Likely the correct query omits the quote marks from the <code>x</code>.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="co"># direct use, comparing to a column</span></span>
-<span id="cb10-2"><a href="#cb10-2"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(</span>
-<span id="cb10-3"><a href="#cb10-3"></a>  d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(x)),</span>
-<span id="cb10-4"><a href="#cb10-4"></a>  db_info))</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># direct use, comparing to a column</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows</span>(., <span class="fu">is.na</span>(x)),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  db_info))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_15887948074494043431_0000000000
+## ) tsql_09624338848106151870_0000000000
 ## WHERE ( ( __IDENTIFIER__x__IDENTIFIER__ ) IS NULL )</code></pre>
 <p>In the above query we are now comparing an identifier to <code>NULL</code>, which is how <code>SQL</code> expresses comparing the contents of the column named to <code>NULL</code> in a row by row fashion (a useful query).</p>
 <p>Or combing the two ideas. We check which rows of the column <code>x</code> have the value <code>&quot;a&quot;</code> as follows.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(</span>
-<span id="cb12-2"><a href="#cb12-2"></a>  d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., x <span class="op">==</span><span class="st"> &#39;a&#39;</span>),</span>
-<span id="cb12-3"><a href="#cb12-3"></a>  db_info))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows</span>(., x <span class="sc">==</span> <span class="st">&#39;a&#39;</span>),</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  db_info))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_54060786686809871333_0000000000
+## ) tsql_58239066646790867132_0000000000
 ## WHERE __IDENTIFIER__x__IDENTIFIER__ = __STRING_CONSTANT__a__STRING_CONSTANT__</code></pre>
 </div>
 <div id="wraprlet-substitution" class="section level2">
@@ -464,44 +214,44 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p><code>wrapr::let()</code> substitution is designed only to substitute in names as if the user had typed them. It is deliberately not designed to deal with other value substitutions (such as strings, integers, or floating point values). This is intentional and to keep <code>wrapr::let()</code> to one job: adapting NSE (Non-standard interfaces) to accept names as values.</p>
 <p><code>wrapr::let()</code>’s principle is that there is no reason for <code>wrapr::let()</code> to ever substitute in a value (such as a string or an integer) as normal evaluation of variable names in environments already supplies a better way to do that. The only thing that is hard to substitute in are new symbols, so <code>wrapr::let()</code> has code to make sure it is doing only that.</p>
 <p>Accordingly <code>wrapr::let()</code> treats both names/symbols and strings as symbols.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="co"># Let substitution treats all substitutions as source-text</span></span>
-<span id="cb14-2"><a href="#cb14-2"></a><span class="co"># so strings and names are as if the user had typed them</span></span>
-<span id="cb14-3"><a href="#cb14-3"></a><span class="co"># in and behave as names (becoming the name of a column).</span></span>
-<span id="cb14-4"><a href="#cb14-4"></a><span class="kw">let</span>(<span class="kw">c</span>(<span class="dt">COL_STRING =</span> col_string),</span>
-<span id="cb14-5"><a href="#cb14-5"></a>    <span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(COL_STRING)),</span>
-<span id="cb14-6"><a href="#cb14-6"></a>               db_info)))</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let substitution treats all substitutions as source-text</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># so strings and names are as if the user had typed them</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># in and behave as names (becoming the name of a column).</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">let</span>(<span class="fu">c</span>(<span class="at">COL_STRING =</span> col_string),</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="fu">to_sql</span>(d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows</span>(., <span class="fu">is.na</span>(COL_STRING)),</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>               db_info)))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_11344751488889245374_0000000000
+## ) tsql_47480453215914624818_0000000000
 ## WHERE ( ( __IDENTIFIER__x__IDENTIFIER__ ) IS NULL )</code></pre>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="co"># Let substitution treats all substitutions as source-text</span></span>
-<span id="cb16-2"><a href="#cb16-2"></a><span class="co"># so strings and names are as if the user had typed them</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a><span class="co"># in and behave as names (becoming the name of a column).</span></span>
-<span id="cb16-4"><a href="#cb16-4"></a><span class="kw">let</span>(<span class="kw">c</span>(<span class="dt">COL_NAME =</span> col_name),</span>
-<span id="cb16-5"><a href="#cb16-5"></a>    <span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(COL_NAME)),</span>
-<span id="cb16-6"><a href="#cb16-6"></a>               db_info)))</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let substitution treats all substitutions as source-text</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># so strings and names are as if the user had typed them</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># in and behave as names (becoming the name of a column).</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">let</span>(<span class="fu">c</span>(<span class="at">COL_NAME =</span> col_name),</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="fu">to_sql</span>(d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows</span>(., <span class="fu">is.na</span>(COL_NAME)),</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>               db_info)))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_20771172759185263738_0000000000
+## ) tsql_14335376659404342862_0000000000
 ## WHERE ( ( __IDENTIFIER__x__IDENTIFIER__ ) IS NULL )</code></pre>
 <p><code>wrapr::let()</code>’s operating assumption is: if the user was using <code>wrapr::let()</code> the user was intending a symbol, regardless if they specify that symbol using a string or a symbol type. This means the user doesn’t have to maintain the distinction between string representations of names and symbol representations of names when using <code>wrapr::let()</code>. And again, for substituting string-values in: there are already much better ways, such as <code>R</code> evaluation itself (as we show below).</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>value_we_want &lt;-<span class="st"> &quot;a&quot;</span></span>
-<span id="cb18-2"><a href="#cb18-2"></a></span>
-<span id="cb18-3"><a href="#cb18-3"></a><span class="kw">let</span>(<span class="kw">c</span>(<span class="dt">COL_NAME =</span> col_name),</span>
-<span id="cb18-4"><a href="#cb18-4"></a>    <span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., COL_NAME <span class="op">==</span><span class="st"> </span>value_we_want),</span>
-<span id="cb18-5"><a href="#cb18-5"></a>               db_info)))</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>value_we_want <span class="ot">&lt;-</span> <span class="st">&quot;a&quot;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">let</span>(<span class="fu">c</span>(<span class="at">COL_NAME =</span> col_name),</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="fu">to_sql</span>(d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows</span>(., COL_NAME <span class="sc">==</span> value_we_want),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>               db_info)))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_98439044642113206064_0000000000
+## ) tsql_91490425966752084520_0000000000
 ## WHERE __IDENTIFIER__x__IDENTIFIER__ = __STRING_CONSTANT__a__STRING_CONSTANT__</code></pre>
 <p>By assuming more about user intent <code>wrapr::let()</code> can smooth over inessential differences for the user.</p>
 </div>
@@ -511,11 +261,11 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p>In this case the emergent behavior is: strings are treated as string constants, and names/symbols are treated as column names. That is the consequences of the substitution performed by <code>bquote()</code> is a function of the type of what is being substituted in. This actually makes sense, but it is something the user has to learn.</p>
 <p><code>rquery</code> can use <code>bquote()</code> substitution two ways: through its own NSE methods, or through <a href="https://winvector.github.io/wrapr/reference/qe.html"><code>wrapr:qe()</code></a> (<code>wrapr</code> quote expression). Both work the same: they treat names/symbols as column names, and character/strings as string constants. So users must express their intent by passing in the correct type.</p>
 <p>Here are examples to show the differences. In all cases substitution is triggered by the <code>.()</code>-notation.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="co"># bquote substitution on string type: col_string </span></span>
-<span id="cb20-2"><a href="#cb20-2"></a><span class="co"># is taken to represent a string constant, not</span></span>
-<span id="cb20-3"><a href="#cb20-3"></a><span class="co"># the name of a column.</span></span>
-<span id="cb20-4"><a href="#cb20-4"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(.(col_string))),</span>
-<span id="cb20-5"><a href="#cb20-5"></a>           db_info))</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># bquote substitution on string type: col_string </span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># is taken to represent a string constant, not</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the name of a column.</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows</span>(., <span class="fu">is.na</span>(.(col_string))),</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>           db_info))</span></code></pre></div>
 <pre><code>## Warning in warn_about_filter_conditions(parsed): rquery::select_rows: expression
 ## is.na(&quot;x&quot;) refers to no columns (so is a constant)</code></pre>
 <pre><code>## SELECT * FROM (
@@ -523,24 +273,24 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_69971034639503336613_0000000000
+## ) tsql_37198357650468050389_0000000000
 ## WHERE ( ( __STRING_CONSTANT__x__STRING_CONSTANT__ ) IS NULL )</code></pre>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="co"># bquote substitution on name type: col_name </span></span>
-<span id="cb23-2"><a href="#cb23-2"></a><span class="co"># is taken to represent a column name.</span></span>
-<span id="cb23-3"><a href="#cb23-3"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows</span>(., <span class="kw">is.na</span>(.(col_name))),</span>
-<span id="cb23-4"><a href="#cb23-4"></a>           db_info))</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># bquote substitution on name type: col_name </span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># is taken to represent a column name.</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows</span>(., <span class="fu">is.na</span>(.(col_name))),</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>           db_info))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_51574324830299520888_0000000000
+## ) tsql_13721490578388016315_0000000000
 ## WHERE ( ( __IDENTIFIER__x__IDENTIFIER__ ) IS NULL )</code></pre>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a><span class="co"># bquote substitution on string type: col_string </span></span>
-<span id="cb25-2"><a href="#cb25-2"></a><span class="co"># is taken to represent a string constant, not</span></span>
-<span id="cb25-3"><a href="#cb25-3"></a><span class="co"># the name of a column.</span></span>
-<span id="cb25-4"><a href="#cb25-4"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows_se</span>(., <span class="kw">qe</span>(<span class="kw">is.na</span>(.(col_string)))),</span>
-<span id="cb25-5"><a href="#cb25-5"></a>           db_info))</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># bquote substitution on string type: col_string </span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co"># is taken to represent a string constant, not</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the name of a column.</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows_se</span>(., <span class="fu">qe</span>(<span class="fu">is.na</span>(.(col_string)))),</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>           db_info))</span></code></pre></div>
 <pre><code>## Warning in warn_about_filter_conditions(parsed): rquery::select_rows: expression
 ## is.na(&quot;x&quot;) refers to no columns (so is a constant)</code></pre>
 <pre><code>## SELECT * FROM (
@@ -548,18 +298,18 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_83314287335586063464_0000000000
+## ) tsql_13951585080786388557_0000000000
 ## WHERE ( ( __STRING_CONSTANT__x__STRING_CONSTANT__ ) IS NULL )</code></pre>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="co"># bquote substitution on name type: col_name </span></span>
-<span id="cb28-2"><a href="#cb28-2"></a><span class="co"># is taken to represent a column name.</span></span>
-<span id="cb28-3"><a href="#cb28-3"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(d_rep <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">select_rows_se</span>(., <span class="kw">qe</span>(<span class="kw">is.na</span>(.(col_name)))),</span>
-<span id="cb28-4"><a href="#cb28-4"></a>           db_info))</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># bquote substitution on name type: col_name </span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co"># is taken to represent a column name.</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(d_rep <span class="sc">%.&gt;%</span> <span class="fu">select_rows_se</span>(., <span class="fu">qe</span>(<span class="fu">is.na</span>(.(col_name)))),</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>           db_info))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   __IDENTIFIER__x__IDENTIFIER__
 ##  FROM
 ##   __IDENTIFIER__d__IDENTIFIER__
-## ) tsql_24738119575277514409_0000000000
+## ) tsql_09785178287248353940_0000000000
 ## WHERE ( ( __IDENTIFIER__x__IDENTIFIER__ ) IS NULL )</code></pre>
 </div>
 <div id="conclusion" class="section level2">

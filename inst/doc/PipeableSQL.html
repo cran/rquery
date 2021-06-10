@@ -12,26 +12,11 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2020-10-17" />
+<meta name="date" content="2021-06-10" />
 
 <title>Pipeable SQL</title>
 
-<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
-// v0.0.1
-// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
-
-document.addEventListener('DOMContentLoaded', function() {
-  const codeList = document.getElementsByClassName("sourceCode");
-  for (var i = 0; i < codeList.length; i++) {
-    var linkList = codeList[i].getElementsByTagName('a');
-    for (var j = 0; j < linkList.length; j++) {
-      if (linkList[j].innerHTML === "") {
-        linkList[j].setAttribute('aria-hidden', 'true');
-      }
-    }
-  }
-});
-</script>
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -40,87 +25,31 @@ document.addEventListener('DOMContentLoaded', function() {
   div.column{display: inline-block; vertical-align: top; width: 50%;}
   div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
   ul.task-list{list-style: none;}
-      code.sourceCode > span { display: inline-block; line-height: 1.25; }
-  code.sourceCode > span { color: inherit; text-decoration: inherit; }
-  code.sourceCode > span:empty { height: 1.2em; }
-  .sourceCode { overflow: visible; }
-  code.sourceCode { white-space: pre; position: relative; }
-  div.sourceCode { margin: 1em 0; }
-  pre.sourceCode { margin: 0; }
-  @media screen {
-  div.sourceCode { overflow: auto; }
-  }
-  @media print {
-  code.sourceCode { white-space: pre-wrap; }
-  code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-  }
-  pre.numberSource code
-    { counter-reset: source-line 0; }
-  pre.numberSource code > span
-    { position: relative; left: -4em; counter-increment: source-line; }
-  pre.numberSource code > span > a:first-child::before
-    { content: counter(source-line);
-      position: relative; left: -1em; text-align: right; vertical-align: baseline;
-      border: none; display: inline-block;
-      -webkit-touch-callout: none; -webkit-user-select: none;
-      -khtml-user-select: none; -moz-user-select: none;
-      -ms-user-select: none; user-select: none;
-      padding: 0 4px; width: 4em;
-      color: #aaaaaa;
-    }
-  pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
-  div.sourceCode
-    {   }
-  @media screen {
-  code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-  }
-  code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-  code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-  code span.at { color: #7d9029; } /* Attribute */
-  code span.bn { color: #40a070; } /* BaseN */
-  code span.bu { } /* BuiltIn */
-  code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-  code span.ch { color: #4070a0; } /* Char */
-  code span.cn { color: #880000; } /* Constant */
-  code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-  code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-  code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-  code span.dt { color: #902000; } /* DataType */
-  code span.dv { color: #40a070; } /* DecVal */
-  code span.er { color: #ff0000; font-weight: bold; } /* Error */
-  code span.ex { } /* Extension */
-  code span.fl { color: #40a070; } /* Float */
-  code span.fu { color: #06287e; } /* Function */
-  code span.im { } /* Import */
-  code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-  code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-  code span.op { color: #666666; } /* Operator */
-  code span.ot { color: #007020; } /* Other */
-  code span.pp { color: #bc7a00; } /* Preprocessor */
-  code span.sc { color: #4070a0; } /* SpecialChar */
-  code span.ss { color: #bb6688; } /* SpecialString */
-  code span.st { color: #4070a0; } /* String */
-  code span.va { color: #19177c; } /* Variable */
-  code span.vs { color: #4070a0; } /* VerbatimString */
-  code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
     </style>
 
 
-<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
 <style type="text/css" data-origin="pandoc">
-code.sourceCode > span { display: inline-block; line-height: 1.25; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-code.sourceCode > span:empty { height: 1.2em; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -140,7 +69,7 @@ pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-le
 div.sourceCode
   {   }
 @media screen {
-code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -197,187 +126,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<style type="text/css">body {
-background-color: #fff;
-margin: 1em auto;
-max-width: 700px;
-overflow: visible;
-padding-left: 2em;
-padding-right: 2em;
-font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-font-size: 14px;
-line-height: 1.35;
-}
-#TOC {
-clear: both;
-margin: 0 0 10px 10px;
-padding: 4px;
-width: 400px;
-border: 1px solid #CCCCCC;
-border-radius: 5px;
-background-color: #f6f6f6;
-font-size: 13px;
-line-height: 1.3;
-}
-#TOC .toctitle {
-font-weight: bold;
-font-size: 15px;
-margin-left: 5px;
-}
-#TOC ul {
-padding-left: 40px;
-margin-left: -1.5em;
-margin-top: 5px;
-margin-bottom: 5px;
-}
-#TOC ul ul {
-margin-left: -2em;
-}
-#TOC li {
-line-height: 16px;
-}
-table {
-margin: 1em auto;
-border-width: 1px;
-border-color: #DDDDDD;
-border-style: outset;
-border-collapse: collapse;
-}
-table th {
-border-width: 2px;
-padding: 5px;
-border-style: inset;
-}
-table td {
-border-width: 1px;
-border-style: inset;
-line-height: 18px;
-padding: 5px 5px;
-}
-table, table th, table td {
-border-left-style: none;
-border-right-style: none;
-}
-table thead, table tr.even {
-background-color: #f7f7f7;
-}
-p {
-margin: 0.5em 0;
-}
-blockquote {
-background-color: #f6f6f6;
-padding: 0.25em 0.75em;
-}
-hr {
-border-style: solid;
-border: none;
-border-top: 1px solid #777;
-margin: 28px 0;
-}
-dl {
-margin-left: 0;
-}
-dl dd {
-margin-bottom: 13px;
-margin-left: 13px;
-}
-dl dt {
-font-weight: bold;
-}
-ul {
-margin-top: 0;
-}
-ul li {
-list-style: circle outside;
-}
-ul ul {
-margin-bottom: 0;
-}
-pre, code {
-background-color: #f7f7f7;
-border-radius: 3px;
-color: #333;
-white-space: pre-wrap; 
-}
-pre {
-border-radius: 3px;
-margin: 5px 0px 10px 0px;
-padding: 10px;
-}
-pre:not([class]) {
-background-color: #f7f7f7;
-}
-code {
-font-family: Consolas, Monaco, 'Courier New', monospace;
-font-size: 85%;
-}
-p > code, li > code {
-padding: 2px 0px;
-}
-div.figure {
-text-align: center;
-}
-img {
-background-color: #FFFFFF;
-padding: 2px;
-border: 1px solid #DDDDDD;
-border-radius: 3px;
-border: 1px solid #CCCCCC;
-margin: 0 5px;
-}
-h1 {
-margin-top: 0;
-font-size: 35px;
-line-height: 40px;
-}
-h2 {
-border-bottom: 4px solid #f7f7f7;
-padding-top: 10px;
-padding-bottom: 2px;
-font-size: 145%;
-}
-h3 {
-border-bottom: 2px solid #f7f7f7;
-padding-top: 10px;
-font-size: 120%;
-}
-h4 {
-border-bottom: 1px solid #f7f7f7;
-margin-left: 8px;
-font-size: 105%;
-}
-h5, h6 {
-border-bottom: 1px solid #ccc;
-font-size: 105%;
-}
-a {
-color: #0033dd;
-text-decoration: none;
-}
-a:hover {
-color: #6666ff; }
-a:visited {
-color: #800080; }
-a:visited:hover {
-color: #BB00BB; }
-a[href^="http:"] {
-text-decoration: underline; }
-a[href^="https:"] {
-text-decoration: underline; }
 
-code > span.kw { color: #555; font-weight: bold; } 
-code > span.dt { color: #902000; } 
-code > span.dv { color: #40a070; } 
-code > span.bn { color: #d14; } 
-code > span.fl { color: #d14; } 
-code > span.ch { color: #d14; } 
-code > span.st { color: #d14; } 
-code > span.co { color: #888888; font-style: italic; } 
-code > span.ot { color: #007020; } 
-code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; } 
-code > span.er { color: #a61717; background-color: #e3d2d2; } 
-</style>
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
 
 
 
@@ -391,7 +141,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Pipeable SQL</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2020-10-17</h4>
+<h4 class="date">2021-06-10</h4>
 
 
 
@@ -404,18 +154,18 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p><code>SQL</code> is a very powerful data processing (or data engineering) grammar. Data scientists are well advised to learn to work with <code>SQL</code>.</p>
 <p>An inessential difficulty in using <code>SQL</code> is <code>SQL</code> represents composition of operations by nesting, which can rapidly become confusing and illegible. This can be overcome by using a query composer such as <code>rquery</code> (some more query composers are listed <a href="https://github.com/WinVector/rquery/blob/master/README.md">here</a>).</p>
 <p>Let’s set up our environment so we can work with examples.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>run_vignette &lt;-<span class="st"> </span><span class="kw">requireNamespace</span>(<span class="st">&quot;DBI&quot;</span>, <span class="dt">quietly =</span> <span class="ot">TRUE</span>) <span class="op">&amp;&amp;</span><span class="st"> </span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="st">  </span><span class="kw">requireNamespace</span>(<span class="st">&quot;RSQLite&quot;</span>, <span class="dt">quietly =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">library</span>(<span class="st">&quot;wrapr&quot;</span>)</span>
-<span id="cb2-3"><a href="#cb2-3"></a></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co"># example database connection</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a>db &lt;-<span class="st"> </span>DBI<span class="op">::</span><span class="kw">dbConnect</span>(RSQLite<span class="op">::</span><span class="kw">SQLite</span>(),</span>
-<span id="cb2-6"><a href="#cb2-6"></a>                     <span class="st">&quot;:memory:&quot;</span>)</span>
-<span id="cb2-7"><a href="#cb2-7"></a>RSQLite<span class="op">::</span><span class="kw">initExtension</span>(db)</span>
-<span id="cb2-8"><a href="#cb2-8"></a></span>
-<span id="cb2-9"><a href="#cb2-9"></a>dbopts &lt;-<span class="st"> </span><span class="kw">rq_connection_tests</span>(db)</span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="kw">print</span>(dbopts)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>run_vignette <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">&quot;DBI&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>) <span class="sc">&amp;&amp;</span> </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">requireNamespace</span>(<span class="st">&quot;RSQLite&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;wrapr&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># example database connection</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>db <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(RSQLite<span class="sc">::</span><span class="fu">SQLite</span>(),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;:memory:&quot;</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>RSQLite<span class="sc">::</span><span class="fu">initExtension</span>(db)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>dbopts <span class="ot">&lt;-</span> <span class="fu">rq_connection_tests</span>(db)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(dbopts)</span></code></pre></div>
 <pre><code>## $rquery.SQLiteConnection.use_DBI_dbListFields
 ## [1] TRUE
 ## 
@@ -500,51 +250,51 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## 
 ## $rquery.SQLiteConnection.expr_map$rand[[12]]
 ## [1] &quot;)&quot;</code></pre>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">options</span>(dbopts)</span>
-<span id="cb4-2"><a href="#cb4-2"></a></span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="co"># copy in example data</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="kw">rq_copy_to</span>(</span>
-<span id="cb4-5"><a href="#cb4-5"></a>  db, <span class="st">&#39;d&#39;</span>,</span>
-<span id="cb4-6"><a href="#cb4-6"></a>  <span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">-5</span>, <span class="dv">3</span>)),</span>
-<span id="cb4-7"><a href="#cb4-7"></a>  <span class="dt">temporary =</span> <span class="ot">FALSE</span>,</span>
-<span id="cb4-8"><a href="#cb4-8"></a>  <span class="dt">overwrite =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(dbopts)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># copy in example data</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rq_copy_to</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  db, <span class="st">&#39;d&#39;</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">v =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">5</span>, <span class="dv">3</span>)),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">temporary =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;mk_td(\&quot;d\&quot;, c( \&quot;v\&quot;))&quot;
 ##    v
 ## 1  1
 ## 2 -5
 ## 3  3</code></pre>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co"># produce a hande to existing table</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a>d &lt;-<span class="st"> </span><span class="kw">db_td</span>(db, <span class="st">&quot;d&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># produce a hande to existing table</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">db_td</span>(db, <span class="st">&quot;d&quot;</span>)</span></code></pre></div>
 <p><code>d</code> is a “table description” which is just the name of a table and the names of expected columns. <code>d</code> does not store data or a database reference (making it safe to serialize/de-serialize). All <code>rquery</code> operation trees or pipelines must start either with a table description or a <code>data.frame</code>. We will discuss table descriptions later.</p>
 <p>Note: in examples we use <code>rq_copy_to()</code> to create data. This is only for the purpose of having easy portable examples. With big data the data is usually already in the remote database or Spark system. The task is almost always to connect and work with this pre-existing remote data and the method to do this is <a href="https://winvector.github.io/rquery/reference/db_td.html"><code>db_td()</code></a>, which builds a reference to a remote table given the table name. The suggested pattern for working with remote tables is to get inputs via <a href="https://winvector.github.io/rquery/reference/db_td.html"><code>db_td()</code></a> and land remote results with <a href="https://winvector.github.io/rquery/reference/materialize.html"><code>materialze()</code></a>. To work with local data one can copy data from memory to the database with <a href="https://winvector.github.io/rquery/reference/rq_copy_to.html"><code>rq_copy_to()</code></a> and bring back results with <a href="https://winvector.github.io/rquery/reference/execute.html"><code>execute()</code></a> (though be aware operation on remote non-memory data is <code>rquery</code>’s primary intent).</p>
 <p>For our first example we will introduce a new column and perform a calculation using this column. This is achieved in <code>SQL</code> by writing code in one of two styles: defining the first new column twice (once to land the value and once to use), or sequencing two queries by nesting. We will demonstrate both methods.</p>
 <p>The define the column twice solution looks like the following.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(db, <span class="st">&quot;</span></span>
-<span id="cb7-2"><a href="#cb7-2"></a><span class="st">  SELECT</span></span>
-<span id="cb7-3"><a href="#cb7-3"></a><span class="st">    *,</span></span>
-<span id="cb7-4"><a href="#cb7-4"></a><span class="st">    ABS(v) AS absv,</span></span>
-<span id="cb7-5"><a href="#cb7-5"></a><span class="st">    ABS(v) - v AS delta</span></span>
-<span id="cb7-6"><a href="#cb7-6"></a><span class="st">  FROM</span></span>
-<span id="cb7-7"><a href="#cb7-7"></a><span class="st">    d</span></span>
-<span id="cb7-8"><a href="#cb7-8"></a><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(db, <span class="st">&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="st">    *,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="st">    ABS(v) AS absv,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="st">    ABS(v) - v AS delta</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="st">    d</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>##    v absv delta
 ## 1  1    1     0
 ## 2 -5    5    10
 ## 3  3    3     0</code></pre>
 <p>In <code>SQL</code> the column <code>absv</code> is not available for calculation in the same query that it is produced.</p>
 <p>The nested method looks like the following, we produce the column <code>absv</code> in one query and then wrap that in another query to later use the column. For expressions longer than <code>ABS(v)</code> this is the preferred solution (until one moves to something like common table expressions).</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>DBI<span class="op">::</span><span class="kw">dbGetQuery</span>(db, <span class="st">&quot;</span></span>
-<span id="cb9-2"><a href="#cb9-2"></a><span class="st">  SELECT</span></span>
-<span id="cb9-3"><a href="#cb9-3"></a><span class="st">    *,</span></span>
-<span id="cb9-4"><a href="#cb9-4"></a><span class="st">    absv - v AS delta</span></span>
-<span id="cb9-5"><a href="#cb9-5"></a><span class="st">  FROM (</span></span>
-<span id="cb9-6"><a href="#cb9-6"></a><span class="st">    SELECT</span></span>
-<span id="cb9-7"><a href="#cb9-7"></a><span class="st">      *,</span></span>
-<span id="cb9-8"><a href="#cb9-8"></a><span class="st">      ABS(v) AS absv</span></span>
-<span id="cb9-9"><a href="#cb9-9"></a><span class="st">    FROM</span></span>
-<span id="cb9-10"><a href="#cb9-10"></a><span class="st">      d</span></span>
-<span id="cb9-11"><a href="#cb9-11"></a><span class="st">  ) subtab</span></span>
-<span id="cb9-12"><a href="#cb9-12"></a><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbGetQuery</span>(db, <span class="st">&quot;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st">  SELECT</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">    *,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">    absv - v AS delta</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">  FROM (</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">    SELECT</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">      *,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">      ABS(v) AS absv</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">    FROM</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="st">      d</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="st">  ) subtab</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>##    v absv delta
 ## 1  1    1     0
 ## 2 -5    5    10
@@ -553,17 +303,17 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h2><code>sql_node()</code></h2>
 <p>Using <code>rquery</code> we can write the <code>SQL</code> composition using pipe notation (where composition is written as <code>x %.&gt;% f %.&gt;% g</code> instead of <code>g(f(x))</code>). We are going to use <a href="https://github.com/WinVector/wrapr"><code>wrapr</code></a> <a href="https://winvector.github.io/wrapr/reference/dot_arrow.html">dot-pipe</a> instead of the <a href="https://CRAN.R-project.org/package=magrittr"><code>magrittr</code></a> pipe to pick up a neat feature we will use later (all other examples will work with the <code>magrittr</code> pipe). The “<code>%.&gt;%</code>” glyph can be <a href="https://github.com/WinVector/addinexamplesWV">bound to a keyboard shortcut</a> for convenience.</p>
 <p>The <code>rquery</code> realization of the above calculation is as follows:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>op_tree &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span></span>
-<span id="cb11-2"><a href="#cb11-2"></a><span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;absv&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;ABS(v)&quot;</span>) <span class="op">%.&gt;%</span></span>
-<span id="cb11-3"><a href="#cb11-3"></a><span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;delta&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;absv - v&quot;</span>)</span>
-<span id="cb11-4"><a href="#cb11-4"></a><span class="kw">execute</span>(db, op_tree)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>op_tree <span class="ot">&lt;-</span> d <span class="sc">%.&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(., <span class="st">&quot;absv&quot;</span> <span class="sc">:</span><span class="er">=</span> <span class="st">&quot;ABS(v)&quot;</span>) <span class="sc">%.&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(., <span class="st">&quot;delta&quot;</span> <span class="sc">:</span><span class="er">=</span> <span class="st">&quot;absv - v&quot;</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">execute</span>(db, op_tree)</span></code></pre></div>
 <pre><code>##   absv delta  v
 ## 1    1     0  1
 ## 2    5    10 -5
 ## 3    3     0  3</code></pre>
 <p>The above is what we call “piped <code>SQL</code>” and represents a major convenience for users as the details of how to compose the statements are left to the package. The <code>sql_node()</code> is a very powerful node. We will use it in our first few examples and move onto more convenient higher level relational nodes.</p>
 <p>We can view the <code>SQL</code> translation of the operations tree as follows:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(op_tree, db))</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(op_tree, db))</span></code></pre></div>
 <pre><code>SELECT
  `absv` AS `absv`,
  absv - v AS `delta`,
@@ -577,13 +327,13 @@ FROM (
    `v`
   FROM
    `d`
- ) tsql_47012300963297661654_0000000000
-) tsql_47012300963297661654_0000000001</code></pre>
+ ) tsql_50685977084084802819_0000000000
+) tsql_50685977084084802819_0000000001</code></pre>
 <p>Notice the above translations did not add identifier quotes to our use of “<code>v</code>” in “<code>ABS(v)</code>”. This is because the <code>SQL</code> expression is not parsed in <code>R</code>. If we want to identify terms as variables we can wrap them with <code>as.name()</code> or <code>quote()</code> to get the quoting (and other variable oriented features). The extra <code>SELECT</code> step to pull data from the inner table is used by <code>rquery</code> for important column narrowing steps, and can actually improve query performance.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>op_tree &lt;-<span class="st"> </span>d <span class="op">%.&gt;%</span></span>
-<span id="cb15-2"><a href="#cb15-2"></a><span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;absv&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">list</span>(<span class="kw">list</span>(<span class="st">&quot;ABS(&quot;</span>, <span class="kw">quote</span>(v), <span class="st">&quot;)&quot;</span>))) <span class="op">%.&gt;%</span></span>
-<span id="cb15-3"><a href="#cb15-3"></a><span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;delta&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">list</span>(<span class="kw">list</span>(<span class="kw">quote</span>(absv),<span class="st">&quot;-&quot;</span>, <span class="kw">quote</span>(v))))</span>
-<span id="cb15-4"><a href="#cb15-4"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(op_tree, db))</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>op_tree <span class="ot">&lt;-</span> d <span class="sc">%.&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(., <span class="st">&quot;absv&quot;</span> <span class="sc">:</span><span class="er">=</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="st">&quot;ABS(&quot;</span>, <span class="fu">quote</span>(v), <span class="st">&quot;)&quot;</span>))) <span class="sc">%.&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(., <span class="st">&quot;delta&quot;</span> <span class="sc">:</span><span class="er">=</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="fu">quote</span>(absv),<span class="st">&quot;-&quot;</span>, <span class="fu">quote</span>(v))))</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(op_tree, db))</span></code></pre></div>
 <pre><code>SELECT
  `absv` AS `absv`,
  `absv` - `v` AS `delta`,
@@ -597,11 +347,11 @@ FROM (
    `v`
   FROM
    `d`
- ) tsql_96836875775522422105_0000000000
-) tsql_96836875775522422105_0000000001</code></pre>
+ ) tsql_58457302067231811449_0000000000
+) tsql_58457302067231811449_0000000001</code></pre>
 <p>The <code>list(list())</code> notation is how we say in <code>R</code> that we have a single element list (i.e. one expression) that is built up as a list of terms. The marking notation is cumbersome, but is not needed when we move on to relation nodes, which are parsed in <code>R</code> and can spot identifiers without additional help.</p>
 <p><code>op_tree</code> itself is a an object with its own presentation format:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">cat</span>(<span class="kw">format</span>(op_tree))</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(op_tree))</span></code></pre></div>
 <pre><code>## mk_td(&quot;d&quot;, c(
 ##   &quot;v&quot;)) %.&gt;%
 ##  sql_node(.,
@@ -611,20 +361,20 @@ FROM (
 ##           delta %:=% absv - v,
 ##              *=TRUE)</code></pre>
 <p>The <code>op_tree</code> supplies an number of important summaries about the proposed query:</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="kw">column_names</span>(op_tree)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">column_names</span>(op_tree)</span></code></pre></div>
 <pre><code>## [1] &quot;absv&quot;  &quot;delta&quot; &quot;v&quot;</code></pre>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a><span class="kw">tables_used</span>(op_tree)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tables_used</span>(op_tree)</span></code></pre></div>
 <pre><code>## [1] &quot;d&quot;</code></pre>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="kw">columns_used</span>(op_tree)</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">columns_used</span>(op_tree)</span></code></pre></div>
 <pre><code>## $d
 ## [1] &quot;v&quot;</code></pre>
 <div id="composing-nodes" class="section level3">
 <h3>Composing nodes</h3>
 <p>We can add nodes to an <code>op_tree</code> to build larger operator trees (or pipelines).</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>op_tree2 &lt;-<span class="st"> </span>op_tree <span class="op">%.&gt;%</span></span>
-<span id="cb25-2"><a href="#cb25-2"></a><span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;prod&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;absv * delta&quot;</span>)</span>
-<span id="cb25-3"><a href="#cb25-3"></a></span>
-<span id="cb25-4"><a href="#cb25-4"></a><span class="kw">cat</span>(<span class="kw">format</span>(op_tree2))</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>op_tree2 <span class="ot">&lt;-</span> op_tree <span class="sc">%.&gt;%</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(., <span class="st">&quot;prod&quot;</span> <span class="sc">:</span><span class="er">=</span> <span class="st">&quot;absv * delta&quot;</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(op_tree2))</span></code></pre></div>
 <pre><code>## mk_td(&quot;d&quot;, c(
 ##   &quot;v&quot;)) %.&gt;%
 ##  sql_node(.,
@@ -637,10 +387,10 @@ FROM (
 ##           prod %:=% absv * delta,
 ##              *=TRUE)</code></pre>
 <p>However one does not have to use the string notation, <a href="https://github.com/WinVector/wrapr"><code>wrapr</code></a> supplies the helper functions <code>qe()</code> (quote expression), <code>qae()</code> (quote assignment expressions), and <code>qc()</code> (quoting concatenate).</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a>op_tree3 &lt;-<span class="st"> </span>op_tree <span class="op">%.&gt;%</span></span>
-<span id="cb27-2"><a href="#cb27-2"></a><span class="st">  </span><span class="kw">sql_node</span>(., <span class="kw">qae</span>(<span class="dt">prod =</span> absv <span class="op">*</span><span class="st"> </span>delta))</span>
-<span id="cb27-3"><a href="#cb27-3"></a></span>
-<span id="cb27-4"><a href="#cb27-4"></a><span class="kw">cat</span>(<span class="kw">format</span>(op_tree3))</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>op_tree3 <span class="ot">&lt;-</span> op_tree <span class="sc">%.&gt;%</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(., <span class="fu">qae</span>(<span class="at">prod =</span> absv <span class="sc">*</span> delta))</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(op_tree3))</span></code></pre></div>
 <pre><code>## mk_td(&quot;d&quot;, c(
 ##   &quot;v&quot;)) %.&gt;%
 ##  sql_node(.,
@@ -653,53 +403,53 @@ FROM (
 ##           prod %:=% absv * delta,
 ##              *=TRUE)</code></pre>
 <p>And, the <code>op_tree</code> record keeping can be used to catch potential errors early in pipeline construction. For example if we try to refer to a non-existent variable when adding an operator we get an thrown exception (note: a <code>sql_node()</code> being added must have its variables marked as above for pre-checking to occur, relational nodes will get this checking automatically).</p>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>op_tree4 &lt;-<span class="st"> </span>op_tree <span class="op">%.&gt;%</span></span>
-<span id="cb29-2"><a href="#cb29-2"></a><span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;z&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">list</span>(<span class="kw">list</span>(<span class="st">&quot;1 + &quot;</span>, <span class="kw">quote</span>(z))))</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>op_tree4 <span class="ot">&lt;-</span> op_tree <span class="sc">%.&gt;%</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(., <span class="st">&quot;z&quot;</span> <span class="sc">:</span><span class="er">=</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="st">&quot;1 + &quot;</span>, <span class="fu">quote</span>(z))))</span></code></pre></div>
 <pre><code>## Error in sql_node.relop(., `:=`(&quot;z&quot;, list(list(&quot;1 + &quot;, quote(z))))): rquery::sql_node.relop undefined columns: z</code></pre>
 <p>However, early error checking is not currently available with the <code>qae()</code> notation, which parts of the expression are values (versus operators or function names) is not marked in the input.</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1"></a>op_tree4 &lt;-<span class="st"> </span>op_tree <span class="op">%.&gt;%</span></span>
-<span id="cb31-2"><a href="#cb31-2"></a><span class="st">  </span><span class="kw">sql_node</span>(., <span class="kw">qae</span>(<span class="dt">z =</span> <span class="dv">1</span> <span class="op">+</span><span class="st"> </span>z))</span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>op_tree4 <span class="ot">&lt;-</span> op_tree <span class="sc">%.&gt;%</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(., <span class="fu">qae</span>(<span class="at">z =</span> <span class="dv">1</span> <span class="sc">+</span> z))</span></code></pre></div>
 <p>`rquery</p>
 </div>
 <div id="a-non-trivial-example" class="section level3">
 <h3>A non-trivial example</h3>
 <p>We can express non-trivial operations in <code>sql_node()</code>s. For example we can build a node the calculates for each row how many columns contain <code>NA</code>/<code>NULL</code> as is demonstrated here.</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a><span class="co"># load up example data</span></span>
-<span id="cb32-2"><a href="#cb32-2"></a>d2 &lt;-<span class="st"> </span><span class="kw">rq_copy_to</span>(</span>
-<span id="cb32-3"><a href="#cb32-3"></a>  db, <span class="st">&#39;d2&#39;</span>,</span>
-<span id="cb32-4"><a href="#cb32-4"></a>  <span class="kw">data.frame</span>(<span class="dt">v1 =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="ot">NA</span>, <span class="dv">3</span>),</span>
-<span id="cb32-5"><a href="#cb32-5"></a>             <span class="dt">v2 =</span> <span class="kw">c</span>(<span class="ot">NA</span>, <span class="st">&quot;b&quot;</span>, <span class="ot">NA</span>, <span class="st">&quot;c&quot;</span>),</span>
-<span id="cb32-6"><a href="#cb32-6"></a>             <span class="dt">v3 =</span> <span class="kw">c</span>(<span class="ot">NA</span>, <span class="ot">NA</span>, <span class="dv">7</span>, <span class="dv">8</span>),</span>
-<span id="cb32-7"><a href="#cb32-7"></a>             <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>))</span>
-<span id="cb32-8"><a href="#cb32-8"></a></span>
-<span id="cb32-9"><a href="#cb32-9"></a><span class="co"># look at table</span></span>
-<span id="cb32-10"><a href="#cb32-10"></a><span class="kw">execute</span>(db, d2)</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load up example data</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>d2 <span class="ot">&lt;-</span> <span class="fu">rq_copy_to</span>(</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  db, <span class="st">&#39;d2&#39;</span>,</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">v1 =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="cn">NA</span>, <span class="dv">3</span>),</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">v2 =</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="st">&quot;b&quot;</span>, <span class="cn">NA</span>, <span class="st">&quot;c&quot;</span>),</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">v3 =</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">NA</span>, <span class="dv">7</span>, <span class="dv">8</span>),</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="co"># look at table</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="fu">execute</span>(db, d2)</span></code></pre></div>
 <pre><code>##   v1   v2 v3
 ## 1  1 &lt;NA&gt; NA
 ## 2  2    b NA
 ## 3 NA &lt;NA&gt;  7
 ## 4  3    c  8</code></pre>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1"></a><span class="co"># get list of columns</span></span>
-<span id="cb34-2"><a href="#cb34-2"></a>vars &lt;-<span class="st"> </span><span class="kw">column_names</span>(d2)</span>
-<span id="cb34-3"><a href="#cb34-3"></a><span class="kw">print</span>(vars)</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get list of columns</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">column_names</span>(d2)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(vars)</span></code></pre></div>
 <pre><code>## [1] &quot;v1&quot; &quot;v2&quot; &quot;v3&quot;</code></pre>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a><span class="co"># build a NA/NULLs per-row counting expression.</span></span>
-<span id="cb36-2"><a href="#cb36-2"></a><span class="co"># names are &quot;quoted&quot; by wrapping them with as.name().</span></span>
-<span id="cb36-3"><a href="#cb36-3"></a><span class="co"># constants can be quoted by an additional list wrapping.</span></span>
-<span id="cb36-4"><a href="#cb36-4"></a>expr &lt;-<span class="st"> </span><span class="kw">lapply</span>(vars,</span>
-<span id="cb36-5"><a href="#cb36-5"></a>               <span class="cf">function</span>(vi) {</span>
-<span id="cb36-6"><a href="#cb36-6"></a>                 <span class="kw">list</span>(<span class="st">&quot;+ (CASE WHEN (&quot;</span>,</span>
-<span id="cb36-7"><a href="#cb36-7"></a>                      <span class="kw">as.name</span>(vi),</span>
-<span id="cb36-8"><a href="#cb36-8"></a>                      <span class="st">&quot;IS NULL ) THEN 1.0 ELSE 0.0 END)&quot;</span>)</span>
-<span id="cb36-9"><a href="#cb36-9"></a>               })</span>
-<span id="cb36-10"><a href="#cb36-10"></a>expr &lt;-<span class="st"> </span><span class="kw">unlist</span>(expr, <span class="dt">recursive =</span> <span class="ot">FALSE</span>)</span>
-<span id="cb36-11"><a href="#cb36-11"></a>expr &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">list</span>(<span class="fl">0.0</span>), expr)</span>
-<span id="cb36-12"><a href="#cb36-12"></a><span class="kw">cat</span>(<span class="kw">paste</span>(<span class="kw">unlist</span>(expr), <span class="dt">collapse =</span> <span class="st">&quot; &quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># build a NA/NULLs per-row counting expression.</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="co"># names are &quot;quoted&quot; by wrapping them with as.name().</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="co"># constants can be quoted by an additional list wrapping.</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>expr <span class="ot">&lt;-</span> <span class="fu">lapply</span>(vars,</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>               <span class="cf">function</span>(vi) {</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">list</span>(<span class="st">&quot;+ (CASE WHEN (&quot;</span>,</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.name</span>(vi),</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;IS NULL ) THEN 1.0 ELSE 0.0 END)&quot;</span>)</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>               })</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>expr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(expr, <span class="at">recursive =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>expr <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">list</span>(<span class="fl">0.0</span>), expr)</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste</span>(<span class="fu">unlist</span>(expr), <span class="at">collapse =</span> <span class="st">&quot; &quot;</span>))</span></code></pre></div>
 <pre><code>## 0 + (CASE WHEN ( v1 IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( v2 IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( v3 IS NULL ) THEN 1.0 ELSE 0.0 END)</code></pre>
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1"></a><span class="co"># instantiate the operator node</span></span>
-<span id="cb38-2"><a href="#cb38-2"></a>op_tree_count_null &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span></span>
-<span id="cb38-3"><a href="#cb38-3"></a><span class="st">  </span><span class="kw">sql_node</span>(., <span class="st">&quot;num_missing&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">list</span>(expr))</span>
-<span id="cb38-4"><a href="#cb38-4"></a><span class="kw">cat</span>(<span class="kw">format</span>(op_tree_count_null))</span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># instantiate the operator node</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>op_tree_count_null <span class="ot">&lt;-</span> d2 <span class="sc">%.&gt;%</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(., <span class="st">&quot;num_missing&quot;</span> <span class="sc">:</span><span class="er">=</span> <span class="fu">list</span>(expr))</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(op_tree_count_null))</span></code></pre></div>
 <pre><code>## mk_td(&quot;d2&quot;, c(
 ##   &quot;v1&quot;,
 ##   &quot;v2&quot;,
@@ -707,9 +457,9 @@ FROM (
 ##  sql_node(.,
 ##           num_missing %:=% 0 + (CASE WHEN ( v1 IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( v2 IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( v3 IS NULL ) THEN 1.0 ELSE 0.0 END),
 ##              *=TRUE)</code></pre>
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1"></a><span class="co"># examine produced SQL</span></span>
-<span id="cb40-2"><a href="#cb40-2"></a>sql &lt;-<span class="st"> </span><span class="kw">to_sql</span>(op_tree_count_null, db)</span>
-<span id="cb40-3"><a href="#cb40-3"></a><span class="kw">cat</span>(sql)</span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># examine produced SQL</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>sql <span class="ot">&lt;-</span> <span class="fu">to_sql</span>(op_tree_count_null, db)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(sql)</span></code></pre></div>
 <pre><code>## SELECT
 ##  `v3` AS `v3`,
 ##  0 + (CASE WHEN ( `v1` IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( `v2` IS NULL ) THEN 1.0 ELSE 0.0 END) + (CASE WHEN ( `v3` IS NULL ) THEN 1.0 ELSE 0.0 END) AS `num_missing`,
@@ -722,19 +472,19 @@ FROM (
 ##   `v3`
 ##  FROM
 ##   `d2`
-## ) tsql_91082354864314379494_0000000000</code></pre>
-<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1"></a><span class="co"># execute</span></span>
-<span id="cb42-2"><a href="#cb42-2"></a><span class="kw">execute</span>(db, op_tree_count_null)</span></code></pre></div>
+## ) tsql_16202085721465195382_0000000000</code></pre>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># execute</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="fu">execute</span>(db, op_tree_count_null)</span></code></pre></div>
 <pre><code>##   v3 num_missing v1   v2
 ## 1 NA           2  1 &lt;NA&gt;
 ## 2 NA           1  2    b
 ## 3  7           2 NA &lt;NA&gt;
 ## 4  8           0  3    c</code></pre>
 <p>And, as this is an important capability, this exact functionality is wrapped in <a href="https://winvector.github.io/rquery/reference/count_null_cols.html"><code>count_null_cols()</code></a>.</p>
-<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a><span class="co"># whole process wrapped in convenience node</span></span>
-<span id="cb44-2"><a href="#cb44-2"></a>d2 <span class="op">%.&gt;%</span></span>
-<span id="cb44-3"><a href="#cb44-3"></a><span class="st">  </span><span class="kw">count_null_cols</span>(., vars, <span class="st">&quot;nnull&quot;</span>) <span class="op">%.&gt;%</span></span>
-<span id="cb44-4"><a href="#cb44-4"></a><span class="st">  </span><span class="kw">execute</span>(db, .)</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># whole process wrapped in convenience node</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>d2 <span class="sc">%.&gt;%</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count_null_cols</span>(., vars, <span class="st">&quot;nnull&quot;</span>) <span class="sc">%.&gt;%</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">execute</span>(db, .)</span></code></pre></div>
 <pre><code>##   v3 nnull v1   v2
 ## 1 NA     2  1 &lt;NA&gt;
 ## 2 NA     1  2    b
@@ -745,17 +495,17 @@ FROM (
 <div id="working-with-sets-of-columns" class="section level2">
 <h2>Working with sets of columns</h2>
 <p>There are some helper methods to apply a parameterized <code>SQL</code> expression to a set of columns.</p>
-<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1"></a><span class="co"># vector of columns we want to work on</span></span>
-<span id="cb46-2"><a href="#cb46-2"></a>colset &lt;-<span class="st"> </span><span class="kw">qc</span>(v1, v2, v3)</span>
-<span id="cb46-3"><a href="#cb46-3"></a><span class="co"># build new names we want as results</span></span>
-<span id="cb46-4"><a href="#cb46-4"></a>colterms &lt;-<span class="st"> </span><span class="kw">paste0</span>(colset, <span class="st">&quot;_isNA&quot;</span>) <span class="op">:</span><span class="er">=</span><span class="st"> </span>colset</span>
-<span id="cb46-5"><a href="#cb46-5"></a><span class="kw">map_to_char</span>(colterms)</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># vector of columns we want to work on</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>colset <span class="ot">&lt;-</span> <span class="fu">qc</span>(v1, v2, v3)</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="co"># build new names we want as results</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>colterms <span class="ot">&lt;-</span> <span class="fu">paste0</span>(colset, <span class="st">&quot;_isNA&quot;</span>) <span class="sc">:</span><span class="er">=</span> colset</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="fu">map_to_char</span>(colterms)</span></code></pre></div>
 <pre><code>## [1] &quot;c(&#39;v1_isNA&#39; = &#39;v1&#39;, &#39;v2_isNA&#39; = &#39;v2&#39;, &#39;v3_isNA&#39; = &#39;v3&#39;)&quot;</code></pre>
-<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1"></a><span class="co"># build an apply expression to set of columns query </span></span>
-<span id="cb48-2"><a href="#cb48-2"></a>s_tree &lt;-<span class="st"> </span>d2 <span class="op">%.&gt;%</span></span>
-<span id="cb48-3"><a href="#cb48-3"></a><span class="st">  </span><span class="kw">sql_expr_set</span>(., colterms, </span>
-<span id="cb48-4"><a href="#cb48-4"></a>               <span class="st">&quot;CASE WHEN . IS NULL THEN 1 ELSE 0 END&quot;</span>)</span>
-<span id="cb48-5"><a href="#cb48-5"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(s_tree, db))</span></code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># build an apply expression to set of columns query </span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>s_tree <span class="ot">&lt;-</span> d2 <span class="sc">%.&gt;%</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_expr_set</span>(., colterms, </span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>               <span class="st">&quot;CASE WHEN . IS NULL THEN 1 ELSE 0 END&quot;</span>)</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(s_tree, db))</span></code></pre></div>
 <pre><code>## SELECT
 ##  v1 AS `v1`,
 ##  v2 AS `v2`,
@@ -770,8 +520,8 @@ FROM (
 ##   `v3`
 ##  FROM
 ##   `d2`
-## ) tsql_57069002785211523303_0000000000</code></pre>
-<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1"></a><span class="kw">execute</span>(db, s_tree)</span></code></pre></div>
+## ) tsql_17260264765870997694_0000000000</code></pre>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">execute</span>(db, s_tree)</span></code></pre></div>
 <pre><code>##   v1   v2 v3 v1_isNA v2_isNA v3_isNA
 ## 1  1 &lt;NA&gt; NA       0       1       1
 ## 2  2    b NA       0       0       1
@@ -788,10 +538,10 @@ FROM (
 <div id="ad-hoc-mode" class="section level1">
 <h1>Ad-hoc mode</h1>
 <p>As a convenience <code>rquery</code> can work with in-memory <code>data.frame</code>s by sending them to the <code>SQL</code> service provider. This provider defaults to <code>RSQlite</code> or can be set by setting the global option <code>rquery.rquery_db_executor</code>. We demonstrate this below.</p>
-<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1"></a>old_o &lt;-<span class="st"> </span><span class="kw">options</span>(<span class="kw">list</span>(<span class="st">&quot;rquery.rquery_db_executor&quot;</span> =<span class="st"> </span><span class="kw">list</span>(<span class="dt">db =</span> db)))</span>
-<span id="cb52-2"><a href="#cb52-2"></a></span>
-<span id="cb52-3"><a href="#cb52-3"></a><span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="dv">-2</span><span class="op">:</span><span class="dv">2</span>) <span class="op">%.&gt;%</span></span>
-<span id="cb52-4"><a href="#cb52-4"></a><span class="st">  </span><span class="kw">execute</span>(., op_tree)</span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>old_o <span class="ot">&lt;-</span> <span class="fu">options</span>(<span class="fu">list</span>(<span class="st">&quot;rquery.rquery_db_executor&quot;</span> <span class="ot">=</span> <span class="fu">list</span>(<span class="at">db =</span> db)))</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">v =</span> <span class="sc">-</span><span class="dv">2</span><span class="sc">:</span><span class="dv">2</span>) <span class="sc">%.&gt;%</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">execute</span>(., op_tree)</span></code></pre></div>
 <pre><code>##   absv delta  v
 ## 1    2     4 -2
 ## 2    1     2 -1
@@ -799,7 +549,7 @@ FROM (
 ## 4    1     0  1
 ## 5    2     0  2</code></pre>
 <p>When using the <code>wrapr</code> dot pipe the above can be abbreviated as:</p>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1"></a><span class="kw">data.frame</span>(<span class="dt">v =</span> <span class="dv">-2</span><span class="op">:</span><span class="dv">2</span>) <span class="op">%.&gt;%</span><span class="st"> </span>op_tree</span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">v =</span> <span class="sc">-</span><span class="dv">2</span><span class="sc">:</span><span class="dv">2</span>) <span class="sc">%.&gt;%</span> op_tree</span></code></pre></div>
 <pre><code>##   absv delta  v
 ## 1    2     4 -2
 ## 2    1     2 -1
@@ -808,7 +558,7 @@ FROM (
 ## 5    2     0  2</code></pre>
 <p>The above calculation is managed by <a href="https://github.com/WinVector/wrapr/blob/master/extras/wrapr_pipe.pdf"><code>wrapr</code> dot pipe <code>S3</code> <code>wrapr_function</code></a> extensions.</p>
 <p><code>rquery</code> operators can be used directly (without any table description nodes) when working with in-memory <code>data.frame</code>s.</p>
-<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1"></a><span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="dv">5</span>) <span class="op">%.&gt;%</span><span class="st"> </span><span class="kw">sql_node</span>(., <span class="st">&quot;z&quot;</span> <span class="op">:</span><span class="er">=</span><span class="st"> &quot;sqrt(x)&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">x =</span> <span class="dv">5</span>) <span class="sc">%.&gt;%</span> <span class="fu">sql_node</span>(., <span class="st">&quot;z&quot;</span> <span class="sc">:</span><span class="er">=</span> <span class="st">&quot;sqrt(x)&quot;</span>)</span></code></pre></div>
 <pre><code>##   x        z
 ## 1 5 2.236068</code></pre>
 <p>The above calculation is triggered by <code>S3</code> override of any of <code>print()</code>, <code>as.data.frame()</code> and <code>head()</code>. Remote tables need an <code>execute()</code> or <code>materialize()</code> step to specify the database connection.</p>
@@ -828,55 +578,55 @@ FROM (
 <li><code>.[]</code> is a new notation meaning: “the thing inside the <code>.[]</code> is supposed to be a column name” (this is the role <code>quote()</code> or <code>as.name()</code>/<code>as.symbol()</code> were serving in the earlier list based expression examples).</li>
 </ul>
 <p>This allows for the following.</p>
-<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1"></a><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
-<span id="cb58-2"><a href="#cb58-2"></a></span>
-<span id="cb58-3"><a href="#cb58-3"></a>date_cutoff &lt;-<span class="st"> &#39;2017-04-02&#39;</span></span>
-<span id="cb58-4"><a href="#cb58-4"></a></span>
-<span id="cb58-5"><a href="#cb58-5"></a>td &lt;-<span class="st"> </span><span class="kw">mk_td</span>(<span class="st">&quot;df&quot;</span>, </span>
-<span id="cb58-6"><a href="#cb58-6"></a>            <span class="kw">c</span>(<span class="st">&quot;cust&quot;</span>,</span>
-<span id="cb58-7"><a href="#cb58-7"></a>              <span class="st">&quot;trans_date&quot;</span>,</span>
-<span id="cb58-8"><a href="#cb58-8"></a>              <span class="st">&quot;sales&quot;</span>))</span>
-<span id="cb58-9"><a href="#cb58-9"></a></span>
-<span id="cb58-10"><a href="#cb58-10"></a><span class="co"># misspelling not caught (argh!)</span></span>
-<span id="cb58-11"><a href="#cb58-11"></a><span class="kw">tryCatch</span>({</span>
-<span id="cb58-12"><a href="#cb58-12"></a>  ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span></span>
-<span id="cb58-13"><a href="#cb58-13"></a><span class="st">  </span><span class="kw">select_rows_se</span>(</span>
-<span id="cb58-14"><a href="#cb58-14"></a>    ., </span>
-<span id="cb58-15"><a href="#cb58-15"></a>    <span class="kw">qe</span>(trans_date <span class="op">&lt;=</span><span class="st">  </span><span class="kw">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="op">%.&gt;%</span></span>
-<span id="cb58-16"><a href="#cb58-16"></a><span class="st">  </span><span class="kw">sql_node</span>(</span>
-<span id="cb58-17"><a href="#cb58-17"></a>    .,</span>
-<span id="cb58-18"><a href="#cb58-18"></a>    <span class="kw">qae</span>(<span class="dt">max_date =</span> <span class="kw">max</span>(trans_datez)),  <span class="co"># trans_date misspelled</span></span>
-<span id="cb58-19"><a href="#cb58-19"></a>    <span class="dt">mods =</span> <span class="st">&quot;GROUP BY cust&quot;</span>,</span>
-<span id="cb58-20"><a href="#cb58-20"></a>    <span class="dt">orig_columns =</span> F)</span>
-<span id="cb58-21"><a href="#cb58-21"></a>  },</span>
-<span id="cb58-22"><a href="#cb58-22"></a>  <span class="dt">error =</span> <span class="cf">function</span>(e) { <span class="kw">print</span>(e) })</span>
-<span id="cb58-23"><a href="#cb58-23"></a></span>
-<span id="cb58-24"><a href="#cb58-24"></a></span>
-<span id="cb58-25"><a href="#cb58-25"></a><span class="co"># misspelling caught</span></span>
-<span id="cb58-26"><a href="#cb58-26"></a><span class="kw">tryCatch</span>({</span>
-<span id="cb58-27"><a href="#cb58-27"></a>  ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span></span>
-<span id="cb58-28"><a href="#cb58-28"></a><span class="st">  </span><span class="kw">select_rows_se</span>(</span>
-<span id="cb58-29"><a href="#cb58-29"></a>    ., </span>
-<span id="cb58-30"><a href="#cb58-30"></a>    <span class="kw">qe</span>(trans_date <span class="op">&lt;=</span><span class="st">  </span><span class="kw">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="op">%.&gt;%</span></span>
-<span id="cb58-31"><a href="#cb58-31"></a><span class="st">  </span><span class="kw">sql_node</span>(</span>
-<span id="cb58-32"><a href="#cb58-32"></a>    .,</span>
-<span id="cb58-33"><a href="#cb58-33"></a>    <span class="kw">qae</span>(<span class="dt">max_date =</span> <span class="kw">max</span>(.[trans_datez])),  <span class="co"># trans_date misspelled</span></span>
-<span id="cb58-34"><a href="#cb58-34"></a>    <span class="dt">mods =</span> <span class="st">&quot;GROUP BY cust&quot;</span>,</span>
-<span id="cb58-35"><a href="#cb58-35"></a>    <span class="dt">orig_columns =</span> F)</span>
-<span id="cb58-36"><a href="#cb58-36"></a>  },</span>
-<span id="cb58-37"><a href="#cb58-37"></a>  <span class="dt">error =</span> <span class="cf">function</span>(e) { <span class="kw">print</span>(e) })</span></code></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>date_cutoff <span class="ot">&lt;-</span> <span class="st">&#39;2017-04-02&#39;</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>td <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="st">&quot;df&quot;</span>, </span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>            <span class="fu">c</span>(<span class="st">&quot;cust&quot;</span>,</span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;trans_date&quot;</span>,</span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;sales&quot;</span>))</span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a><span class="co"># misspelling not caught (argh!)</span></span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a><span class="fu">tryCatch</span>({</span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a>  ops <span class="ot">&lt;-</span> td <span class="sc">%.&gt;%</span></span>
+<span id="cb58-13"><a href="#cb58-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_rows_se</span>(</span>
+<span id="cb58-14"><a href="#cb58-14" aria-hidden="true" tabindex="-1"></a>    ., </span>
+<span id="cb58-15"><a href="#cb58-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qe</span>(trans_date <span class="sc">&lt;=</span>  <span class="fu">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="sc">%.&gt;%</span></span>
+<span id="cb58-16"><a href="#cb58-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(</span>
+<span id="cb58-17"><a href="#cb58-17" aria-hidden="true" tabindex="-1"></a>    .,</span>
+<span id="cb58-18"><a href="#cb58-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qae</span>(<span class="at">max_date =</span> <span class="fu">max</span>(trans_datez)),  <span class="co"># trans_date misspelled</span></span>
+<span id="cb58-19"><a href="#cb58-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">mods =</span> <span class="st">&quot;GROUP BY cust&quot;</span>,</span>
+<span id="cb58-20"><a href="#cb58-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">orig_columns =</span> F)</span>
+<span id="cb58-21"><a href="#cb58-21" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb58-22"><a href="#cb58-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) { <span class="fu">print</span>(e) })</span>
+<span id="cb58-23"><a href="#cb58-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-24"><a href="#cb58-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-25"><a href="#cb58-25" aria-hidden="true" tabindex="-1"></a><span class="co"># misspelling caught</span></span>
+<span id="cb58-26"><a href="#cb58-26" aria-hidden="true" tabindex="-1"></a><span class="fu">tryCatch</span>({</span>
+<span id="cb58-27"><a href="#cb58-27" aria-hidden="true" tabindex="-1"></a>  ops <span class="ot">&lt;-</span> td <span class="sc">%.&gt;%</span></span>
+<span id="cb58-28"><a href="#cb58-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_rows_se</span>(</span>
+<span id="cb58-29"><a href="#cb58-29" aria-hidden="true" tabindex="-1"></a>    ., </span>
+<span id="cb58-30"><a href="#cb58-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qe</span>(trans_date <span class="sc">&lt;=</span>  <span class="fu">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="sc">%.&gt;%</span></span>
+<span id="cb58-31"><a href="#cb58-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(</span>
+<span id="cb58-32"><a href="#cb58-32" aria-hidden="true" tabindex="-1"></a>    .,</span>
+<span id="cb58-33"><a href="#cb58-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qae</span>(<span class="at">max_date =</span> <span class="fu">max</span>(.[trans_datez])),  <span class="co"># trans_date misspelled</span></span>
+<span id="cb58-34"><a href="#cb58-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">mods =</span> <span class="st">&quot;GROUP BY cust&quot;</span>,</span>
+<span id="cb58-35"><a href="#cb58-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">orig_columns =</span> F)</span>
+<span id="cb58-36"><a href="#cb58-36" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb58-37"><a href="#cb58-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) { <span class="fu">print</span>(e) })</span></code></pre></div>
 <pre><code>## &lt;simpleError in sql_node.relop(., qae(max_date = max(.[trans_datez])), mods = &quot;GROUP BY cust&quot;,     orig_columns = F): rquery::sql_node.relop undefined columns: trans_datez&gt;</code></pre>
-<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1"></a>ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span></span>
-<span id="cb60-2"><a href="#cb60-2"></a><span class="st">  </span><span class="kw">select_rows_se</span>(</span>
-<span id="cb60-3"><a href="#cb60-3"></a>    ., </span>
-<span id="cb60-4"><a href="#cb60-4"></a>    <span class="kw">qe</span>(trans_date <span class="op">&lt;=</span><span class="st">  </span><span class="kw">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="op">%.&gt;%</span></span>
-<span id="cb60-5"><a href="#cb60-5"></a><span class="st">  </span><span class="kw">sql_node</span>(</span>
-<span id="cb60-6"><a href="#cb60-6"></a>    .,</span>
-<span id="cb60-7"><a href="#cb60-7"></a>    <span class="kw">qae</span>(<span class="dt">max_date =</span> <span class="kw">max</span>(.[trans_date])),</span>
-<span id="cb60-8"><a href="#cb60-8"></a>    <span class="dt">mods =</span> <span class="st">&quot;GROUP BY cust&quot;</span>,</span>
-<span id="cb60-9"><a href="#cb60-9"></a>    <span class="dt">orig_columns =</span> F)</span>
-<span id="cb60-10"><a href="#cb60-10"></a></span>
-<span id="cb60-11"><a href="#cb60-11"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, rquery<span class="op">::</span><span class="kw">rquery_default_db_info</span>()))</span></code></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>ops <span class="ot">&lt;-</span> td <span class="sc">%.&gt;%</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_rows_se</span>(</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    ., </span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qe</span>(trans_date <span class="sc">&lt;=</span>  <span class="fu">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="sc">%.&gt;%</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>    .,</span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qae</span>(<span class="at">max_date =</span> <span class="fu">max</span>(.[trans_date])),</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">mods =</span> <span class="st">&quot;GROUP BY cust&quot;</span>,</span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">orig_columns =</span> F)</span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(ops, rquery<span class="sc">::</span><span class="fu">rquery_default_db_info</span>()))</span></code></pre></div>
 <pre><code>## SELECT
 ##  max( &quot;trans_date&quot; ) AS &quot;max_date&quot;
 ## FROM (
@@ -887,35 +637,35 @@ FROM (
 ##    &quot;sales&quot;
 ##   FROM
 ##    &quot;df&quot;
-##  ) tsql_91651366431177966911_0000000000
+##  ) tsql_15576039787127429537_0000000000
 ##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( &#39;2017-04-02&#39; , &#39;%Y-%m-%d&#39; )
-## ) tsql_91651366431177966911_0000000001 GROUP BY cust</code></pre>
+## ) tsql_15576039787127429537_0000000001 GROUP BY cust</code></pre>
 <p>The <code>.[]</code>-notation is just signalling to <code>rquery</code> which symbols are column names (without requiring <code>rquery</code> to fully parse the <code>SQL</code> fragments). The <code>rquery</code> relational nodes get this sort of checking without any additional notation as they do fully parse the <code>R</code> expressions prior to any <code>SQL</code> translation.</p>
 <p>We can combine <code>.()</code> and <code>.[]</code> for even more powerful expressions such as the following.</p>
-<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1"></a><span class="kw">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
-<span id="cb62-2"><a href="#cb62-2"></a></span>
-<span id="cb62-3"><a href="#cb62-3"></a>date_cutoff &lt;-<span class="st"> &#39;2017-04-02&#39;</span></span>
-<span id="cb62-4"><a href="#cb62-4"></a></span>
-<span id="cb62-5"><a href="#cb62-5"></a>td &lt;-<span class="st"> </span><span class="kw">mk_td</span>(<span class="st">&quot;df&quot;</span>, </span>
-<span id="cb62-6"><a href="#cb62-6"></a>            <span class="kw">c</span>(<span class="st">&quot;cust&quot;</span>,</span>
-<span id="cb62-7"><a href="#cb62-7"></a>              <span class="st">&quot;trans_date&quot;</span>,</span>
-<span id="cb62-8"><a href="#cb62-8"></a>              <span class="st">&quot;sales&quot;</span>))</span>
-<span id="cb62-9"><a href="#cb62-9"></a></span>
-<span id="cb62-10"><a href="#cb62-10"></a>COL_TO_MAX =<span class="st"> </span><span class="kw">as.name</span>(<span class="st">&quot;trans_date&quot;</span>)</span>
-<span id="cb62-11"><a href="#cb62-11"></a>NEW_COL =<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;max_&quot;</span>, COL_TO_MAX)</span>
-<span id="cb62-12"><a href="#cb62-12"></a>GROUP_COL =<span class="st"> &quot;cust&quot;</span></span>
-<span id="cb62-13"><a href="#cb62-13"></a></span>
-<span id="cb62-14"><a href="#cb62-14"></a>ops &lt;-<span class="st"> </span>td <span class="op">%.&gt;%</span></span>
-<span id="cb62-15"><a href="#cb62-15"></a><span class="st">  </span><span class="kw">select_rows_se</span>(</span>
-<span id="cb62-16"><a href="#cb62-16"></a>    ., </span>
-<span id="cb62-17"><a href="#cb62-17"></a>    <span class="kw">qe</span>(trans_date <span class="op">&lt;=</span><span class="st">  </span><span class="kw">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="op">%.&gt;%</span></span>
-<span id="cb62-18"><a href="#cb62-18"></a><span class="st">  </span><span class="kw">sql_node</span>(</span>
-<span id="cb62-19"><a href="#cb62-19"></a>    .,</span>
-<span id="cb62-20"><a href="#cb62-20"></a>    <span class="kw">qae</span>(.(NEW_COL) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">max</span>(.[.(COL_TO_MAX)])),</span>
-<span id="cb62-21"><a href="#cb62-21"></a>    <span class="dt">mods =</span> <span class="kw">paste</span>(<span class="st">&quot;GROUP BY&quot;</span>, GROUP_COL),</span>
-<span id="cb62-22"><a href="#cb62-22"></a>    <span class="dt">orig_columns =</span> F)</span>
-<span id="cb62-23"><a href="#cb62-23"></a></span>
-<span id="cb62-24"><a href="#cb62-24"></a><span class="kw">cat</span>(<span class="kw">to_sql</span>(ops, rquery<span class="op">::</span><span class="kw">rquery_default_db_info</span>()))</span></code></pre></div>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>date_cutoff <span class="ot">&lt;-</span> <span class="st">&#39;2017-04-02&#39;</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>td <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="st">&quot;df&quot;</span>, </span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>            <span class="fu">c</span>(<span class="st">&quot;cust&quot;</span>,</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;trans_date&quot;</span>,</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>              <span class="st">&quot;sales&quot;</span>))</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>COL_TO_MAX <span class="ot">=</span> <span class="fu">as.name</span>(<span class="st">&quot;trans_date&quot;</span>)</span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>NEW_COL <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">&quot;max_&quot;</span>, COL_TO_MAX)</span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>GROUP_COL <span class="ot">=</span> <span class="st">&quot;cust&quot;</span></span>
+<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a>ops <span class="ot">&lt;-</span> td <span class="sc">%.&gt;%</span></span>
+<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_rows_se</span>(</span>
+<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a>    ., </span>
+<span id="cb62-17"><a href="#cb62-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qe</span>(trans_date <span class="sc">&lt;=</span>  <span class="fu">str_to_date</span>(.(date_cutoff), <span class="st">&#39;%Y-%m-%d&#39;</span>))) <span class="sc">%.&gt;%</span></span>
+<span id="cb62-18"><a href="#cb62-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sql_node</span>(</span>
+<span id="cb62-19"><a href="#cb62-19" aria-hidden="true" tabindex="-1"></a>    .,</span>
+<span id="cb62-20"><a href="#cb62-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qae</span>(.(NEW_COL) <span class="sc">:</span><span class="er">=</span> <span class="fu">max</span>(.[.(COL_TO_MAX)])),</span>
+<span id="cb62-21"><a href="#cb62-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">mods =</span> <span class="fu">paste</span>(<span class="st">&quot;GROUP BY&quot;</span>, GROUP_COL),</span>
+<span id="cb62-22"><a href="#cb62-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">orig_columns =</span> F)</span>
+<span id="cb62-23"><a href="#cb62-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-24"><a href="#cb62-24" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(ops, rquery<span class="sc">::</span><span class="fu">rquery_default_db_info</span>()))</span></code></pre></div>
 <pre><code>## SELECT
 ##  max( &quot;trans_date&quot; ) AS &quot;max_trans_date&quot;
 ## FROM (
@@ -926,9 +676,9 @@ FROM (
 ##    &quot;sales&quot;
 ##   FROM
 ##    &quot;df&quot;
-##  ) tsql_72602647658709976943_0000000000
+##  ) tsql_08309843820851199015_0000000000
 ##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( &#39;2017-04-02&#39; , &#39;%Y-%m-%d&#39; )
-## ) tsql_72602647658709976943_0000000001 GROUP BY cust</code></pre>
+## ) tsql_08309843820851199015_0000000001 GROUP BY cust</code></pre>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
@@ -950,8 +700,8 @@ FROM (
 </div>
 <div id="appendix-always-clean-up-on-the-way-out" class="section level1">
 <h1>Appendix: Always clean up on the way out</h1>
-<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1"></a><span class="kw">options</span>(old_o)</span>
-<span id="cb64-2"><a href="#cb64-2"></a>DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(db)</span></code></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(old_o)</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(db)</span></code></pre></div>
 </div>
 
 
