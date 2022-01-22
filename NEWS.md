@@ -1,4 +1,9 @@
 
+# rquery 1.4.8 2022/01/22
+
+ * Work on examples and doc.
+ * Clean up use of rank().
+
 # rquery 1.4.7 2021/06/10
 
  * Check for empty ... on more _se() methods.

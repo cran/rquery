@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2021-06-10" />
+<meta name="date" content="2022-01-22" />
 
 <title>Query Generation</title>
 
@@ -141,7 +141,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <h1 class="title toc-ignore">Query Generation</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2021-06-10</h4>
+<h4 class="date">2022-01-22</h4>
 
 
 
@@ -155,26 +155,28 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>dq <span class="ot">&lt;-</span> d <span class="sc">%.&gt;%</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extend</span>(.,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">probability :=</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>           <span class="fu">exp</span>(assessmentTotal <span class="sc">*</span> scale)<span class="sc">/</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>           <span class="fu">sum</span>(<span class="fu">exp</span>(assessmentTotal <span class="sc">*</span> scale)),</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">count :=</span> <span class="fu">count</span>(<span class="dv">1</span>),</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>) <span class="sc">%.&gt;%</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extend</span>(.,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">rank :=</span> <span class="fu">rank</span>(),</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>,</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">orderby =</span> <span class="fu">c</span>(<span class="st">&#39;probability&#39;</span>, <span class="st">&#39;surveyCategory&#39;</span>))  <span class="sc">%.&gt;%</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_columns</span>(., <span class="st">&#39;diagnosis&#39;</span> <span class="sc">:</span><span class="er">=</span> <span class="st">&#39;surveyCategory&#39;</span>) <span class="sc">%.&gt;%</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_rows</span>(., rank <span class="sc">==</span> count) <span class="sc">%.&gt;%</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_columns</span>(., <span class="fu">c</span>(<span class="st">&#39;subjectID&#39;</span>, </span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&#39;diagnosis&#39;</span>, </span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&#39;probability&#39;</span>)) <span class="sc">%.&gt;%</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">orderby</span>(., <span class="st">&#39;subjectID&#39;</span>)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(my_db)</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;SQLiteConnection&quot;</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;package&quot;)</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;RSQLite&quot;</span></span></code></pre></div>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">one =</span> <span class="dv">1</span>) <span class="sc">%.&gt;%</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extend</span>(.,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">probability :=</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>           <span class="fu">exp</span>(assessmentTotal <span class="sc">*</span> scale)<span class="sc">/</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>           <span class="fu">sum</span>(<span class="fu">exp</span>(assessmentTotal <span class="sc">*</span> scale)),</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">count :=</span> <span class="fu">sum</span>(one),</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>) <span class="sc">%.&gt;%</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extend</span>(.,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">rank :=</span> <span class="fu">cumsum</span>(one),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">orderby =</span> <span class="fu">c</span>(<span class="st">&#39;probability&#39;</span>, <span class="st">&#39;surveyCategory&#39;</span>))  <span class="sc">%.&gt;%</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_columns</span>(., <span class="st">&#39;diagnosis&#39;</span> <span class="sc">:</span><span class="er">=</span> <span class="st">&#39;surveyCategory&#39;</span>) <span class="sc">%.&gt;%</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_rows</span>(., rank <span class="sc">==</span> count) <span class="sc">%.&gt;%</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_columns</span>(., <span class="fu">c</span>(<span class="st">&#39;subjectID&#39;</span>, </span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&#39;diagnosis&#39;</span>, </span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&#39;probability&#39;</span>)) <span class="sc">%.&gt;%</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">orderby</span>(., <span class="st">&#39;subjectID&#39;</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(my_db)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;SQLiteConnection&quot;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;package&quot;)</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;RSQLite&quot;</span></span></code></pre></div>
 <p>Presentation format (see also <a href="https://winvector.github.io/rquery/reference/op_diagram.html"><code>op_diagram()</code></a>):</p>
 <pre><code>  mk_td(&quot;d&quot;, c(
     &quot;subjectID&quot;,
@@ -183,13 +185,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     &quot;irrelevantCol1&quot;,
     &quot;irrelevantCol2&quot;)) %.&gt;%
    extend(.,
+    one := 1) %.&gt;%
+   extend(.,
     probability := exp(assessmentTotal * 0.237) / sum(exp(assessmentTotal * 0.237)),
-    count := count(1),
+    count := sum(one),
     partitionby = c(&#39;subjectID&#39;),
     orderby = c(),
     reverse = c()) %.&gt;%
    extend(.,
-    rank := rank(),
+    rank := cumsum(one),
     partitionby = c(&#39;subjectID&#39;),
     orderby = c(&#39;probability&#39;, &#39;surveyCategory&#39;),
     reverse = c()) %.&gt;%
@@ -223,27 +227,35 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
        `surveyCategory`,
        `probability`,
        `count`,
-       rank ( ) OVER (  PARTITION BY `subjectID` ORDER BY `probability`, `surveyCategory` ) AS `rank`
+       SUM ( `one` ) OVER (  PARTITION BY `subjectID` ORDER BY `probability`, `surveyCategory` ) AS `rank`
       FROM (
        SELECT
         `subjectID`,
         `surveyCategory`,
+        `one`,
         exp ( `assessmentTotal` * 0.237 ) / sum ( exp ( `assessmentTotal` * 0.237 ) ) OVER (  PARTITION BY `subjectID` ) AS `probability`,
-        count ( 1 ) OVER (  PARTITION BY `subjectID` ) AS `count`
+        sum ( `one` ) OVER (  PARTITION BY `subjectID` ) AS `count`
        FROM (
         SELECT
          `subjectID`,
          `surveyCategory`,
-         `assessmentTotal`
-        FROM
-         `d` LIMIT 1000
-        ) tsql_80987133311344751488_0000000000
-       ) tsql_80987133311344751488_0000000001
-     ) tsql_80987133311344751488_0000000002
-    ) tsql_80987133311344751488_0000000003
+         `assessmentTotal`,
+         1  AS `one`
+        FROM (
+         SELECT
+          `subjectID`,
+          `surveyCategory`,
+          `assessmentTotal`
+         FROM
+          `d` LIMIT 1000
+         ) tsql_80987133311344751488_0000000000
+        ) tsql_80987133311344751488_0000000001
+       ) tsql_80987133311344751488_0000000002
+     ) tsql_80987133311344751488_0000000003
+    ) tsql_80987133311344751488_0000000004
     WHERE `rank` = `count`
-   ) tsql_80987133311344751488_0000000004
-  ) tsql_80987133311344751488_0000000005 ORDER BY `subjectID`</code></pre>
+   ) tsql_80987133311344751488_0000000005
+  ) tsql_80987133311344751488_0000000006 ORDER BY `subjectID`</code></pre>
 
 
 
