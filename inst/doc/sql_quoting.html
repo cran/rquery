@@ -12,7 +12,7 @@
 
 <meta name="author" content="John Mount" />
 
-<meta name="date" content="2022-01-22" />
+<meta name="date" content="2022-02-28" />
 
 <title>SQL quoting</title>
 
@@ -141,7 +141,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <h1 class="title toc-ignore">SQL quoting</h1>
 <h4 class="author">John Mount</h4>
-<h4 class="date">2022-01-22</h4>
+<h4 class="date">2022-02-28</h4>
 
 
 
@@ -198,9 +198,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##    &#39;sales&#39;
 ##   FROM
 ##    &#39;df&#39;
-##  ) tsql_56860454087854791521_0000000000
+##  ) tsql_53739465413029083355_0000000000
 ##  WHERE &#39;trans_date&#39; &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
-## ) tsql_56860454087854791521_0000000001 GROUP BY  &#39;cust&#39;</code></pre>
+## ) tsql_53739465413029083355_0000000001 GROUP BY  &#39;cust&#39;</code></pre>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>db2 <span class="ot">&lt;-</span> <span class="fu">rquery_db_info</span>(</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">identifier_quote_char =</span> <span class="st">&#39;&quot;&#39;</span>,</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">string_quote_char =</span> <span class="st">&quot;&#39;&quot;</span>)</span>
@@ -218,9 +218,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##    &quot;sales&quot;
 ##   FROM
 ##    &quot;df&quot;
-##  ) tsql_12239907159420646858_0000000000
+##  ) tsql_09624338848106151870_0000000000
 ##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( &#39;2017-04-02&#39; , &#39;%Y-%m-%d&#39; )
-## ) tsql_12239907159420646858_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
+## ) tsql_09624338848106151870_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
 <p>Notice our included quote characters were translated. This is an unwanted side-effect of using the <code>qae()</code> shortcut which does not tokenize, so it does not know which quotes are in which roles in the expression.</p>
 <p>To override quote translation in the <code>sql_node()</code> (which is simple string substitution without quote context or escaping) you must use the clunkier “build up a string as a list of tokens” (where sub-listed items are string literals and names are column names).</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ops <span class="ot">&lt;-</span> td <span class="sc">%.&gt;%</span></span>
@@ -262,9 +262,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##    &#39;sales&#39;
 ##   FROM
 ##    &#39;df&#39;
-##  ) tsql_17031403389915222762_0000000000
+##  ) tsql_58239066646790867132_0000000000
 ##  WHERE &#39;trans_date&#39; &lt;= str_to_date ( &quot;2017-04-02&quot; , &quot;%Y-%m-%d&quot; )
-## ) tsql_17031403389915222762_0000000001 GROUP BY  &#39;cust&#39;</code></pre>
+## ) tsql_58239066646790867132_0000000001 GROUP BY  &#39;cust&#39;</code></pre>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(ops, db2))</span></code></pre></div>
 <pre><code>## SELECT
 ##  NA,
@@ -278,9 +278,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##    &quot;sales&quot;
 ##   FROM
 ##    &quot;df&quot;
-##  ) tsql_64707185728251594095_0000000000
+##  ) tsql_47480453215914624818_0000000000
 ##  WHERE &quot;trans_date&quot; &lt;= str_to_date ( &#39;2017-04-02&#39; , &#39;%Y-%m-%d&#39; )
-## ) tsql_64707185728251594095_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
+## ) tsql_47480453215914624818_0000000001 GROUP BY  &quot;cust&quot;</code></pre>
 <p>Quotes within string literals are going to be a nightmare moving from db to db, so our advice is to try to avoid them.</p>
 
 

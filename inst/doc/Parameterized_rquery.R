@@ -63,12 +63,6 @@ mtcars %.>% ops
 # print the operator sequence
 cat(format(ops))
 
-## ----eval=FALSE, message=FALSE, warning=FALSE---------------------------------
-#  # draw the pipeline
-#  ops %.>%
-#    op_diagram(.) %.>%
-#    DiagrammeR::grViz(.)
-
 ## ----dbex, eval=have_db, message=FALSE, warning=FALSE-------------------------
 # connect to a database
 raw_connection <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
