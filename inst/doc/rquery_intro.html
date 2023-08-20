@@ -12,29 +12,42 @@
 
 <meta name="author" content="John Mount, Win-Vector LLC" />
 
-<meta name="date" content="2022-02-28" />
+<meta name="date" content="2023-08-19" />
 
 <title>rquery Introduction</title>
 
-<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
 
 <style type="text/css">
-  code{white-space: pre-wrap;}
-  span.smallcaps{font-variant: small-caps;}
-  span.underline{text-decoration: underline;}
-  div.column{display: inline-block; vertical-align: top; width: 50%;}
-  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-  ul.task-list{list-style: none;}
-    </style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
 
 
 <style type="text/css">
-  code {
-    white-space: pre;
-  }
-  .sourceCode {
-    overflow: visible;
-  }
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
@@ -52,55 +65,54 @@ pre > code.sourceCode { white-space: pre-wrap; }
 pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
-  { counter-reset: source-line 0; }
+{ counter-reset: source-line 0; }
 pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
+{ position: relative; left: -4em; counter-increment: source-line; }
 pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
 div.sourceCode
-  {   }
+{ }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
 </style>
 <script>
 // apply pandoc div.sourceCode style to pre.sourceCode instead
@@ -109,13 +121,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -127,7 +146,187 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
 
 
 
@@ -141,72 +340,142 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <h1 class="title toc-ignore">rquery Introduction</h1>
 <h4 class="author">John Mount, Win-Vector LLC</h4>
-<h4 class="date">2022-02-28</h4>
+<h4 class="date">2023-08-19</h4>
 
 
 
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p><a href="https://github.com/WinVector/rquery"><code>rquery</code></a> is a query generator for <a href="https://www.r-project.org"><code>R</code></a>. It is based on <a href="https://en.wikipedia.org/wiki/Relational_algebra">Edgar F. Codd’s relational algebra</a> plus experience using <code>SQL</code> and <a href="https://CRAN.R-project.org/package=dplyr"><code>dplyr</code></a> at big data scale. The design represents an attempt to make <code>SQL</code> more teachable by denoting composition by a sequential pipeline notation instead of nested queries or functions. The implementation delivers reliable high performance data processing on large data systems such as <code>Spark</code> and databases. Package features include: data processing trees or pipelines as observable objects (able to report both columns produced and columns used), optimized <code>SQL</code> generation as an explicit user visible modeling step, convenience methods for applying query trees to in-memory <code>data.frame</code>s, and low direct package dependencies.</p>
+<p><a href="https://github.com/WinVector/rquery"><code>rquery</code></a>
+is a query generator for <a href="https://www.r-project.org"><code>R</code></a>. It is based on <a href="https://en.wikipedia.org/wiki/Relational_algebra">Edgar F. Codd’s
+relational algebra</a> plus experience using <code>SQL</code> and <a href="https://CRAN.R-project.org/package=dplyr"><code>dplyr</code></a>
+at big data scale. The design represents an attempt to make
+<code>SQL</code> more teachable by denoting composition by a sequential
+pipeline notation instead of nested queries or functions. The
+implementation delivers reliable high performance data processing on
+large data systems such as <code>Spark</code> and databases. Package
+features include: data processing trees or pipelines as observable
+objects (able to report both columns produced and columns used),
+optimized <code>SQL</code> generation as an explicit user visible
+modeling step, convenience methods for applying query trees to in-memory
+<code>data.frame</code>s, and low direct package dependencies.</p>
 <p>Let’s set up our environment so we can work with examples.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>run_vignette <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">&quot;DBI&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>) <span class="sc">&amp;&amp;</span> </span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">requireNamespace</span>(<span class="st">&quot;RSQLite&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;wrapr&quot;</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># example database connection</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>db <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(RSQLite<span class="sc">::</span><span class="fu">SQLite</span>(),</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;:memory:&quot;</span>)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>RSQLite<span class="sc">::</span><span class="fu">initExtension</span>(db)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># adapt to database</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>dbopts <span class="ot">&lt;-</span> <span class="fu">rq_connection_tests</span>(db)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(dbopts)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># register database</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>old_o <span class="ot">&lt;-</span> <span class="fu">options</span>(<span class="fu">list</span>(<span class="st">&quot;rquery.rquery_db_executor&quot;</span> <span class="ot">=</span> <span class="fu">list</span>(<span class="at">db =</span> db)))</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>run_vignette <span class="ot">&lt;-</span> <span class="fu">requireNamespace</span>(<span class="st">&quot;DBI&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>) <span class="sc">&amp;&amp;</span> </span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="fu">requireNamespace</span>(<span class="st">&quot;RSQLite&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;rquery&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;wrapr&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># example database connection</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>db <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(RSQLite<span class="sc">::</span><span class="fu">SQLite</span>(),</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>                     <span class="st">&quot;:memory:&quot;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>RSQLite<span class="sc">::</span><span class="fu">initExtension</span>(db)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co"># adapt to database</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>dbopts <span class="ot">&lt;-</span> <span class="fu">rq_connection_tests</span>(db)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="fu">options</span>(dbopts)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co"># register database</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>old_o <span class="ot">&lt;-</span> <span class="fu">options</span>(<span class="fu">list</span>(<span class="st">&quot;rquery.rquery_db_executor&quot;</span> <span class="ot">=</span> <span class="fu">list</span>(<span class="at">db =</span> db)))</span></code></pre></div>
 </div>
 <div id="table-descriptions" class="section level1">
 <h1>Table descriptions</h1>
-<p><code>rquery</code> table descriptions are simple objects that store only the name of a table and expected columns. Any local data or database table that has at least the set of columns named in the table description can be used in a given <code>rquery</code> pipeline.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># copy in example data</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rq_copy_to</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  db, <span class="st">&#39;d&#39;</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">v =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">5</span>, <span class="dv">3</span>)),</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">temporary =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p><code>rquery</code> table descriptions are simple objects that store
+only the name of a table and expected columns. Any local data or
+database table that has at least the set of columns named in the table
+description can be used in a given <code>rquery</code> pipeline.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># copy in example data</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">rq_copy_to</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  db, <span class="st">&#39;d&#39;</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">v =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">5</span>, <span class="dv">3</span>)),</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">temporary =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;mk_td(\&quot;d\&quot;, c( \&quot;v\&quot;))&quot;
 ##    v
 ## 1  1
 ## 2 -5
 ## 3  3</code></pre>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># produce a hande to existing table</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">db_td</span>(db, <span class="st">&quot;d&quot;</span>)</span></code></pre></div>
-<p>The table description “<code>d</code>” we have been using in examples was produced as a result of moving data to a database by <a href="https://winvector.github.io/rquery/reference/rq_copy_to.html"><code>rq_copy_to()</code></a>. However we can also create a description of an existing database table with <a href="https://winvector.github.io/rquery/reference/db_td.html"><code>db_td()</code></a> or even build a description by hand with <a href="https://winvector.github.io/rquery/reference/mk_td.html"><code>mk_td()</code></a>. Also one can build descriptions of local or in-memory <code>data.frame</code>s with <a href="https://winvector.github.io/rquery/reference/local_td.html"><code>local_td()</code></a>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># produce a hande to existing table</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">db_td</span>(db, <span class="st">&quot;d&quot;</span>)</span></code></pre></div>
+<p>The table description “<code>d</code>” we have been using in examples
+was produced as a result of moving data to a database by <a href="https://winvector.github.io/rquery/reference/rq_copy_to.html"><code>rq_copy_to()</code></a>.
+However we can also create a description of an existing database table
+with <a href="https://winvector.github.io/rquery/reference/db_td.html"><code>db_td()</code></a>
+or even build a description by hand with <a href="https://winvector.github.io/rquery/reference/mk_td.html"><code>mk_td()</code></a>.
+Also one can build descriptions of local or in-memory
+<code>data.frame</code>s with <a href="https://winvector.github.io/rquery/reference/local_td.html"><code>local_td()</code></a>.</p>
 </div>
 <div id="operators" class="section level1">
 <h1>Operators</h1>
-<p>The <a href="https://winvector.github.io/rquery/reference/sql_node.html"><code>sql_node()</code></a> alone can make writing, understanding, and maintaining complex data transformations as queries easier. And this node is a good introduction to some of the power of the <code>rquery</code> package. However, the primary purpose of <code>rquery</code> is to provide ready-made relational operators to further simplify to the point of rarely needing to use the <code>sql_node()</code> directly.</p>
+<p>The <a href="https://winvector.github.io/rquery/reference/sql_node.html"><code>sql_node()</code></a>
+alone can make writing, understanding, and maintaining complex data
+transformations as queries easier. And this node is a good introduction
+to some of the power of the <code>rquery</code> package. However, the
+primary purpose of <code>rquery</code> is to provide ready-made
+relational operators to further simplify to the point of rarely needing
+to use the <code>sql_node()</code> directly.</p>
 <p>The primary operators supplied by <code>rquery</code> are:</p>
 <p>The primary relational operators include:</p>
 <ul>
-<li><a href="https://winvector.github.io/rquery/reference/extend.html"><code>extend()</code></a>/<a href="https://winvector.github.io/rquery/reference/extend_se.html"><code>extend_se()</code></a>. Extend adds derived columns to a relation table. With a sufficiently powerful <code>SQL</code> provider this includes ordered and partitioned window functions. This operator also includes built-in <a href="https://winvector.github.io/seplyr/"><code>seplyr</code></a>-style <a href="https://winvector.github.io/seplyr/articles/MutatePartitioner.html">assignment partitioning</a>.</li>
-<li><a href="https://winvector.github.io/rquery/reference/project.html"><code>project()</code></a>. Project is usually <em>portrayed</em> as the equivalent to column selection, though the original definition includes aggregation. In our opinion the original relational nature of the operator is best captured by moving <code>SQL</code>’s “<code>GROUP BY</code>” aggregation functionality.</li>
-<li><a href="https://winvector.github.io/rquery/reference/natural_join.html"><code>natural_join()</code></a>. This a specialized relational join operator, using all common columns as an equi-join condition.</li>
-<li><a href="https://winvector.github.io/rquery/reference/theta_join.html"><code>theta_join()</code></a>. This is the relational join operator allowing an arbitrary predicate.</li>
-<li><a href="https://winvector.github.io/rquery/reference/theta_join.html"><code>select_rows()</code></a>. This is Codd’s relational row selection. Obviously <code>select</code> alone is an over-used and now ambiguous term (for example: it is already used as the “doit” verb in <code>SQL</code> and the <em>column</em> selector in <code>dplyr</code>).</li>
-<li><a href="https://winvector.github.io/rquery/reference/rename_columns.html"><code>rename_columns()</code></a>. This operator renames sets of columns.</li>
+<li><a href="https://winvector.github.io/rquery/reference/extend.html"><code>extend()</code></a>/<a href="https://winvector.github.io/rquery/reference/extend_se.html"><code>extend_se()</code></a>.
+Extend adds derived columns to a relation table. With a sufficiently
+powerful <code>SQL</code> provider this includes ordered and partitioned
+window functions. This operator also includes built-in <a href="https://winvector.github.io/seplyr/"><code>seplyr</code></a>-style
+<a href="https://winvector.github.io/seplyr/articles/MutatePartitioner.html">assignment
+partitioning</a>.</li>
+<li><a href="https://winvector.github.io/rquery/reference/project.html"><code>project()</code></a>.
+Project is usually <em>portrayed</em> as the equivalent to column
+selection, though the original definition includes aggregation. In our
+opinion the original relational nature of the operator is best captured
+by moving <code>SQL</code>’s “<code>GROUP BY</code>” aggregation
+functionality.</li>
+<li><a href="https://winvector.github.io/rquery/reference/natural_join.html"><code>natural_join()</code></a>.
+This a specialized relational join operator, using all common columns as
+an equi-join condition.</li>
+<li><a href="https://winvector.github.io/rquery/reference/theta_join.html"><code>theta_join()</code></a>.
+This is the relational join operator allowing an arbitrary
+predicate.</li>
+<li><a href="https://winvector.github.io/rquery/reference/theta_join.html"><code>select_rows()</code></a>.
+This is Codd’s relational row selection. Obviously <code>select</code>
+alone is an over-used and now ambiguous term (for example: it is already
+used as the “doit” verb in <code>SQL</code> and the <em>column</em>
+selector in <code>dplyr</code>).</li>
+<li><a href="https://winvector.github.io/rquery/reference/rename_columns.html"><code>rename_columns()</code></a>.
+This operator renames sets of columns.</li>
 </ul>
-<p>The primary non-relational (traditional <code>SQL</code>) operators are:</p>
+<p>The primary non-relational (traditional <code>SQL</code>) operators
+are:</p>
 <ul>
-<li><a href="https://winvector.github.io/rquery/reference/select_columns.html"><code>select_columns()</code></a>. This allows choice of columns (central to <code>SQL</code>), but is not a relational operator as it can damage row-uniqueness.</li>
-<li><a href="https://winvector.github.io/rquery/reference/orderby.html"><code>orderby()</code></a>. Row order is not a concept in the relational algebra (and also not maintained in most <code>SQL</code> implementations). This operator is only useful when used with its <code>limit=</code> option, or as the last step as data comes out of the relation store and is moved to <code>R</code> (where row-order is usually maintained).</li>
+<li><a href="https://winvector.github.io/rquery/reference/select_columns.html"><code>select_columns()</code></a>.
+This allows choice of columns (central to <code>SQL</code>), but is not
+a relational operator as it can damage row-uniqueness.</li>
+<li><a href="https://winvector.github.io/rquery/reference/orderby.html"><code>orderby()</code></a>.
+Row order is not a concept in the relational algebra (and also not
+maintained in most <code>SQL</code> implementations). This operator is
+only useful when used with its <code>limit=</code> option, or as the
+last step as data comes out of the relation store and is moved to
+<code>R</code> (where row-order is usually maintained).</li>
 </ul>
-<p>The above list (and especially naming) are chosen to first match Codd’s relational concepts (<code>project</code>, <code>select</code>, <code>rename</code>, <code>join</code>, aggregation), <code>SQL</code> naming conventions. Notice this covers the <a href="https://dplyr.tidyverse.org">primary <code>dplyr</code> operators</a> <code>mutate()</code> (Codd’s <code>extend</code>), <code>select()</code> (not relational), <code>filter()</code> (Codd’s <code>select</code>, represented in <code>SQL</code> by “<code>WHERE</code>”), <code>summarise()</code> (Codd’s <code>project</code> or aggregate concepts, triggered in <code>SQL</code> by “<code>GROUP BY</code>”), <code>arrange()</code> (not a relational concept, implemented in <code>SQL</code> by “ORDER BY”). This correspondence is due to Codd’s ideas and <code>SQL</code> driving data engineering thinking for almost the last 50 years (both with and without credit or citation).</p>
-<p>With relational operators the user can work fast and work further away from syntactic details. For example some <code>R</code> operators (such as <code>is.na</code>) are translated to <code>SQL</code> analogues (in this case <code>IS NULL</code>).</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>d <span class="sc">%.&gt;%</span> </span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extend</span>(., <span class="at">was_na :=</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(v), <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">%.&gt;%</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">to_sql</span>(., db) <span class="sc">%.&gt;%</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(.)</span></code></pre></div>
+<p>The above list (and especially naming) are chosen to first match
+Codd’s relational concepts (<code>project</code>, <code>select</code>,
+<code>rename</code>, <code>join</code>, aggregation), <code>SQL</code>
+naming conventions. Notice this covers the <a href="https://dplyr.tidyverse.org">primary <code>dplyr</code>
+operators</a> <code>mutate()</code> (Codd’s <code>extend</code>),
+<code>select()</code> (not relational), <code>filter()</code> (Codd’s
+<code>select</code>, represented in <code>SQL</code> by
+“<code>WHERE</code>”), <code>summarise()</code> (Codd’s
+<code>project</code> or aggregate concepts, triggered in
+<code>SQL</code> by “<code>GROUP BY</code>”), <code>arrange()</code>
+(not a relational concept, implemented in <code>SQL</code> by “ORDER
+BY”). This correspondence is due to Codd’s ideas and <code>SQL</code>
+driving data engineering thinking for almost the last 50 years (both
+with and without credit or citation).</p>
+<p>With relational operators the user can work fast and work further
+away from syntactic details. For example some <code>R</code> operators
+(such as <code>is.na</code>) are translated to <code>SQL</code>
+analogues (in this case <code>IS NULL</code>).</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>d <span class="sc">%.&gt;%</span> </span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="fu">extend</span>(., <span class="at">was_na :=</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(v), <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">%.&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">to_sql</span>(., db) <span class="sc">%.&gt;%</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="fu">cat</span>(.)</span></code></pre></div>
 <pre><code>## SELECT
 ##  `v`,
 ##  ( CASE WHEN ( ( ( `v` ) IS NULL ) ) THEN ( 1 ) WHEN NOT ( ( ( `v` ) IS NULL ) ) THEN ( 0 ) ELSE NULL END )  AS `was_na`
@@ -216,42 +485,61 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##  FROM
 ##   `d`
 ##  ) tsql_53216271909501275172_0000000000</code></pre>
-<p>The exact translation depends on the database (which is why <code>to_sql()</code> takes a database argument). Some care has to be taken as <code>SQL</code> types are different than <code>R</code> types (in particular for some databases logical types are not numeric).</p>
-<p>With a database that supplies window functions one can quickly work the “logistic scoring by hand” example from<br />
-from <a href="https://win-vector.com/2017/08/04/lets-have-some-sympathy-for-the-part-time-r-user/">Let’s Have Some Sympathy For The Part-time R User</a>. This example worked with <code>rquery</code> code that works with both <code>PostgreSQL</code> and <code>Spark</code> can be found <a href="https://github.com/WinVector/rquery/blob/master/README.md">here</a>.</p>
-<p>We can demonstrate the pipeline, but the <code>SQLite</code> database we are using in this vignette does not have the window functions required to execute it. <code>PostgreSQL</code>, <code>Spark</code>, and many other databases do have the necessary functionality. The pipeline is a good example of a non-trivial sequence of relational nodes.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>scale <span class="ot">&lt;-</span> <span class="fl">0.237</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>dq <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="st">&quot;d3&quot;</span>, </span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">columns =</span> <span class="fu">qc</span>(subjectID, </span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                                surveyCategory, </span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                                assessmentTotal)) <span class="sc">%.&gt;%</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extend</span>(.,</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">probability :=</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>               <span class="fu">exp</span>(assessmentTotal <span class="sc">*</span> scale))  <span class="sc">%.&gt;%</span> </span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">normalize_cols</span>(.,</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                 <span class="st">&quot;probability&quot;</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>                 <span class="at">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>) <span class="sc">%.&gt;%</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pick_top_k</span>(.,</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>             <span class="at">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>,</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>             <span class="at">orderby =</span> <span class="fu">c</span>(<span class="st">&#39;probability&#39;</span>, <span class="st">&#39;surveyCategory&#39;</span>),</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>             <span class="at">reverse =</span> <span class="fu">c</span>(<span class="st">&#39;probability&#39;</span>)) <span class="sc">%.&gt;%</span> </span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_columns</span>(., <span class="st">&#39;diagnosis&#39;</span> <span class="sc">:</span><span class="er">=</span> <span class="st">&#39;surveyCategory&#39;</span>) <span class="sc">%.&gt;%</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_columns</span>(., <span class="fu">c</span>(<span class="st">&#39;subjectID&#39;</span>, </span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&#39;diagnosis&#39;</span>, </span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&#39;probability&#39;</span>)) <span class="sc">%.&gt;%</span></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">orderby</span>(., <span class="st">&#39;subjectID&#39;</span>)</span></code></pre></div>
-<p><a href="https://winvector.github.io/wrapr/reference/qc.html"><code>qc()</code></a> is “quoting concatenate”, a convenience function that lets us skip a few quote marks. No <code>list()</code>, <code>as.name()</code>, or <code>quote()</code> steps are needed as the operator nodes are parsed by <code>R</code> to find identifiers. The <code>scale</code> constant was added to the environment as pipelines try to bind constants during pipe construction (else <code>scale</code> would be estimated to be a missing column name).</p>
-<p>Even though we are not going to run this query here, we can still check some properties of the query.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tables_used</span>(dq)</span></code></pre></div>
+<p>The exact translation depends on the database (which is why
+<code>to_sql()</code> takes a database argument). Some care has to be
+taken as <code>SQL</code> types are different than <code>R</code> types
+(in particular for some databases logical types are not numeric).</p>
+<p>With a database that supplies window functions one can quickly work
+the “logistic scoring by hand” example from<br />
+from <a href="https://win-vector.com/2017/08/04/lets-have-some-sympathy-for-the-part-time-r-user/">Let’s
+Have Some Sympathy For The Part-time R User</a>. This example worked
+with <code>rquery</code> code that works with both
+<code>PostgreSQL</code> and <code>Spark</code> can be found <a href="https://github.com/WinVector/rquery/blob/master/README.md">here</a>.</p>
+<p>We can demonstrate the pipeline, but the <code>SQLite</code> database
+we are using in this vignette does not have the window functions
+required to execute it. <code>PostgreSQL</code>, <code>Spark</code>, and
+many other databases do have the necessary functionality. The pipeline
+is a good example of a non-trivial sequence of relational nodes.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>scale <span class="ot">&lt;-</span> <span class="fl">0.237</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>dq <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="st">&quot;d3&quot;</span>, </span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>                   <span class="at">columns =</span> <span class="fu">qc</span>(subjectID, </span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>                                surveyCategory, </span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>                                assessmentTotal)) <span class="sc">%.&gt;%</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="fu">extend</span>(.,</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>             <span class="at">probability :=</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>               <span class="fu">exp</span>(assessmentTotal <span class="sc">*</span> scale))  <span class="sc">%.&gt;%</span> </span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  <span class="fu">normalize_cols</span>(.,</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>                 <span class="st">&quot;probability&quot;</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>                 <span class="at">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>) <span class="sc">%.&gt;%</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="fu">pick_top_k</span>(.,</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>             <span class="at">partitionby =</span> <span class="st">&#39;subjectID&#39;</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>             <span class="at">orderby =</span> <span class="fu">c</span>(<span class="st">&#39;probability&#39;</span>, <span class="st">&#39;surveyCategory&#39;</span>),</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>             <span class="at">reverse =</span> <span class="fu">c</span>(<span class="st">&#39;probability&#39;</span>)) <span class="sc">%.&gt;%</span> </span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>  <span class="fu">rename_columns</span>(., <span class="st">&#39;diagnosis&#39;</span> <span class="sc">:=</span> <span class="st">&#39;surveyCategory&#39;</span>) <span class="sc">%.&gt;%</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  <span class="fu">select_columns</span>(., <span class="fu">c</span>(<span class="st">&#39;subjectID&#39;</span>, </span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>                      <span class="st">&#39;diagnosis&#39;</span>, </span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>                      <span class="st">&#39;probability&#39;</span>)) <span class="sc">%.&gt;%</span></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>  <span class="fu">orderby</span>(., <span class="st">&#39;subjectID&#39;</span>)</span></code></pre></div>
+<p><a href="https://winvector.github.io/wrapr/reference/qc.html"><code>qc()</code></a>
+is “quoting concatenate”, a convenience function that lets us skip a few
+quote marks. No <code>list()</code>, <code>as.name()</code>, or
+<code>quote()</code> steps are needed as the operator nodes are parsed
+by <code>R</code> to find identifiers. The <code>scale</code> constant
+was added to the environment as pipelines try to bind constants during
+pipe construction (else <code>scale</code> would be estimated to be a
+missing column name).</p>
+<p>Even though we are not going to run this query here, we can still
+check some properties of the query.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">tables_used</span>(dq)</span></code></pre></div>
 <pre><code>## [1] &quot;d3&quot;</code></pre>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">columns_used</span>(dq)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">columns_used</span>(dq)</span></code></pre></div>
 <pre><code>## $d3
 ## [1] &quot;subjectID&quot;       &quot;surveyCategory&quot;  &quot;assessmentTotal&quot;</code></pre>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">column_names</span>(dq)</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">column_names</span>(dq)</span></code></pre></div>
 <pre><code>## [1] &quot;subjectID&quot;   &quot;diagnosis&quot;   &quot;probability&quot;</code></pre>
 <p>The operations can be printed as an operations tree.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(dq))</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(dq))</span></code></pre></div>
 <pre><code>## mk_td(&quot;d3&quot;, c(
 ##   &quot;subjectID&quot;,
 ##   &quot;surveyCategory&quot;,
@@ -278,9 +566,17 @@ from <a href="https://win-vector.com/2017/08/04/lets-have-some-sympathy-for-the-
 ##   c(&#39;subjectID&#39;),
 ##   reverse = c(),
 ##   limit = NULL)</code></pre>
-<p>Notice the returned presentation is not exactly the set of nodes we specified. This is because of the nodes we used (<code>normalize_cols()</code> and <code>pick_top_k()</code>) are actually higher-order nodes (implemented in terms of nodes). Also <code>extend()</code> nodes are re-factored to be unambiguous in their use and re-use of column names.</p>
-<p>We can also exhibit the <code>SQL</code> this operations tree renders, to (though the <code>SQLite</code> database we are using in vignettes does not have the required window-functions to execute it; we suggest using <code>PostgreSQL</code>).</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(dq, db))</span></code></pre></div>
+<p>Notice the returned presentation is not exactly the set of nodes we
+specified. This is because of the nodes we used
+(<code>normalize_cols()</code> and <code>pick_top_k()</code>) are
+actually higher-order nodes (implemented in terms of nodes). Also
+<code>extend()</code> nodes are re-factored to be unambiguous in their
+use and re-use of column names.</p>
+<p>We can also exhibit the <code>SQL</code> this operations tree
+renders, to (though the <code>SQLite</code> database we are using in
+vignettes does not have the required window-functions to execute it; we
+suggest using <code>PostgreSQL</code>).</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(dq, db))</span></code></pre></div>
 <pre><code>## SELECT * FROM (
 ##  SELECT
 ##   `subjectID`,
@@ -328,35 +624,52 @@ from <a href="https://win-vector.com/2017/08/04/lets-have-some-sympathy-for-the-
 </div>
 <div id="non-sql-nodes" class="section level1">
 <h1>Non-<code>SQL</code> nodes</h1>
-<p>Not all data transform steps can conveniently be written as a single <code>SQL</code> statement. To work around this potential limitation <code>rquery</code> supplies a special type of node called <a href="https://winvector.github.io/rquery/reference/non_sql_node.html"><code>non_sql_node()</code></a>. <code>non_sql_node()</code> is used to implement arbitrary table to table transforms as <code>rquery</code> pipeline steps. Two prototypical <code>non_sql_node()</code> is <a href="https://winvector.github.io/rquery/reference/rsummary_node.html"><code>rsummary_node()</code></a>.</p>
-<p><code>rsummary_node()</code> builds a table of summary information about another database table. The format is each column of the original table produces a row of summary information in the result table. Here is a simple example.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>d <span class="sc">%.&gt;%</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rsummary_node</span>(.) <span class="sc">%.&gt;%</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">execute</span>(db, .)</span></code></pre></div>
+<p>Not all data transform steps can conveniently be written as a single
+<code>SQL</code> statement. To work around this potential limitation
+<code>rquery</code> supplies a special type of node called <a href="https://winvector.github.io/rquery/reference/non_sql_node.html"><code>non_sql_node()</code></a>.
+<code>non_sql_node()</code> is used to implement arbitrary table to
+table transforms as <code>rquery</code> pipeline steps. Two prototypical
+<code>non_sql_node()</code> is <a href="https://winvector.github.io/rquery/reference/rsummary_node.html"><code>rsummary_node()</code></a>.</p>
+<p><code>rsummary_node()</code> builds a table of summary information
+about another database table. The format is each column of the original
+table produces a row of summary information in the result table. Here is
+a simple example.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>d <span class="sc">%.&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>  <span class="fu">rsummary_node</span>(.) <span class="sc">%.&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>  <span class="fu">execute</span>(db, .)</span></code></pre></div>
 <pre><code>##   column index   class nrows nna nunique min max       mean       sd lexmin
 ## 1      v     1 numeric     3   0      NA  -5   3 -0.3333333 4.163332     NA
 ##   lexmax
 ## 1     NA</code></pre>
-<p>Users can add additional capabilities by writing their own <code>non_sql_node()</code>s.</p>
+<p>Users can add additional capabilities by writing their own
+<code>non_sql_node()</code>s.</p>
 </div>
 <div id="standard-interfaces" class="section level1">
 <h1>Standard interfaces</h1>
-<p><code>rquery</code> goes out of its way to supply easy to program over value-oriented interfaces. For any meta-programming we suggest using <a href="https://winvector.github.io/wrapr/reference/let.html"><code>wrapr::let()</code></a>, a powerful and <a href="https://github.com/WinVector/wrapr/blob/master/extras/wrapr_let.pdf">well-documented</a> meta-programming system.</p>
+<p><code>rquery</code> goes out of its way to supply easy to program
+over value-oriented interfaces. For any meta-programming we suggest
+using <a href="https://winvector.github.io/wrapr/reference/let.html"><code>wrapr::let()</code></a>,
+a powerful and <a href="https://github.com/WinVector/wrapr/blob/master/extras/wrapr_let.pdf">well-documented</a>
+meta-programming system.</p>
 </div>
 <div id="assignment-partitioning" class="section level1">
 <h1>Assignment partitioning</h1>
-<p><code>rquery</code> accepts many assignment in a <code>sql_node()</code> or in a single <code>extend</code> node. The <code>extend</code> node comes with automatic <a href="#assignment-partitioning">assignment partitioning</a> to ensure correct and performant results. This allows the user to write large <code>extend</code> blocks and know they will be executed correctly.</p>
+<p><code>rquery</code> accepts many assignment in a
+<code>sql_node()</code> or in a single <code>extend</code> node. The
+<code>extend</code> node comes with automatic <a href="#assignment-partitioning">assignment partitioning</a> to ensure
+correct and performant results. This allows the user to write large
+<code>extend</code> blocks and know they will be executed correctly.</p>
 <p>Here is an example.</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ot <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="st">&#39;d4&#39;</span>,</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">columns =</span> <span class="fu">qc</span>(<span class="st">&#39;a&#39;</span>, <span class="st">&#39;b&#39;</span>, <span class="st">&#39;c&#39;</span>, <span class="st">&#39;d&#39;</span>)) <span class="sc">%.&gt;%</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extend</span>(., </span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">x =</span> a <span class="sc">+</span> <span class="dv">1</span>,</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> x <span class="sc">+</span> <span class="dv">1</span>,</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">u =</span> b <span class="sc">+</span> <span class="dv">1</span>,</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">v =</span> c <span class="sc">+</span> <span class="dv">1</span>,</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">w =</span> d <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(ot))</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>ot <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="st">&#39;d4&#39;</span>,</span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a>                   <span class="at">columns =</span> <span class="fu">qc</span>(<span class="st">&#39;a&#39;</span>, <span class="st">&#39;b&#39;</span>, <span class="st">&#39;c&#39;</span>, <span class="st">&#39;d&#39;</span>)) <span class="sc">%.&gt;%</span></span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a>  <span class="fu">extend</span>(., </span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a>             <span class="at">x =</span> a <span class="sc">+</span> <span class="dv">1</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a>             <span class="at">y =</span> x <span class="sc">+</span> <span class="dv">1</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a>             <span class="at">u =</span> b <span class="sc">+</span> <span class="dv">1</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a>             <span class="at">v =</span> c <span class="sc">+</span> <span class="dv">1</span>,</span>
+<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a>             <span class="at">w =</span> d <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(ot))</span></code></pre></div>
 <pre><code>## mk_td(&quot;d4&quot;, c(
 ##   &quot;a&quot;,
 ##   &quot;b&quot;,
@@ -369,21 +682,31 @@ from <a href="https://win-vector.com/2017/08/04/lets-have-some-sympathy-for-the-
 ##   w := d + 1) %.&gt;%
 ##  extend(.,
 ##   y := x + 1)</code></pre>
-<p>Notice the dependent assignment was moved into its own extend block. This sort of transform is critical in getting correct results from <code>SQL</code> (<a href="https://win-vector.com/2018/01/21/advisory-on-multiple-assignment-dplyrmutate-on-databases/">here</a> is an example of what can happen when one does not correctly mitigate this issue).</p>
-<p>A node that uses the assignment partitioning and re-ordering is the <a href="https://winvector.github.io/rquery/reference/if_else_block.html"><code>if_else_block()</code></a> which can be used to simulate block-oriented if-else semantics as seen in systems such as <code>SAS</code> (also meaning <code>rquery</code> can be critical porting code from <code>SAS</code> to <code>SQL</code> based <code>R</code>). This allows coordinated assignments such as the following:</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>ifet <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="st">&quot;d5&quot;</span>,</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">columns =</span> <span class="st">&quot;test&quot;</span>) <span class="sc">%.&gt;%</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extend_se</span>(.,</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>            <span class="fu">c</span>(<span class="fu">qae</span>(<span class="at">x =</span> <span class="st">&#39;&#39;</span>,</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">y =</span> <span class="st">&#39;&#39;</span>),</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>              <span class="fu">if_else_block</span>(</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>                <span class="fu">qe</span>(test <span class="sc">&gt;</span> <span class="dv">5</span>),</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">thenexprs =</span> <span class="fu">qae</span>(<span class="at">x =</span> <span class="st">&#39;a&#39;</span>, </span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>                                <span class="at">y =</span> <span class="st">&#39;b&#39;</span>),</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">elseexprs =</span> <span class="fu">qae</span>(<span class="at">x =</span> <span class="st">&#39;b&#39;</span>, </span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>                                <span class="at">y =</span> <span class="st">&#39;a&#39;</span>)</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>              )))</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(ifet))</span></code></pre></div>
+<p>Notice the dependent assignment was moved into its own extend block.
+This sort of transform is critical in getting correct results from
+<code>SQL</code> (<a href="https://win-vector.com/2018/01/21/advisory-on-multiple-assignment-dplyrmutate-on-databases/">here</a>
+is an example of what can happen when one does not correctly mitigate
+this issue).</p>
+<p>A node that uses the assignment partitioning and re-ordering is the
+<a href="https://winvector.github.io/rquery/reference/if_else_block.html"><code>if_else_block()</code></a>
+which can be used to simulate block-oriented if-else semantics as seen
+in systems such as <code>SAS</code> (also meaning <code>rquery</code>
+can be critical porting code from <code>SAS</code> to <code>SQL</code>
+based <code>R</code>). This allows coordinated assignments such as the
+following:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a>ifet <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="st">&quot;d5&quot;</span>,</span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>                     <span class="at">columns =</span> <span class="st">&quot;test&quot;</span>) <span class="sc">%.&gt;%</span></span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>  <span class="fu">extend_se</span>(.,</span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a>            <span class="fu">c</span>(<span class="fu">qae</span>(<span class="at">x =</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb24-5"><a href="#cb24-5" tabindex="-1"></a>                  <span class="at">y =</span> <span class="st">&#39;&#39;</span>),</span>
+<span id="cb24-6"><a href="#cb24-6" tabindex="-1"></a>              <span class="fu">if_else_block</span>(</span>
+<span id="cb24-7"><a href="#cb24-7" tabindex="-1"></a>                <span class="fu">qe</span>(test <span class="sc">&gt;</span> <span class="dv">5</span>),</span>
+<span id="cb24-8"><a href="#cb24-8" tabindex="-1"></a>                <span class="at">thenexprs =</span> <span class="fu">qae</span>(<span class="at">x =</span> <span class="st">&#39;a&#39;</span>, </span>
+<span id="cb24-9"><a href="#cb24-9" tabindex="-1"></a>                                <span class="at">y =</span> <span class="st">&#39;b&#39;</span>),</span>
+<span id="cb24-10"><a href="#cb24-10" tabindex="-1"></a>                <span class="at">elseexprs =</span> <span class="fu">qae</span>(<span class="at">x =</span> <span class="st">&#39;b&#39;</span>, </span>
+<span id="cb24-11"><a href="#cb24-11" tabindex="-1"></a>                                <span class="at">y =</span> <span class="st">&#39;a&#39;</span>)</span>
+<span id="cb24-12"><a href="#cb24-12" tabindex="-1"></a>              )))</span>
+<span id="cb24-13"><a href="#cb24-13" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">format</span>(ifet))</span></code></pre></div>
 <pre><code>## mk_td(&quot;d5&quot;, c(
 ##   &quot;test&quot;)) %.&gt;%
 ##  extend(.,
@@ -396,24 +719,46 @@ from <a href="https://win-vector.com/2017/08/04/lets-have-some-sympathy-for-the-
 ##  extend(.,
 ##   x := ifelse(!(ifebtest_1), &quot;b&quot;, x),
 ##   y := ifelse(!(ifebtest_1), &quot;a&quot;, y))</code></pre>
-<p>As you can see, the <code>if_else_block()</code> works by landing the test in a column and then using that column to conditional all further statements. <a href="https://winvector.github.io/wrapr/reference/qe.html"><code>qe()</code></a> and <a href="https://winvector.github.io/wrapr/reference/qae.html"><code>qae()</code></a> are quoting convenience functions. Note the <code>if_else_block</code> depends on <code>x</code> and <code>y</code> being defined before entering the block, as they are self-assigned ( this is checked by the <code>extend</code> node). The <code>if_else_block()</code> returns a list of assignments, which then used in the <code>extend_se()</code> statement, which in turn is re-factored into a sequence of safe extend nodes.</p>
+<p>As you can see, the <code>if_else_block()</code> works by landing the
+test in a column and then using that column to conditional all further
+statements. <a href="https://winvector.github.io/wrapr/reference/qe.html"><code>qe()</code></a>
+and <a href="https://winvector.github.io/wrapr/reference/qae.html"><code>qae()</code></a>
+are quoting convenience functions. Note the <code>if_else_block</code>
+depends on <code>x</code> and <code>y</code> being defined before
+entering the block, as they are self-assigned ( this is checked by the
+<code>extend</code> node). The <code>if_else_block()</code> returns a
+list of assignments, which then used in the <code>extend_se()</code>
+statement, which in turn is re-factored into a sequence of safe extend
+nodes.</p>
 </div>
 <div id="performance" class="section level1">
 <h1>Performance</h1>
-<p>As <code>rquery</code> pipelines are factored into stages similar to the common relational operators they tend to be very compatible with downstream query optimizers. We think some of the advantage is the fact that <code>rquery</code> deliberately does not have a <code>group_by</code> operator, but instead considers this as the <code>partitionby</code> attribute of a <a href="https://winvector.github.io/rquery/reference/project.html"><code>project()</code> node</a> (non-trivial example <a href="https://github.com/WinVector/rquery/blob/master/README.md">here</a>).</p>
-<p>We have seen database based <code>rquery</code> outperform both in-memory <code>dplyr</code> and database based <code>dplyr</code></p>
+<p>As <code>rquery</code> pipelines are factored into stages similar to
+the common relational operators they tend to be very compatible with
+downstream query optimizers. We think some of the advantage is the fact
+that <code>rquery</code> deliberately does not have a
+<code>group_by</code> operator, but instead considers this as the
+<code>partitionby</code> attribute of a <a href="https://winvector.github.io/rquery/reference/project.html"><code>project()</code>
+node</a> (non-trivial example <a href="https://github.com/WinVector/rquery/blob/master/README.md">here</a>).</p>
+<p>We have seen database based <code>rquery</code> outperform both
+in-memory <code>dplyr</code> and database based <code>dplyr</code></p>
 <blockquote>
 <p><img src="data:image/png;base64,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YCWDpeiLL77QM7kMOty8McMYi40zhD6Bq6++2jVDvrS1hVUHa4RiaBprZ0ZqiJZ2RlL/YYISXrE5uN2QSGoW20ICJEACEUUgoADFotrff/+9bjDWYcQwu6/h2ogiEsGNKeuVCnBNREOIlnaGU182Smvsd/g9VmLlvs6P6fU2w6lNrCsJkAAJRBOBIysgO2gxFg2n+HQAiklIgATKnUDX+mfLCTXb6fU6PQuD32fj9Cae0dwnARIgARIIIQIBLaCe9YQTNZxosZA3AvzjsLzPrl27XMv7eJ7DfRIgARIoDwJ3d3pIhsy+XnILc5U1tEgtshQjZzY4R/q1urI8imOeJEACJEACZUjAsQUUryzE4t14gw2W5sEHPqKnnHKK/Oc//ynDKjErEiABEghOoEFaI3nq7An69ZVYSL5388vkvi6PBT+RKUiABEiABCqdgGMLKN7HjbUhsX4k3gmP2fFYsBzvG8eHgQRIgAQqmkDrmifImz3fr+hiWR4JkAAJkEApCTgSoBhm37Ztm164vGHDhtoSinWtbrvtNj1DfvTo0TJu3LhSVoWnkwAJkAAJkAAJkAAJRAMBR0Pwqamper1IswZo69atXbPj8ZpHrBfKQAIkQAIkQAIkQAIkQAJOCDgSoFjvs0OHDvLoo4/qNzl07NhRpk2bptcGnTFjhvYHdVIY05AACZAACZAACZAACZCAoyF4YJo4caL07t1bunXrJjfddJOefIRlmTATHks0MZAACZAACZAACZAACZCAEwKOBWjnzp1lw4YNkpeXp9cDXbp0qX4HPN4r3qQJ19xzAptpSIAESIAESIAESIAERL0yxGGA0DTiE6c0btxYBg8eLN98843gFY8MJEACJEACJEACJEACJOCEQEALKCYXYbklhO+++06efPJJMROREIfh908++URatWqFXQYSIAESIAESIAESIAESCEogoADFQvN33HGHXmopPz9fvvjiC4mLi3NlislJTZs2lQceeMAVxw0SIAESIAESIAESIAESCEQgoACtVauWa7mlPn36yOTJk/k++EA0eYwESIAESIAESIAESCAogYAC1H42Zrrn5ubqiUj4tgfMhs/MzLRHcZsESIAESIAESIAESIAEfBJwLEA//PBDPelo3759XhldccUVMnXqVK94RpAACZAACZAACZAACZCAJwHHAnTo0KHSt29fGTJk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f//3f3LuuefKJ598Io0bN/ZbAA+QAAmQAAmQAAmQAAmQgJ2AYwHasWNHmTNnjhadhw4dkjfeeEOuueYae17cJgESIAESIAESIAESIIGgBAIK0J9++kkOHjzolslDDz0kd955p/z1118ye/Zsfaxu3brSrl07t3TcIQESIAESIAESIAESIAFfBAIK0BtvvFFWrlzp6zyBEDXhiiuukKlTp5pdfpMACZAACZAACZAACZCAXwIBBejSpUu1vyfOLioqkthY35Pm/cX7LZUHSIAESIAESIAESIAEopaAb0V5FEdCQoIkJibqz8knnyxffvmla9/E4xsTkxhIgARIgARIgARIgARIwAmBgALUZJCTkyPr1q3TVlATx28SIAESIAESIAESIAESKAkBR6bLlJQUefLJJ+Wee+6RzZs3S6tWrQRxJtSuXVvatGljdvlNAiRAAiRAAiRAAiRAAn4JOBKgOHvEiBGyf/9+ufXWW70y4yQkLySMIAESIAESIAESIAES8EPAsQCF5RML0PsK9AH1RYVxJEACJEACJEACJEACvgg4FqBVqlTxdT7jSIAESIAESIAESIAESKBYBBwLUOSKyUi7d++WgoICXUhhYaEelt+1a5dccMEFxSqYiUmABEiABEiABEiABKKTgGMBOmnSJLnlllskOzvbi9RNN91EAepFhREkQAIkQAIkQAIkQAK+CDhahgkn3n333XL55ZfLrFmzJC0tTRYsWCATJkyQzMxMeeKJJ3zlzTgSIAESIAESIAESIAES8CLgyAKK2e/btm2TUaNGScOGDaVOnTpSvXp1ue222yQ3N1dGjx4t48aN88qcESRAAiRAAiRAAiRAAiTgScCRBTQ1NVXwVqTk5GR9fuvWreX777/X26eeeqr89NNPnvlynwRIgARIgARIgARIgAR8EnAkQCE+O3ToII8++qhkZWVJx44dZdq0aZKfny8zZsyQZs2a+cyckSRAAiRAAiRAAiRAAiTgScDREDxOmjhxovTu3Vu6desmmHR0yimnSNWqVQUz4adPn+6ZL/dJgARIgARIgARIgARIwCcBxwK0c+fOsmHDBsnLy9PCc+nSpfL111/L+eefL02aNPGZOSNJgARIgARIgARIgARIwJOAYwGKE/EmJAjPw4cP63wgPH/77Te9Fmj79u098+Y+CZAACZAACZAACZAACXgRcCxAx48fLw8//LD2AfXMhe+C9yTCfRIgARIgARIgARIgAX8EHAnQoqIiGTt2rF7vc9CgQeL5Ws6YmBh/+TOeBEiABEiABEiABEiABNwIOBKg8PvE6zb79u2rF6F3y4E7JEACJEACJEACJEACJFAMAo6WYcL6nwMHDpRnn31WDh06VIzsmZQESIAESIAESIAESIAE3Ak4soDilEceeUTatm2rl2PChKPY2GPatUePHvotSe5Zc48ESIAESIAESIAESIAEvAk4FqB9+vTR733v2bOn1KhRwy2ndu3aue1zhwRIgARIgARIgARIgAT8EXAkQA8ePCjLly+XVatWSZs2bfzlxXgSIAESIAESIAESIAESCErg2Dh6gKR44xHW/MzJyQmQiodIgARIgARIgARIgARIIDgBRxZQZDNixAjp37+/3HXXXfrd7ykpKa7cMzIytH+oK4IbJEACJEACJEACJEACJOCHgGMBevvtt+s3Ht16661eWXEhei8kjCABEiABEiABEiABEvBDwLEA3b59u34Vp6984uLifEUzjgRIgARIgARIgARIgAS8CDgWoElJSfrkLVu2aEuoPaf09HRp0KCBPYrbJEACJEACJEACJEACJOCTgGMB+sUXX+jF6Pfv3++VEYfgvZAwggRIgARIgARIgARIwA8BxwL05ptvFqwBetttt0nDhg3dsvN8N7zbQe6QAAmQAAmQAAmQAAmQgI2AIwF64MAB2bx5szzzzDMcarfB4yYJkAAJkAAJkAAJkEDxCThaBxQ+nk2bNpUNGzYUvwSeQQIkQAIkQAIkQAIkQAI2AgEtoAsXLpTs7GydfODAgQJfzwcffFBatGghCQkJrmy4DqgLBTdIgARIgARIgARIgASCEAgoQG+44QZZuXKlWxZDhw5128cOJyF5IWEECZAACZAACZAACZCAHwIBBeiSJUu81v60LEtiYmJ0docOHZLU1FThOqB+6DKaBEiABEiABEiABEjAi0BAH1Cs/ZmcnKw/e/fulSFDhsiUKVP0fmFhobRp00ZeeukllyD1yp0RJEACJEACJEACJEACJOBBIKAAtacdPny4rF+/Xrp27aqj8S745557TiZMmCDTp0+3J+U2CZAACZAACZAACZAACfglEHAI3pyVl5cnX331lfYHrV+/vo6OjY2Vq666SrKysmTy5Mly2WWXmeT8JgESIAES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Yx8TXRvZOP7MAY1dFhxAoOQJ3HHHHTZy5Ei3B9yQIUPcNjx169Yt+YoosdQIrFmzxo4//nj7448/TD9Gem211VbWuHFjSzT+y5cvtxNPPNGWLl1qY8eOtffee8969OjBHOFSG8XiVfz888/bTTfdZP369YsJ0OKMuW5gzj//fNtkk03sgQcecIJmu+22K16jyLXRCMyYMcONm+Z4+z0+9fd855132rx582LfB926dXNtSnRtZO34ayN6AgQgUPIEgi+n/D59+uSvXbvWFf7000/nX3/99SVfESWWKoGpU6fmBwJ0gzYkG/9HH300P/gxiuU59dRT8z/++OPYZw7KNoHVq1fnDxw4MF/jFuzxmb9ixQrX4OKOef/+/fMnTJjgyvjll1/yDzrooPzAQl62IWR56wLDQn7v3r3zjz766PxRo0bFaAQ3EPmPPfZY7LM/SHZtZOv4Mwd0o90rUVG2EdAG5O3atbPKldf/mckFryfiECoWgUCA2uabb26jR4+2l156yZYtW+Y6mGz8p02b5qZkeBJcG55E+XgPbipNblV5NcKhOGMuC/rPP//svitUliznNWrUsNmzZ4eL5riMEahevbo9/PDDzvIZfsKdvg9q1aplw4cPt08//dQ9AUpNT3RtZPP4I0DL2EVNcyoOgblz51rY3V6nTh1buHBhxekgPXEEpkyZ4uZ5Ll682L0fccQR7vGrycY/sHKZrgcfuDY8ifLxXq1aNevVq1fM7e5bXZwxl6tW23OFRYy+N+If6evr4L1sEOjevbvbXkmtCaycsUZJgI4fP950jQwbNswuuugidy7RtZHN488ipNhlwwEESpaAnn8sS4kPutPVXTOhYhEYMGCA6SWrlYIWF8kaqseuJhp/ro2KdQ343iQb10Tn4uNVlr4rtLCFUP4I6JG7mssrz9fBBx9sgZveWbjjx9n/HsTHq8fZMv5YQMvf9U2LywkBbTodtmLoWBtSEyoWAblKwyvgt9xyS5O1I9n4azeE+GujWbNmFQtMFvamOGOuTcq1GC18Dena4HoofxfQqlWr3I4nftpVbm6um1Ihj0eiayObxx8BWv6ucVpcTghoa52JEyfarFmz3B3tK6+8Yrvuums5aT3NLCqBMWPG2P333++Sa/7nu+++67blSTb+e+yxh73++usWLF5x7vpx48ZZhw4dilol6coogeKMuSzlnTp1spdfftn1StdTvXr13KuMdpNmJSCgrdRuv/1254JXku+++85Nu2rfvr0lujayefxxwSe4kIiGQLoENK8vWCVrp5xyitsTsnnz5nbMMcekWyz5yxiBww8/3G3Fo22V5s+fb9pyRYuKZAVJNP777bef234pWEHr0h111FFu66Yy1jWakyKBZH/zycb8zDPPtIsvvthefPFFdz1cddVVKdZM8rJAQPN4tZ3W0KFD3UvfB5deeqmbjpPs2sjW8edRnGXhqqUNFZpAsGWLc69pZSSh4hKQ9VPzubT4IBySjb8WLmlesKwghIpDoLhj/vvvv7v5gxWHRPb2RPsCS3SGF5eJRrJrI9vGHwGavX8f9BwCEIAABCAAAQiUCgHmgJYKdiqFAAQgAAEIQAAC2UsAAZq9Y0/PIQABCEAAAhCAQKkQQICWCnYqhQAEIAABCEAAAtlLAAGavWNPzyEAAQhAAAIQgECpEECAlgp2KoUABCAAAQhAAALZS4C9P7J37Ok5BCAAgYQE7r77bvvtt99i5/V88s0339w9A11PeNkY4c8//3Rb2eiRptdee631798/I/ulfvPNN+7BANqLszjh1ltvdU8zStS+//73v25D8gsuuMBq167tqtB2PMOHD7cvvvjCPZCgXbt21qdPH56AVJwBIE+5JMA2TOVy2Gg0BCAAgcwSaNmypa1bt8623npry8/Pt19//dVmzpzpHqrw7LPP2m677ZbRBpx99tnWpEkTu+KKK0yPOKxZs6a98cYbts8++5R4vRKC2kB83rx5xSq7cePGLq/a+p///KdAGT///LPp8axiqOPNNtvMtN/jgQceaBK+eiqWxP3bb7/tNqF/6aWX3JORChTCBwhUQAK44CvgoNIlCEAAAiVB4Nhjj7V33nnHPV500qRJ7jnXTZs2teOOO86WLFlSElUkLOOTTz6JnZPFVRbDTIhPVaInlBVXfPpGbrvttvbcc8/5j7H3Z555ZgOr5vPPP28TJkywKVOm2GuvveYsoRL4ev775ZdfHsvLAQQqMgEEaEUeXfoGAQhAoAQJNGzY0D2zfPr06fbQQw+5kj/88EP3GMlwNSNHjnSPJ1XcypUrbcCAAfbpp5/aoYce6tLKsqoyZHXcf//9rW/fvnbLLbc4S6fy3Hbbbc7aKmvgDTfcYGvWrHFlTJ48WaddGDdunB1//PHu0afnnXeezZo1y58yubxlLX3kkUfskEMOMT3qVBbGREFiV21RkNBVe9U+PUaxR48eJmvs3LlzE2V38YcddphNnTrVvv766wLpRowYYUceeWSBOG9JFk8f9MScu+66K2Mi29fDOwTKCgEEaFkZCdoBAQhAoBwQkFu8RYsWzn2s5koUyoUdDp999pkTqoqToJNYlZVRjymV+/nHH380zXlctGiR9evXz1q1auVc13JhK7Rp08a53OWubtu2rZsKoDJmz57tzr/yyivOda3HHUrUjh071nbccUcnGpVA4vO0006zxx57zPbdd1/THFIJSVlxo8K0adPsiSeecKeUVnUdcMABbtpBr169nBW4e/fuUVljceKy1157maYn+PDDDz84UaqywkFtVt+7du3qnhk+Y8YMd1ru+MsuuyyclGMIVFgCCNAKO7R0DAIQgEBmCOy8887OfZxK6bIQSqgOHTrUvv/+e2cVlECUm/+mm24ynR8/frwrUvMjGzVqZLvssov17t17g2rOPfdcJ2hlaT399NNNgrdevXpuvqhPrDmj77//vp1zzjkmN7jOazpBUcMRRxxhjz76qJ111ll2zz332MSJEwu1gsrSGXbDy/opC2xeXl6Batu3b28ffPCBE+QqX/Ntt9pqKxs0aJAT7AUS8wECFZQAArSCDizdggAEIJApAlqdroUzqYROnTrFksvtPmTIEDe3VOLujDPOcC7yFStWxNIkOtDKfLmw462KBx10kBOiPp/Ea+XK63/i9C5rairzVnfddVdflFtEpA9Lly6NxUUdyLIp1/1XX33lTkuAHn300VFJnbiWIF6wYIFpqkHPnj3txhtvdFMKtGCJAIGKTgABWtFHmP5BAAIQKEECEkeyYGp1vA/xgklu9/jQoEGDWJTmScrid/LJJ5vmX8odL/d1UYJc+AoSlOGglehyn/sgC2g4VKlSJfyx0ONwfi9k4/sZX4jmdGqhlKygcvdrYZGmAMQHWYH9XFEJebn57733Xhs9erSzjGqBEgECFZ0A+4BW9BGmfxCAAARKkMCTTz7pFvxoJbyC5nXGWxb9nMZE1Q4ePNjN89TCIC8MP/roowICMlFebWmkVfESa3vuuWcsmeZ9yrVd2kFu+Jtvvtn16/DDD7eqVTf8mdWUAE0PiJ87q7mwClp0RYBARSeABbSijzD9gwAEIFBMAlpZrlXuY8aMMW0dNHDgQDfnUqvPO3bs6ErV9kNyyT/++ONu/uLLL79sr776atIatWBHi3CWL1/u9seUC/p///ufWzHvM8pi+t13320w71KC9dRTTzUJ4VGjRrkyHnzwQTd/VIKvtIM2k5cbXhZNrb6PClogJREqC7D4an9QueM1D1aLrjR9gACBik5gw1uzit5j+gcBCEAAAkUioJXhfnW4XMVaLHPddde5hT2+gM6dO7vPElN67bTTTm77IlkkEwU9EUiLeuQ21wKdDh06uG2YLrnkEidm69Sp4xbvaHsliV+tJg8Hbc20bNky57qWhVELljSXNJHgC+fN9LEWO2nFvFzsXbp0iaxOC5zk4teTl4YNG+YsnvrcrVs390QmbclEgEBFJ8CTkCr6CNM/CEAAAhuBgATh4sWLnagsanULFy507nT/eMr4fHoCktzRNWrUiD/lPmuP0fnz57tHhEYmKAeR6qO2l9LUAj8doRw0myZCIG0CCNC0EVIABCAAAQhAAAIQgEAqBJgDmgot0kIAAhCAAAQgAAEIpE0AAZo2QgqAAAQgAAEIQAACEEiFAAI0FVqkhQAEIAABCEAAAhBImwACNG2EFAABCEAAAhCAAAQgkAoBBGgqtEgLAQhAAAIQgAAEIJA2gf8HLEG0/rH/xBMAAAAASUVORK5CYII="></p>
 <p>(Figure from: <a href="https://win-vector.com/2018/01/09/rquery-fast-data-manipulation-in-r/">here</a>.)</p>
 </blockquote>
-<p>In addition <code>rquery</code> includes automatic column narrowing: where only columns used to construct the final result are pulled from initial tables. This feature is important in production (where data marts can be quite wide) and has show significant additional performance advantages</p>
-<p>From a coding point of view the automatic narrowing effect looks like this.</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>wp <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="at">table =</span> <span class="st">&#39;d6&#39;</span>,</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">columns =</span> letters[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]) <span class="sc">%.&gt;%</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extend</span>(., <span class="at">res :=</span> a <span class="sc">+</span> b)</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co"># full query</span></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(wp, db))</span></code></pre></div>
+<p>In addition <code>rquery</code> includes automatic column narrowing:
+where only columns used to construct the final result are pulled from
+initial tables. This feature is important in production (where data
+marts can be quite wide) and has show significant additional performance
+advantages</p>
+<p>From a coding point of view the automatic narrowing effect looks like
+this.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a>wp <span class="ot">&lt;-</span> <span class="fu">mk_td</span>(<span class="at">table =</span> <span class="st">&#39;d6&#39;</span>,</span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>                   <span class="at">columns =</span> letters[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]) <span class="sc">%.&gt;%</span></span>
+<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a>  <span class="fu">extend</span>(., <span class="at">res :=</span> a <span class="sc">+</span> b)</span>
+<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" tabindex="-1"></a><span class="co"># full query</span></span>
+<span id="cb26-6"><a href="#cb26-6" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(wp, db))</span></code></pre></div>
 <pre><code>## SELECT
 ##  `a`,
 ##  `b`,
@@ -431,14 +776,14 @@ from <a href="https://win-vector.com/2017/08/04/lets-have-some-sympathy-for-the-
 ##  FROM
 ##   `d6`
 ##  ) tsql_37404760889968246576_0000000000</code></pre>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># longer pipeline</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>wn <span class="ot">&lt;-</span> wp <span class="sc">%.&gt;%</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_columns</span>(., <span class="st">&quot;res&quot;</span>)</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co"># notice select at end of the pipeline automatically </span></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co"># gets propagated back to the beginning of the</span></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="co"># pipeline</span></span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(wn, db))</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="co"># longer pipeline</span></span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a>wn <span class="ot">&lt;-</span> wp <span class="sc">%.&gt;%</span></span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a>  <span class="fu">select_columns</span>(., <span class="st">&quot;res&quot;</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a><span class="co"># notice select at end of the pipeline automatically </span></span>
+<span id="cb28-6"><a href="#cb28-6" tabindex="-1"></a><span class="co"># gets propagated back to the beginning of the</span></span>
+<span id="cb28-7"><a href="#cb28-7" tabindex="-1"></a><span class="co"># pipeline</span></span>
+<span id="cb28-8"><a href="#cb28-8" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">to_sql</span>(wn, db))</span></code></pre></div>
 <pre><code>## SELECT
 ##  `res`
 ## FROM (
@@ -452,34 +797,47 @@ from <a href="https://win-vector.com/2017/08/04/lets-have-some-sympathy-for-the-
 ##    `d6`
 ##   ) tsql_53722877270271010297_0000000000
 ## ) tsql_53722877270271010297_0000000001</code></pre>
-<p>A graph of the the effects of this kind of narrowing (for <code>dplyr</code> by hand as <code>dplyr</code> currently does not have the above type of automatic query analysis/optimization) shows the sensitivity to this optimization.</p>
+<p>A graph of the the effects of this kind of narrowing (for
+<code>dplyr</code> by hand as <code>dplyr</code> currently does not have
+the above type of automatic query analysis/optimization) shows the
+sensitivity to this optimization.</p>
 <blockquote>
 <p><img src="data:image/png;base64,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"></p>
-<p>(Figure from: <a href="https://github.com/WinVector/rquery/blob/master/extras/PerfTest.md">here</a>, please see also <a href="https://win-vector.com/2017/12/20/how-to-greatly-speed-up-your-spark-queries/">here</a>.)</p>
+<p>(Figure from: <a href="https://github.com/WinVector/rquery/blob/master/extras/PerfTest.md">here</a>,
+please see also <a href="https://win-vector.com/2017/12/20/how-to-greatly-speed-up-your-spark-queries/">here</a>.)</p>
 </blockquote>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
-<p><code>rquery</code> is new package, but it is already proving to be correct (avoiding <a href="https://win-vector.com/2018/01/21/advisory-on-multiple-assignment-dplyrmutate-on-databases/">known data processing issues</a>) and performant. For working with <code>R</code> at a big data scale (say using <code>PostgreSQL</code> or <code>Spark</code>) <code>rquery</code> is the right specialized tool for specifying data manipulation.</p>
+<p><code>rquery</code> is new package, but it is already proving to be
+correct (avoiding <a href="https://win-vector.com/2018/01/21/advisory-on-multiple-assignment-dplyrmutate-on-databases/">known
+data processing issues</a>) and performant. For working with
+<code>R</code> at a big data scale (say using <code>PostgreSQL</code> or
+<code>Spark</code>) <code>rquery</code> is the right specialized tool
+for specifying data manipulation.</p>
 </div>
 <div id="see-also" class="section level1">
 <h1>See also</h1>
 <p>For deeper dives into specific topics, please see also:</p>
 <ul>
 <li><a href="https://winvector.github.io/rquery/index.html"><code>rquery README</code></a></li>
-<li><a href="https://github.com/WinVector/rquery/blob/master/extras/JoinController.md">Join Controller</a></li>
-<li><a href="https://github.com/WinVector/rquery/blob/master/extras/DependencySorting.md">Join Dependency Sorting</a></li>
+<li><a href="https://github.com/WinVector/rquery/blob/master/extras/JoinController.md">Join
+Controller</a></li>
+<li><a href="https://github.com/WinVector/rquery/blob/master/extras/DependencySorting.md">Join
+Dependency Sorting</a></li>
 <li><a href="https://github.com/WinVector/rquery/blob/master/extras/PerfTest.md">PerfTest</a></li>
-<li><a href="https://github.com/WinVector/rquery/blob/master/extras/AssigmentPartitioner.md">Assignment Partitioner</a></li>
+<li><a href="https://github.com/WinVector/rquery/blob/master/extras/AssigmentPartitioner.md">Assignment
+Partitioner</a></li>
 <li><a href="https://github.com/WinVector/rquery/blob/master/extras/ExtraDBs.md">DifferentDBs</a></li>
-<li><a href="https://github.com/WinVector/rqdatatable"><code>data.table based</code> implementation</a></li>
+<li><a href="https://github.com/WinVector/rqdatatable"><code>data.table based</code>
+implementation</a></li>
 </ul>
 <hr />
 </div>
 <div id="appendix-always-clean-up-on-the-way-out" class="section level1">
 <h1>Appendix: Always clean up on the way out</h1>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(old_o)</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(db)</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="fu">options</span>(old_o)</span>
+<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(db)</span></code></pre></div>
 </div>
 
 
